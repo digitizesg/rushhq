@@ -97,7 +97,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-dvh grid place-items-center px-6 py-12">
       <div className="w-full max-w-sm">
-        <p className="font-serif text-3xl text-ink mb-1">Rush HQ</p>
+        <p className="text-3xl text-ink mb-1">Rush HQ</p>
         <p className="text-muted text-[14px] mb-8">
           {mfa ? "Two-factor verification" : "Sign in to your account"}
         </p>
@@ -121,7 +121,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
             {error && (
-              <p className="text-coral text-[13px]" role="alert">{error}</p>
+              <p className="text-danger text-[13px]" role="alert">{error}</p>
             )}
             <Button type="submit" className="w-full" loading={submitting}>
               Sign in
@@ -148,7 +148,7 @@ export default function LoginPage() {
               hint="Open your authenticator app and enter the current code."
             />
             {error && (
-              <p className="text-coral text-[13px]" role="alert">{error}</p>
+              <p className="text-danger text-[13px]" role="alert">{error}</p>
             )}
             <Button type="submit" className="w-full" loading={submitting}>
               Verify

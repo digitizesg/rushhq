@@ -19,7 +19,7 @@ export function CalendarWeek({
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (
-    <div className="bg-white border border-border-warm rounded-lg overflow-hidden divide-y divide-border-warm/70">
+    <div className="bg-white border border-line rounded-lg overflow-hidden divide-y divide-line/70">
       {days.map((day) => {
         const onDay = occurrencesOnDay(occurrences, day);
         const today = isToday(day);
@@ -33,15 +33,15 @@ export function CalendarWeek({
               <p
                 className={[
                   "text-[11px] font-medium uppercase tracking-wider mb-1",
-                  today ? "text-sage" : "text-muted",
+                  today ? "text-primary" : "text-muted",
                 ].join(" ")}
               >
                 {format(day, "EEE")}
               </p>
               <p
                 className={[
-                  "font-serif text-[24px] font-medium tnum",
-                  today ? "text-sage" : "text-ink",
+                  "text-[24px] font-medium tnum",
+                  today ? "text-primary" : "text-ink",
                 ].join(" ")}
               >
                 {format(day, "d")}

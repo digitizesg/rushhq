@@ -24,8 +24,8 @@ export function CalendarMonth({
   const labels = weekDayLabels();
 
   return (
-    <div className="bg-white border border-border-warm rounded-lg overflow-hidden">
-      <div className="grid grid-cols-7 bg-paper border-b border-border-warm">
+    <div className="bg-white border border-line rounded-lg overflow-hidden">
+      <div className="grid grid-cols-7 bg-soft border-b border-line">
         {labels.map((l) => (
           <div
             key={l}
@@ -46,10 +46,10 @@ export function CalendarMonth({
             <div
               key={idx}
               className={[
-                "border-b border-r border-border-warm/70 min-h-[110px] p-1.5 flex flex-col gap-1",
+                "border-b border-r border-line/70 min-h-[110px] p-1.5 flex flex-col gap-1",
                 idx % 7 === 6 ? "border-r-0" : "",
                 idx >= weeks.flat().length - 7 ? "border-b-0" : "",
-                inMonth ? "bg-white" : "bg-cream/40",
+                inMonth ? "bg-white" : "bg-page/40",
               ].join(" ")}
             >
               <button
@@ -57,9 +57,9 @@ export function CalendarMonth({
                 onClick={() => onSelectDay(day)}
                 className={[
                   "self-start text-[12.5px] tnum px-1.5 rounded-full transition-colors",
-                  inMonth ? "text-ink hover:bg-paper" : "text-muted hover:text-ink",
+                  inMonth ? "text-ink hover:bg-soft" : "text-muted hover:text-ink",
                   today
-                    ? "bg-sage text-white hover:bg-sage hover:text-white"
+                    ? "bg-primary text-white hover:bg-primary hover:text-white"
                     : "",
                 ].join(" ")}
                 title={format(day, "EEEE d LLLL")}

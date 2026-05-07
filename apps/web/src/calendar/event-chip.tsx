@@ -11,9 +11,7 @@ interface EventChipProps {
 
 export function EventChip({ occurrence, detailed = false, onClick }: EventChipProps) {
   const { event, start } = occurrence;
-  // Colour by primary attendee for stable per-person accents. If the
-  // event has no attendees, fall back to a neutral palette slot.
-  const colour = colourFor(occurrence.event.created_by);
+  const colour = colourFor(event.created_by);
   const recurring = !!event.rrule;
 
   return (
@@ -22,32 +20,46 @@ export function EventChip({ occurrence, detailed = false, onClick }: EventChipPr
       onClick={onClick}
       title={`${event.title}${event.location ? " · " + event.location : ""}`}
       className={[
-        "w-full text-left rounded-md transition-colors hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sage",
-        detailed ? "px-3 py-2" : "px-2 py-1",
+        "w-full text-left rounded-md transition-shadow hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary",
+        detailed ? "px-3 py-2.5" : "px-2 py-1",
       ].join(" ")}
       style={{
-        background: colour.chipBg,
+        background: colour.soft,
         color: colour.text,
-        boxShadow: `inset 3px 0 0 ${colour.bg}`,
       }}
     >
       {detailed ? (
-        <div className="space-y-0.5">
-          <p className="text-[13px] font-medium truncate">{event.title}</p>
-          <p className="text-[11.5px] opacity-80 tnum">
-            {event.all_day ? "All day" : formatTime24(start)}
-            {recurring ? " · repeats" : ""}
-            {event.visibility === "parents" ? " · parents" : ""}
-          </p>
+        <div className="flex items-start gap-3">
+          <span
+            className="mt-1 inline-block size-2 rounded-full shrink-0"
+            style={{ background: colour.accent }}
+            aria-hidden
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-[13.5px] font-medium truncate">{event.title}</p>
+            <p className="text-[11.5px] tnum opacity-80">
+              {event.all_day ? "All day" : formatTime24(start)}
+              {recurring ? " · repeats" : ""}
+              {event.visibility === "parents" ? " · parents" : ""}
+            </p>
+          </div>
         </div>
       ) : (
         <div className="flex items-baseline gap-1.5">
           {!event.all_day && (
-            <span className="text-[10.5px] opacity-80 tnum shrink-0">
+            <span
+              className="text-[10.5px] tnum shrink-0 opacity-80"
+              style={{ color: colour.text }}
+            >
               {formatTime24(start)}
             </span>
           )}
-          <span className="text-[12px] truncate">{event.title}</span>
+          <span
+            className="text-[12px] truncate font-medium"
+            style={{ color: colour.text }}
+          >
+            {event.title}
+          </span>
         </div>
       )}
     </button>

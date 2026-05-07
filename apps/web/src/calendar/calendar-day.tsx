@@ -13,13 +13,13 @@ interface DayViewProps {
 export function CalendarDay({ day, occurrences, onAdd, onSelectEvent }: DayViewProps) {
   const onDay = occurrencesOnDay(occurrences, day);
   return (
-    <div className="bg-white border border-border-warm rounded-lg p-5">
+    <div className="bg-white border border-line rounded-lg p-5">
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-[12px] uppercase tracking-wider text-muted">
             {format(day, "EEEE")}
           </p>
-          <p className="font-serif text-[24px] font-medium text-ink tnum">
+          <p className="text-[24px] font-medium text-ink tnum">
             {format(day, "d LLLL yyyy")}
           </p>
         </div>

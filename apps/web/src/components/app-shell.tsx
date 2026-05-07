@@ -3,8 +3,8 @@ import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "@/auth/auth-context";
 
 const navBase =
-  "px-3 py-2 rounded-md text-[14px] font-medium text-muted hover:text-ink hover:bg-paper transition-colors";
-const navActive = "text-ink bg-paper";
+  "px-3 py-2 rounded-md text-[14px] font-medium text-muted hover:text-ink hover:bg-soft transition-colors";
+const navActive = "text-ink bg-soft";
 
 export function AppShell() {
   const { member, isParent, signOut } = useAuth();
@@ -12,11 +12,11 @@ export function AppShell() {
 
   return (
     <div className="min-h-dvh flex flex-col">
-      <header className="bg-cream border-b border-border-warm">
+      <header className="bg-page border-b border-line">
         <div className="mx-auto max-w-[1100px] px-4 sm:px-6 h-14 flex items-center gap-4">
           <Link
             to="/"
-            className="font-serif text-[19px] font-medium text-ink"
+            className="text-[19px] font-medium text-ink"
             onClick={() => setMenuOpen(false)}
           >
             Rush HQ
@@ -52,13 +52,13 @@ export function AppShell() {
             </span>
             <button
               onClick={() => signOut()}
-              className="hidden sm:inline-flex h-8 px-3 rounded-md text-[13px] text-muted hover:text-ink hover:bg-paper transition-colors"
+              className="hidden sm:inline-flex h-8 px-3 rounded-md text-[13px] text-muted hover:text-ink hover:bg-soft transition-colors"
             >
               Sign out
             </button>
             <button
               type="button"
-              className="sm:hidden inline-flex items-center justify-center size-9 rounded-md text-muted hover:text-ink hover:bg-paper"
+              className="sm:hidden inline-flex items-center justify-center size-9 rounded-md text-muted hover:text-ink hover:bg-soft"
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((v) => !v)}
@@ -87,7 +87,7 @@ export function AppShell() {
         </div>
 
         {menuOpen && (
-          <div className="sm:hidden border-t border-border-warm bg-cream">
+          <div className="sm:hidden border-t border-line bg-page">
             <nav className="flex flex-col p-3 gap-1 max-w-[1100px] mx-auto">
               <NavLink
                 to="/"
@@ -118,7 +118,7 @@ export function AppShell() {
                   setMenuOpen(false);
                   void signOut();
                 }}
-                className="text-left px-3 py-2 rounded-md text-[14px] text-muted hover:text-ink hover:bg-paper"
+                className="text-left px-3 py-2 rounded-md text-[14px] text-muted hover:text-ink hover:bg-soft"
               >
                 Sign out
               </button>

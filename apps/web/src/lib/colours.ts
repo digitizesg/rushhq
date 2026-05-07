@@ -1,22 +1,25 @@
-// Per-member colour assignment. Keys are family_members.id; the palette
-// is small and warm-toned to match the rest of the app. New members
-// cycle through PALETTE deterministically based on their id hash, so
-// colours stay stable across page loads without us having to store
-// them in the database.
+// Per-member colour assignment. Every event chip + avatar reads as a
+// distinct hue, matching the modern "tinted-chip" look (white card,
+// soft pastel background, saturated accent text). Colours are stable
+// per member id — no DB column, just a hash.
 
-const PALETTE: ReadonlyArray<{ bg: string; ring: string; text: string; chipBg: string }> = [
-  // sage primary
-  { bg: "#5d8a4e", ring: "#5d8a4e", text: "#1f2f17", chipBg: "#e7f0e1" },
-  // honey
-  { bg: "#d4a574", ring: "#b8884f", text: "#3a280f", chipBg: "#f5e3c8" },
-  // forest
-  { bg: "#3f5e36", ring: "#3f5e36", text: "#172012", chipBg: "#dde7d6" },
-  // ochre
-  { bg: "#a87c34", ring: "#a87c34", text: "#3a2a10", chipBg: "#efddb8" },
-  // plum
-  { bg: "#7a4a5f", ring: "#7a4a5f", text: "#2a161e", chipBg: "#ead5dc" },
-  // slate
-  { bg: "#5d6b78", ring: "#5d6b78", text: "#1d2429", chipBg: "#dde2e6" },
+export interface MemberColour {
+  /** Saturated accent for left-rail / dot / time-pill / icon. */
+  accent: string;
+  /** Soft tinted background for the chip body. */
+  soft: string;
+  /** Readable text colour against the soft background. */
+  text: string;
+}
+
+const PALETTE: ReadonlyArray<MemberColour> = [
+  { accent: "#2563eb", soft: "#eff6ff", text: "#1d4ed8" }, // blue
+  { accent: "#7c3aed", soft: "#f5f3ff", text: "#6d28d9" }, // violet
+  { accent: "#059669", soft: "#ecfdf5", text: "#047857" }, // emerald
+  { accent: "#d97706", soft: "#fffbeb", text: "#b45309" }, // amber
+  { accent: "#e11d48", soft: "#fff1f2", text: "#be123c" }, // rose
+  { accent: "#4f46e5", soft: "#eef2ff", text: "#4338ca" }, // indigo
+  { accent: "#0891b2", soft: "#ecfeff", text: "#0e7490" }, // cyan
 ];
 
 function hash(id: string): number {
@@ -27,9 +30,7 @@ function hash(id: string): number {
   return Math.abs(h);
 }
 
-export function colourFor(memberId: string | null | undefined): typeof PALETTE[number] {
-  if (!memberId) return PALETTE[5]; // grey-ish fallback
+export function colourFor(memberId: string | null | undefined): MemberColour {
+  if (!memberId) return { accent: "#64748b", soft: "#f1f5f9", text: "#475569" };
   return PALETTE[hash(memberId) % PALETTE.length];
 }
-
-export type MemberColour = ReturnType<typeof colourFor>;

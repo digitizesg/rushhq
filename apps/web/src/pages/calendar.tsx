@@ -65,12 +65,12 @@ export default function CalendarPage() {
       <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
         <div>
           <p className="text-[12px] uppercase tracking-wider text-muted mb-1">Calendar</p>
-          <h1 className="font-serif text-[28px] font-medium text-ink tnum">
+          <h1 className="text-[28px] font-medium text-ink tnum">
             {viewLabel(view, anchor)}
           </h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex items-center bg-white border border-border-warm rounded-full p-0.5">
+          <div className="inline-flex items-center bg-white border border-line rounded-full p-0.5">
             {VIEW_OPTIONS.map((o) => (
               <button
                 key={o.value}
@@ -78,7 +78,7 @@ export default function CalendarPage() {
                 onClick={() => setView(o.value)}
                 className={[
                   "px-3 h-8 rounded-full text-[13px] font-medium transition-colors",
-                  view === o.value ? "bg-sage text-white" : "text-muted hover:text-ink",
+                  view === o.value ? "bg-primary text-white" : "text-muted hover:text-ink",
                 ].join(" ")}
               >
                 {o.label}
@@ -89,7 +89,7 @@ export default function CalendarPage() {
             <button
               type="button"
               onClick={() => setAnchor((d) => shiftAnchor(view, d, -1))}
-              className="size-9 grid place-items-center rounded-md bg-white border border-border-warm text-muted hover:text-ink"
+              className="size-9 grid place-items-center rounded-md bg-white border border-line text-muted hover:text-ink"
               aria-label="Previous"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
@@ -99,14 +99,14 @@ export default function CalendarPage() {
             <button
               type="button"
               onClick={() => setAnchor(new Date())}
-              className="h-9 px-3 rounded-md bg-white border border-border-warm text-[13px] text-muted hover:text-ink"
+              className="h-9 px-3 rounded-md bg-white border border-line text-[13px] text-muted hover:text-ink"
             >
               Today
             </button>
             <button
               type="button"
               onClick={() => setAnchor((d) => shiftAnchor(view, d, 1))}
-              className="size-9 grid place-items-center rounded-md bg-white border border-border-warm text-muted hover:text-ink"
+              className="size-9 grid place-items-center rounded-md bg-white border border-line text-muted hover:text-ink"
               aria-label="Next"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
@@ -121,13 +121,13 @@ export default function CalendarPage() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-md border border-coral/40 bg-coral/[0.06] text-coral text-[13px] px-4 py-3">
+        <div className="mb-4 rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[13px] px-4 py-3">
           {error}
         </div>
       )}
 
       {loading && events.length === 0 ? (
-        <div className="bg-white border border-border-warm rounded-lg p-10 text-center text-muted text-[14px]">
+        <div className="bg-white border border-line rounded-lg p-10 text-center text-muted text-[14px]">
           Loading…
         </div>
       ) : view === "month" ? (

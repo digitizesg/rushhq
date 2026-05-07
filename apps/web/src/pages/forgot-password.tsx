@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
   return (
     <main className="min-h-dvh grid place-items-center px-6 py-12">
       <div className="w-full max-w-sm">
-        <p className="font-serif text-3xl text-ink mb-1">Rush HQ</p>
+        <p className="text-3xl text-ink mb-1">Rush HQ</p>
         <p className="text-muted text-[14px] mb-8">Reset your password</p>
         {sent ? (
           <div className="space-y-4">
@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
             </p>
             <Link
               to="/login"
-              className="text-[13px] text-sage underline-offset-2 hover:underline"
+              className="text-[13px] text-primary underline-offset-2 hover:underline"
             >
               Back to sign in
             </Link>
@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
             {error && (
-              <p className="text-coral text-[13px]" role="alert">{error}</p>
+              <p className="text-danger text-[13px]" role="alert">{error}</p>
             )}
             <Button type="submit" className="w-full" loading={submitting}>
               Send reset link

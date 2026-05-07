@@ -70,7 +70,7 @@ export default function AdminPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[12px] uppercase tracking-wider text-muted mb-1">Admin</p>
-          <h1 className="font-serif text-[28px] font-medium text-ink">
+          <h1 className="text-[28px] font-medium text-ink">
             Family and dispatch
           </h1>
         </div>
@@ -78,16 +78,16 @@ export default function AdminPage() {
       </div>
 
       {error && (
-        <div className="rounded-md border border-coral/40 bg-coral/[0.06] text-coral text-[13px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[13px] px-4 py-3">
           {error}
         </div>
       )}
 
       <section>
-        <p className="font-serif text-[18px] font-medium text-ink mb-3">Members</p>
-        <div className="bg-white border border-border-warm rounded-lg overflow-x-auto">
+        <p className="text-[18px] font-medium text-ink mb-3">Members</p>
+        <div className="bg-white border border-line rounded-lg overflow-x-auto">
           <table className="w-full text-[14px] min-w-[640px]">
-            <thead className="bg-paper text-muted text-left text-[12.5px]">
+            <thead className="bg-soft text-muted text-left text-[12.5px]">
               <tr>
                 <th className="font-medium px-4 py-2.5">Short name</th>
                 <th className="font-medium px-4 py-2.5">Full name</th>
@@ -105,7 +105,7 @@ export default function AdminPage() {
                 </tr>
               )}
               {rows.map((r) => (
-                <tr key={r.member.id} className="border-t border-border-warm">
+                <tr key={r.member.id} className="border-t border-line">
                   <td className="px-4 py-3 text-ink">{r.member.short_name}</td>
                   <td className="px-4 py-3 text-ink">{r.member.full_name}</td>
                   <td className="px-4 py-3 capitalize text-muted">{r.member.role}</td>
@@ -144,12 +144,12 @@ export default function AdminPage() {
       </section>
 
       <section>
-        <p className="font-serif text-[18px] font-medium text-ink mb-3">
+        <p className="text-[18px] font-medium text-ink mb-3">
           Recent notifications
         </p>
-        <div className="bg-white border border-border-warm rounded-lg overflow-x-auto">
+        <div className="bg-white border border-line rounded-lg overflow-x-auto">
           <table className="w-full text-[13.5px] min-w-[720px]">
-            <thead className="bg-paper text-muted text-left text-[12.5px]">
+            <thead className="bg-soft text-muted text-left text-[12.5px]">
               <tr>
                 <th className="font-medium px-4 py-2.5">When</th>
                 <th className="font-medium px-4 py-2.5">Channel</th>
@@ -170,7 +170,7 @@ export default function AdminPage() {
               {logs.map((row) => {
                 const member = rows.find((r) => r.member.id === row.member_id)?.member;
                 return (
-                  <tr key={row.id} className="border-t border-border-warm">
+                  <tr key={row.id} className="border-t border-line">
                     <td className="px-4 py-3 tnum text-ink">
                       {format(new Date(row.dispatched_at), "EEE d LLL HH:mm")}
                     </td>
@@ -238,11 +238,11 @@ function classify(c: TelegramContact | null): RowState["contactState"] {
 
 function TelegramBadge({ state }: { state: RowState["contactState"] }) {
   const styles: Record<RowState["contactState"], { bg: string; text: string; label: string }> = {
-    "not-setup": { bg: "bg-paper", text: "text-muted", label: "Not set up" },
-    pending:    { bg: "bg-paper", text: "text-honey", label: "Pending" },
-    expired:    { bg: "bg-paper", text: "text-coral", label: "Expired" },
-    linked:     { bg: "bg-sage-soft", text: "text-sage", label: "Linked" },
-    loading:    { bg: "bg-paper", text: "text-muted", label: "…" },
+    "not-setup": { bg: "bg-soft", text: "text-muted", label: "Not set up" },
+    pending:    { bg: "bg-soft", text: "text-amber", label: "Pending" },
+    expired:    { bg: "bg-soft", text: "text-danger", label: "Expired" },
+    linked:     { bg: "bg-primary-soft", text: "text-primary", label: "Linked" },
+    loading:    { bg: "bg-soft", text: "text-muted", label: "…" },
   };
   const s = styles[state];
   return (
@@ -254,10 +254,10 @@ function TelegramBadge({ state }: { state: RowState["contactState"] }) {
 
 function StatusPill({ status }: { status: DispatchLogEntry["status"] }) {
   const map: Record<DispatchLogEntry["status"], { bg: string; text: string }> = {
-    sent:    { bg: "bg-sage-soft", text: "text-sage" },
-    queued:  { bg: "bg-paper", text: "text-muted" },
-    skipped: { bg: "bg-paper", text: "text-muted" },
-    failed:  { bg: "bg-paper", text: "text-coral" },
+    sent:    { bg: "bg-primary-soft", text: "text-primary" },
+    queued:  { bg: "bg-soft", text: "text-muted" },
+    skipped: { bg: "bg-soft", text: "text-muted" },
+    failed:  { bg: "bg-soft", text: "text-danger" },
   };
   const s = map[status];
   return (
@@ -293,7 +293,7 @@ function ActiveToggle({
       }}
       className={[
         "relative inline-flex h-5 w-9 rounded-full transition-colors",
-        member.active ? "bg-sage" : "bg-border-warm",
+        member.active ? "bg-primary" : "bg-border-warm",
         busy ? "opacity-60" : "",
       ].join(" ")}
     >
@@ -393,17 +393,17 @@ function AddMemberForm({ onAdded, onCancelled }: AddMemberFormProps) {
         </Select>
       </div>
       {error && (
-        <p role="alert" className="text-coral text-[13px]">
+        <p role="alert" className="text-danger text-[13px]">
           {error}
         </p>
       )}
       <p className="text-[12.5px] text-muted">
         This creates a family-member record. To give them a sign-in, create
         their auth user in Supabase, then link the two by setting
-        <code className="mx-1 px-1 rounded bg-paper">family_members.auth_user_id</code>
+        <code className="mx-1 px-1 rounded bg-soft">family_members.auth_user_id</code>
         — see README step 11. A one-click flow is on the roadmap.
       </p>
-      <div className="flex justify-end gap-2 pt-2 border-t border-border-warm">
+      <div className="flex justify-end gap-2 pt-2 border-t border-line">
         <Button type="button" variant="secondary" onClick={onCancelled}>
           Cancel
         </Button>

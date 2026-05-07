@@ -87,11 +87,11 @@ export default function SettingsPage() {
     <section className="mx-auto max-w-[760px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
       <div>
         <p className="text-[12px] uppercase tracking-wider text-muted mb-1">Settings</p>
-        <h1 className="font-serif text-[28px] font-medium text-ink">Your account</h1>
+        <h1 className="text-[28px] font-medium text-ink">Your account</h1>
       </div>
 
-      <section className="bg-white border border-border-warm rounded-lg p-6">
-        <p className="font-serif text-[18px] font-medium text-ink mb-3">Profile</p>
+      <section className="bg-white border border-line rounded-lg p-6">
+        <p className="text-[18px] font-medium text-ink mb-3">Profile</p>
         <dl className="grid grid-cols-3 gap-y-2 text-[14px]">
           <dt className="text-muted">Short name</dt>
           <dd className="col-span-2 text-ink">{member?.short_name}</dd>
@@ -104,16 +104,16 @@ export default function SettingsPage() {
         </dl>
       </section>
 
-      <section className="bg-white border border-border-warm rounded-lg p-6">
-        <p className="font-serif text-[18px] font-medium text-ink mb-1">
+      <section className="bg-white border border-line rounded-lg p-6">
+        <p className="text-[18px] font-medium text-ink mb-1">
           Notifications
         </p>
         <p className="text-muted text-[13.5px] mb-4">
           Pick how you'd like each kind of message to reach you.
         </p>
-        <div className="overflow-hidden rounded-md border border-border-warm">
+        <div className="overflow-hidden rounded-md border border-line">
           <table className="w-full text-[14px]">
-            <thead className="bg-paper">
+            <thead className="bg-soft">
               <tr className="text-left text-muted text-[12.5px]">
                 <th className="font-medium px-4 py-2.5">Event</th>
                 <th className="font-medium px-4 py-2.5 w-28">Telegram</th>
@@ -125,7 +125,7 @@ export default function SettingsPage() {
                 const row = prefs[t.value];
                 const isLast = idx === NOTIFICATION_EVENT_TYPES.length - 1;
                 return (
-                  <tr key={t.value} className={isLast ? "" : "border-b border-border-warm"}>
+                  <tr key={t.value} className={isLast ? "" : "border-b border-line"}>
                     <td className="px-4 py-3 text-ink">{t.label}</td>
                     <td className="px-4 py-3">
                       <Toggle
@@ -155,8 +155,8 @@ export default function SettingsPage() {
         <TelegramCard memberId={member.id} heading="Telegram" />
       )}
 
-      <section className="bg-white border border-border-warm rounded-lg p-6">
-        <p className="font-serif text-[18px] font-medium text-ink mb-1">Password</p>
+      <section className="bg-white border border-line rounded-lg p-6">
+        <p className="text-[18px] font-medium text-ink mb-1">Password</p>
         <p className="text-muted text-[13.5px] mb-4">
           We'll email you a link to set a new one.
         </p>
@@ -164,10 +164,10 @@ export default function SettingsPage() {
           Send reset email
         </Button>
         {resetSent && (
-          <p className="mt-3 text-sage text-[13px]">Reset link sent. Check your inbox.</p>
+          <p className="mt-3 text-primary text-[13px]">Reset link sent. Check your inbox.</p>
         )}
         {resetError && (
-          <p className="mt-3 text-coral text-[13px]">{resetError}</p>
+          <p className="mt-3 text-danger text-[13px]">{resetError}</p>
         )}
       </section>
     </section>
@@ -195,7 +195,7 @@ function Toggle({
       onClick={() => onChange(!checked)}
       className={[
         "relative inline-flex h-6 w-11 rounded-full transition-colors",
-        checked ? "bg-sage" : "bg-border-warm",
+        checked ? "bg-primary" : "bg-border-warm",
         disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
       ].join(" ")}
     >

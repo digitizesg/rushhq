@@ -81,8 +81,8 @@ export default function MfaEnrolPage() {
 
   return (
     <main className="min-h-dvh grid place-items-center px-6 py-12">
-      <div className="w-full max-w-md bg-white border border-border-warm rounded-lg p-7">
-        <p className="font-serif text-2xl text-ink mb-1">Set up two-factor</p>
+      <div className="w-full max-w-md bg-white border border-line rounded-lg p-7">
+        <p className="text-2xl text-ink mb-1">Set up two-factor</p>
         <p className="text-muted text-[14px] mb-6">
           Two-factor sign-in is required for parent accounts. Scan this QR code
           with an authenticator app (1Password, Authy, Google Authenticator),
@@ -90,7 +90,7 @@ export default function MfaEnrolPage() {
         </p>
         {pending ? (
           <div className="space-y-5">
-            <div className="bg-paper border border-border-warm rounded-md p-4 grid place-items-center">
+            <div className="bg-soft border border-line rounded-md p-4 grid place-items-center">
               <img
                 src={pending.qr}
                 alt="QR code for two-factor enrolment"
@@ -101,7 +101,7 @@ export default function MfaEnrolPage() {
               <summary className="cursor-pointer hover:text-ink">
                 Can't scan? Show the secret key
               </summary>
-              <p className="mt-2 font-mono text-[12.5px] text-ink break-all bg-paper border border-border-warm rounded-md p-3">
+              <p className="mt-2 font-mono text-[12.5px] text-ink break-all bg-soft border border-line rounded-md p-3">
                 {pending.secret}
               </p>
             </details>
@@ -117,7 +117,7 @@ export default function MfaEnrolPage() {
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
               />
               {error && (
-                <p className="text-coral text-[13px]" role="alert">{error}</p>
+                <p className="text-danger text-[13px]" role="alert">{error}</p>
               )}
               <Button type="submit" className="w-full" loading={submitting}>
                 Verify and continue

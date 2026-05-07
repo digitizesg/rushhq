@@ -1,36 +1,62 @@
 @import "tailwindcss";
 
+/* Token names are intentionally semantic, not colour-named. The whole
+   palette can be swapped without touching any component. */
 @theme {
-  --color-cream: #fbf6ec;
-  --color-paper: #f4ecd8;
-  --color-border-warm: #e8dcc4;
-  --color-ink: #2a2118;
-  --color-muted: #6b5d4c;
-  --color-sage: #5d8a4e;
-  --color-sage-soft: #e7f0e1;
-  --color-honey: #d4a574;
-  --color-coral: #c25f4a;
+  /* Surfaces */
+  --color-page: #f5f6f8;        /* page background */
+  --color-card: #ffffff;        /* cards */
+  --color-soft: #f1f3f7;        /* hover / secondary surfaces */
+  --color-line: #e6e8ee;        /* neutral hairline */
+  --color-line-strong: #d1d5db;
 
-  --font-serif: "Fraunces", "Iowan Old Style", Georgia, serif;
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  /* Text */
+  --color-ink: #0f172a;         /* near-black slate */
+  --color-ink-soft: #334155;
+  --color-muted: #64748b;
+  --color-subtle: #94a3b8;
+
+  /* Brand accent — fresh blue */
+  --color-primary: #2563eb;
+  --color-primary-strong: #1d4ed8;
+  --color-primary-soft: #eff6ff;
+
+  /* Status / category colours, matched to soft tints for chip backgrounds */
+  --color-blue: #2563eb;        --color-blue-soft: #eff6ff;
+  --color-violet: #7c3aed;      --color-violet-soft: #f5f3ff;
+  --color-emerald: #059669;     --color-emerald-soft: #ecfdf5;
+  --color-amber: #d97706;       --color-amber-soft: #fffbeb;
+  --color-rose: #e11d48;        --color-rose-soft: #fff1f2;
+  --color-indigo: #4f46e5;      --color-indigo-soft: #eef2ff;
+
+  /* Aliases used by status pills */
+  --color-success: #059669;
+  --color-success-soft: #ecfdf5;
+  --color-danger: #e11d48;
+  --color-danger-soft: #fff1f2;
+
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+               Monaco, "Courier New", monospace;
 
   --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
 }
 
 html, body {
-  background: var(--color-cream);
+  background: var(--color-page);
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
 }
 
 button {
   font-family: inherit;
 }
 
-/* Numerals align in tables and time displays. */
 .tnum {
   font-variant-numeric: tabular-nums;
 }

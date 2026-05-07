@@ -259,15 +259,15 @@ export function EventForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="w-full rounded-md border border-border-warm bg-white px-3 py-2 text-[14px] text-ink focus:outline-2 focus:outline-offset-0 focus:outline-sage"
+          className="w-full rounded-md border border-line bg-white px-3 py-2 text-[14px] text-ink focus:outline-2 focus:outline-offset-0 focus:outline-primary"
         />
       </label>
 
-      <div className="bg-white border border-border-warm rounded-md p-4 space-y-3">
+      <div className="bg-white border border-line rounded-md p-4 space-y-3">
         <label className="flex items-center gap-2 text-[14px] text-ink cursor-pointer">
           <input
             type="checkbox"
-            className="size-4 rounded border-border-warm accent-sage"
+            className="size-4 rounded border-line accent-primary"
             checked={allDay}
             onChange={(e) => setAllDay(e.target.checked)}
           />
@@ -321,15 +321,15 @@ export function EventForm({
 
       <div>
         <p className="block text-[13px] font-medium text-ink mb-1.5">Attendees</p>
-        <div className="bg-white border border-border-warm rounded-md p-3 grid sm:grid-cols-2 gap-1">
+        <div className="bg-white border border-line rounded-md p-3 grid sm:grid-cols-2 gap-1">
           {members.map((m) => (
             <label
               key={m.id}
-              className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-paper cursor-pointer"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-soft cursor-pointer"
             >
               <input
                 type="checkbox"
-                className="size-4 rounded border-border-warm accent-sage"
+                className="size-4 rounded border-line accent-primary"
                 checked={attendeeIds.includes(m.id)}
                 onChange={() => toggleAttendee(m.id)}
               />
@@ -362,7 +362,7 @@ export function EventForm({
           <button
             type="button"
             onClick={addReminder}
-            className="text-[13px] text-sage hover:underline underline-offset-2"
+            className="text-[13px] text-primary hover:underline underline-offset-2"
           >
             + Add reminder
           </button>
@@ -374,7 +374,7 @@ export function EventForm({
             {reminders.map((r) => (
               <div
                 key={r.id}
-                className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end bg-white border border-border-warm rounded-md p-2.5"
+                className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end bg-white border border-line rounded-md p-2.5"
               >
                 <Select
                   label="When"
@@ -406,7 +406,7 @@ export function EventForm({
                   type="button"
                   onClick={() => removeReminder(r.id)}
                   aria-label="Remove reminder"
-                  className="size-10 grid place-items-center text-muted hover:text-coral rounded-md hover:bg-paper"
+                  className="size-10 grid place-items-center text-muted hover:text-danger rounded-md hover:bg-soft"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
                     <path
@@ -425,16 +425,16 @@ export function EventForm({
       </div>
 
       {error && (
-        <p role="alert" className="text-coral text-[13px]">
+        <p role="alert" className="text-danger text-[13px]">
           {error}
         </p>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border-warm">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-line">
         {isEditing && onDeleted && (
           confirmingDelete ? (
             <div className="flex items-center gap-2">
-              <span className="text-[13px] text-coral">Sure?</span>
+              <span className="text-[13px] text-danger">Sure?</span>
               <Button
                 type="button"
                 size="sm"
