@@ -1,20 +1,416 @@
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { format } from "date-fns";
+import { supabase } from "@/lib/supabase";
+import type {
+  DispatchLogEntry,
+  FamilyMember,
+  MemberRole,
+  MemberType,
+  TelegramContact,
+} from "@/lib/types";
+import { Modal } from "@/components/modal";
+import { Button } from "@/components/button";
+import { TextField } from "@/components/text-field";
+import { Select } from "@/components/select";
+import { TelegramCard } from "@/components/telegram-card";
+
+interface RowState {
+  member: FamilyMember;
+  contactState: "loading" | "not-setup" | "pending" | "linked" | "expired";
+}
+
 export default function AdminPage() {
+  const [rows, setRows] = useState<RowState[]>([]);
+  const [logs, setLogs] = useState<DispatchLogEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [addOpen, setAddOpen] = useState(false);
+  const [telegramFor, setTelegramFor] = useState<FamilyMember | null>(null);
+
+  async function load() {
+    setLoading(true);
+    setError(null);
+    try {
+      const [memberRes, contactRes, logRes] = await Promise.all([
+        supabase.from("family_members").select("*").order("short_name"),
+        supabase.from("telegram_contacts").select("*"),
+        supabase
+          .from("notification_dispatch_log")
+          .select("*")
+          .order("dispatched_at", { ascending: false })
+          .limit(50),
+      ]);
+      if (memberRes.error) throw memberRes.error;
+      if (contactRes.error) throw contactRes.error;
+      if (logRes.error) throw logRes.error;
+
+      const contactByMember = new Map<string, TelegramContact>(
+        ((contactRes.data as TelegramContact[]) ?? []).map((c) => [c.member_id, c]),
+      );
+      const memberRows = ((memberRes.data as FamilyMember[]) ?? []).map((m) => ({
+        member: m,
+        contactState: classify(contactByMember.get(m.id) ?? null),
+      }));
+      setRows(memberRows);
+      setLogs((logRes.data as DispatchLogEntry[]) ?? []);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void load();
+  }, []);
+
   return (
-    <section className="mx-auto max-w-[1100px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
-      <div>
-        <p className="text-[12px] uppercase tracking-wider text-muted mb-1">
-          Admin
-        </p>
-        <h1 className="font-serif text-[28px] font-medium text-ink">
-          Family members and dispatch
-        </h1>
+    <section className="mx-auto max-w-[1100px] px-4 sm:px-6 py-6 sm:py-10 space-y-8">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[12px] uppercase tracking-wider text-muted mb-1">Admin</p>
+          <h1 className="font-serif text-[28px] font-medium text-ink">
+            Family and dispatch
+          </h1>
+        </div>
+        <Button onClick={() => setAddOpen(true)}>+ Add member</Button>
       </div>
-      <div className="bg-white border border-border-warm rounded-lg p-6">
-        <p className="text-muted text-[14px]">
-          Member roster, add-member flow, Telegram link generation, and the
-          dispatch log land in the next build chunk.
+
+      {error && (
+        <div className="rounded-md border border-coral/40 bg-coral/[0.06] text-coral text-[13px] px-4 py-3">
+          {error}
+        </div>
+      )}
+
+      <section>
+        <p className="font-serif text-[18px] font-medium text-ink mb-3">Members</p>
+        <div className="bg-white border border-border-warm rounded-lg overflow-x-auto">
+          <table className="w-full text-[14px] min-w-[640px]">
+            <thead className="bg-paper text-muted text-left text-[12.5px]">
+              <tr>
+                <th className="font-medium px-4 py-2.5">Short name</th>
+                <th className="font-medium px-4 py-2.5">Full name</th>
+                <th className="font-medium px-4 py-2.5">Role</th>
+                <th className="font-medium px-4 py-2.5">Type</th>
+                <th className="font-medium px-4 py-2.5">Active</th>
+                <th className="font-medium px-4 py-2.5">Telegram</th>
+                <th className="font-medium px-4 py-2.5"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && rows.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-6 text-muted text-center">Loading…</td>
+                </tr>
+              )}
+              {rows.map((r) => (
+                <tr key={r.member.id} className="border-t border-border-warm">
+                  <td className="px-4 py-3 text-ink">{r.member.short_name}</td>
+                  <td className="px-4 py-3 text-ink">{r.member.full_name}</td>
+                  <td className="px-4 py-3 capitalize text-muted">{r.member.role}</td>
+                  <td className="px-4 py-3 capitalize text-muted">{r.member.member_type}</td>
+                  <td className="px-4 py-3">
+                    <ActiveToggle
+                      member={r.member}
+                      onChange={(active) => {
+                        setRows((prev) =>
+                          prev.map((row) =>
+                            row.member.id === r.member.id
+                              ? { ...row, member: { ...row.member, active } }
+                              : row,
+                          ),
+                        );
+                      }}
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <TelegramBadge state={r.contactState} />
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setTelegramFor(r.member)}
+                    >
+                      Manage Telegram
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <p className="font-serif text-[18px] font-medium text-ink mb-3">
+          Recent notifications
         </p>
-      </div>
+        <div className="bg-white border border-border-warm rounded-lg overflow-x-auto">
+          <table className="w-full text-[13.5px] min-w-[720px]">
+            <thead className="bg-paper text-muted text-left text-[12.5px]">
+              <tr>
+                <th className="font-medium px-4 py-2.5">When</th>
+                <th className="font-medium px-4 py-2.5">Channel</th>
+                <th className="font-medium px-4 py-2.5">Status</th>
+                <th className="font-medium px-4 py-2.5">Member</th>
+                <th className="font-medium px-4 py-2.5">Scheduled for</th>
+                <th className="font-medium px-4 py-2.5">Note</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-6 text-muted text-center">
+                    No dispatches yet. The dispatcher fires every five minutes.
+                  </td>
+                </tr>
+              )}
+              {logs.map((row) => {
+                const member = rows.find((r) => r.member.id === row.member_id)?.member;
+                return (
+                  <tr key={row.id} className="border-t border-border-warm">
+                    <td className="px-4 py-3 tnum text-ink">
+                      {format(new Date(row.dispatched_at), "EEE d LLL HH:mm")}
+                    </td>
+                    <td className="px-4 py-3 capitalize text-ink">{row.channel}</td>
+                    <td className="px-4 py-3">
+                      <StatusPill status={row.status} />
+                    </td>
+                    <td className="px-4 py-3 text-ink">
+                      {member?.short_name ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 tnum text-muted">
+                      {row.scheduled_for
+                        ? format(new Date(row.scheduled_for), "EEE d LLL HH:mm")
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-muted">
+                      {row.error_message ?? ""}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <Modal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        title="Add family member"
+      >
+        <AddMemberForm
+          onAdded={async () => {
+            setAddOpen(false);
+            await load();
+          }}
+          onCancelled={() => setAddOpen(false)}
+        />
+      </Modal>
+
+      <Modal
+        open={!!telegramFor}
+        onClose={() => setTelegramFor(null)}
+        title={telegramFor ? `${telegramFor.short_name} · Telegram` : ""}
+      >
+        {telegramFor && (
+          <TelegramCard
+            memberId={telegramFor.id}
+            heading={`${telegramFor.short_name}'s Telegram`}
+          />
+        )}
+      </Modal>
     </section>
+  );
+}
+
+function classify(c: TelegramContact | null): RowState["contactState"] {
+  if (!c) return "not-setup";
+  if (c.chat_id != null) return "linked";
+  if (c.pending_token && c.pending_token_expires_at) {
+    return new Date(c.pending_token_expires_at) > new Date() ? "pending" : "expired";
+  }
+  return "not-setup";
+}
+
+function TelegramBadge({ state }: { state: RowState["contactState"] }) {
+  const styles: Record<RowState["contactState"], { bg: string; text: string; label: string }> = {
+    "not-setup": { bg: "bg-paper", text: "text-muted", label: "Not set up" },
+    pending:    { bg: "bg-paper", text: "text-honey", label: "Pending" },
+    expired:    { bg: "bg-paper", text: "text-coral", label: "Expired" },
+    linked:     { bg: "bg-sage-soft", text: "text-sage", label: "Linked" },
+    loading:    { bg: "bg-paper", text: "text-muted", label: "…" },
+  };
+  const s = styles[state];
+  return (
+    <span className={`inline-flex items-center px-2 h-6 rounded-full text-[12px] ${s.bg} ${s.text}`}>
+      {s.label}
+    </span>
+  );
+}
+
+function StatusPill({ status }: { status: DispatchLogEntry["status"] }) {
+  const map: Record<DispatchLogEntry["status"], { bg: string; text: string }> = {
+    sent:    { bg: "bg-sage-soft", text: "text-sage" },
+    queued:  { bg: "bg-paper", text: "text-muted" },
+    skipped: { bg: "bg-paper", text: "text-muted" },
+    failed:  { bg: "bg-paper", text: "text-coral" },
+  };
+  const s = map[status];
+  return (
+    <span className={`inline-flex items-center px-2 h-6 rounded-full text-[12px] capitalize ${s.bg} ${s.text}`}>
+      {status}
+    </span>
+  );
+}
+
+function ActiveToggle({
+  member,
+  onChange,
+}: {
+  member: FamilyMember;
+  onChange: (active: boolean) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={member.active}
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        const next = !member.active;
+        const { error } = await supabase
+          .from("family_members")
+          .update({ active: next })
+          .eq("id", member.id);
+        setBusy(false);
+        if (!error) onChange(next);
+      }}
+      className={[
+        "relative inline-flex h-5 w-9 rounded-full transition-colors",
+        member.active ? "bg-sage" : "bg-border-warm",
+        busy ? "opacity-60" : "",
+      ].join(" ")}
+    >
+      <span
+        className="absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform"
+        style={{ transform: member.active ? "translateX(16px)" : "translateX(0)" }}
+      />
+    </button>
+  );
+}
+
+interface AddMemberFormProps {
+  onAdded: () => Promise<void>;
+  onCancelled: () => void;
+}
+
+function AddMemberForm({ onAdded, onCancelled }: AddMemberFormProps) {
+  const [shortName, setShortName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<MemberRole>("helper");
+  const [memberType, setMemberType] = useState<MemberType>("helper");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Keep memberType in step with role unless the operator explicitly
+  // changed it. Simple heuristic: type defaults to whatever the role
+  // currently is.
+  const inferredType = useMemo<MemberType>(() => role, [role]);
+  const effectiveType = memberType === inferredType ? inferredType : memberType;
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (!shortName.trim() || !fullName.trim()) {
+      setError("Short name and full name are required.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("family_members").insert({
+        short_name: shortName.trim(),
+        full_name: fullName.trim(),
+        email: email.trim() || null,
+        role,
+        member_type: effectiveType,
+        active: true,
+      });
+      if (error) throw error;
+      await onAdded();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid sm:grid-cols-2 gap-3">
+        <TextField
+          label="Short name"
+          required
+          value={shortName}
+          onChange={(e) => setShortName(e.target.value)}
+        />
+        <TextField
+          label="Full name"
+          required
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+        />
+      </div>
+      <TextField
+        label="Email (optional)"
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        hint="Optional. Used by the email-channel reminders. The auth user is linked separately, see README step 11."
+      />
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Select label="Role" value={role} onChange={(e) => setRole(e.target.value as MemberRole)}>
+          <option value="parent">Parent</option>
+          <option value="helper">Helper</option>
+          <option value="child">Child</option>
+        </Select>
+        <Select
+          label="Member type"
+          value={memberType}
+          onChange={(e) => setMemberType(e.target.value as MemberType)}
+        >
+          <option value="parent">Parent</option>
+          <option value="helper">Helper</option>
+          <option value="child">Child</option>
+        </Select>
+      </div>
+      {error && (
+        <p role="alert" className="text-coral text-[13px]">
+          {error}
+        </p>
+      )}
+      <p className="text-[12.5px] text-muted">
+        This creates a family-member record. To give them a sign-in, create
+        their auth user in Supabase, then link the two by setting
+        <code className="mx-1 px-1 rounded bg-paper">family_members.auth_user_id</code>
+        — see README step 11. A one-click flow is on the roadmap.
+      </p>
+      <div className="flex justify-end gap-2 pt-2 border-t border-border-warm">
+        <Button type="button" variant="secondary" onClick={onCancelled}>
+          Cancel
+        </Button>
+        <Button type="submit" loading={submitting}>
+          Add member
+        </Button>
+      </div>
+    </form>
   );
 }
