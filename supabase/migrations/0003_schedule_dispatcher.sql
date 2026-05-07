@@ -1,19 +1,24 @@
 -- Rush HQ — schedule the dispatcher
 -- ==================================
 -- Wires pg_cron + pg_net so Postgres calls the dispatch-reminders edge
--- function every 5 minutes. Run this AFTER deploying the edge function
--- and after you've set the project URL + service role key as
--- database settings (see runbook in README.md, step 9).
+-- function every 5 minutes.
 --
--- Required GUCs (set via the Supabase SQL editor, one-time):
---   alter database postgres set "app.settings.supabase_url" = 'https://YOUR_PROJECT_REF.supabase.co';
---   alter database postgres set "app.settings.service_role_key" = 'YOUR_SERVICE_ROLE_KEY';
+-- The function URL is hardcoded — it's not secret. The service role
+-- key is read from Supabase Vault, which is the recommended pattern
+-- on modern Supabase projects (ALTER DATABASE SET is locked down for
+-- security, so the older "GUC" approach no longer works).
+--
+-- Setup before running this migration:
+--
+--   In the SQL editor of the project:
+--     select vault.create_secret('YOUR_SERVICE_ROLE_KEY', 'rushhq_service_role_key');
+--
+-- Then re-run `supabase db push` so the cron job here can find the secret.
+-- The migration is idempotent — re-running drops and reschedules.
 
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 
--- Idempotent: drop any existing schedule with the same name before
--- creating it, so this migration is safe to re-run.
 do $$
 declare existing_jobid bigint;
 begin
@@ -23,15 +28,24 @@ begin
   end if;
 end $$;
 
+-- The function URL is derived from the project ref; embed it in the
+-- migration so different environments need only change this one line.
+-- The service role key is read from Vault on every fire.
 select cron.schedule(
   'rushhq-dispatch-reminders',
   '*/5 * * * *',
   $cron$
     select net.http_post(
-      url := current_setting('app.settings.supabase_url') || '/functions/v1/dispatch-reminders',
+      url := 'https://kkwslqdqwnzcpsunhdsj.supabase.co/functions/v1/dispatch-reminders',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
-        'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key')
+        'Authorization',
+          'Bearer ' || (
+            select decrypted_secret
+              from vault.decrypted_secrets
+             where name = 'rushhq_service_role_key'
+             limit 1
+          )
       ),
       body := '{}'::jsonb,
       timeout_milliseconds := 30000
@@ -40,4 +54,4 @@ select cron.schedule(
 );
 
 comment on extension pg_cron is
-  'Schedules the dispatch-reminders edge function every 5 minutes. See README.md step 9 for the one-time GUCs.';
+  'Schedules the dispatch-reminders edge function every 5 minutes. Reads the service role key from Vault (vault.create_secret(...)).';
