@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# build output
+dist/
+build/
+.vercel/
+.next/
+
+# env
+.env
+.env.*
+!.env.example
+
+# editors
+.DS_Store
+.idea/
+.vscode/
+
+# logs
+*.log
+npm-debug.log*
+
+# supabase local
+supabase/.temp/
+supabase/.branches/

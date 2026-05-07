@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #fbf6ec;
+  --color-paper: #f4ecd8;
+  --color-border-warm: #e8dcc4;
+  --color-ink: #2a2118;
+  --color-muted: #6b5d4c;
+  --color-sage: #5d8a4e;
+  --color-sage-soft: #e7f0e1;
+  --color-honey: #d4a574;
+  --color-coral: #c25f4a;
+
+  --font-serif: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+html, body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Numerals align in tables and time displays. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
