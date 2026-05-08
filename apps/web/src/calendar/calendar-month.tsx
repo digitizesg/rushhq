@@ -7,6 +7,7 @@ import {
 } from "@/lib/calendar";
 import { EventChip } from "@/calendar/event-chip";
 import type { FamilyMember } from "@/lib/types";
+import { publicHolidayOn, schoolHolidayOn } from "@/lib/sg-holidays";
 
 interface MonthGridProps {
   anchor: Date;
@@ -48,6 +49,8 @@ export function CalendarMonth({
           const inMonth = isSameMonth(day, anchor);
           const today = isToday(day);
           const weekend = isWeekend(day);
+          const ph = publicHolidayOn(day);
+          const sh = !ph ? schoolHolidayOn(day) : null;
           const visible = onDay.slice(0, 3);
           const overflow = onDay.length - visible.length;
           return (
@@ -59,7 +62,13 @@ export function CalendarMonth({
                 "group relative text-left border-b border-r border-line/70 min-h-[78px] sm:min-h-[140px] p-1 sm:p-2 flex flex-col gap-1 sm:gap-1.5 transition-colors",
                 idx % 7 === 6 ? "border-r-0" : "",
                 idx >= totalCells - 7 ? "border-b-0" : "",
-                inMonth ? "bg-white hover:bg-soft/60" : "bg-page/60 hover:bg-page",
+                ph
+                  ? "bg-rose-soft/40 hover:bg-rose-soft/60"
+                  : sh
+                    ? "bg-amber-soft/40 hover:bg-amber-soft/60"
+                    : inMonth
+                      ? "bg-white hover:bg-soft/60"
+                      : "bg-page/60 hover:bg-page",
                 "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary",
               ].join(" ")}
               title={format(day, "EEEE d LLLL")}
@@ -79,11 +88,19 @@ export function CalendarMonth({
                 >
                   {format(day, "d")}
                 </span>
-                {onDay.length > 0 && (
+                {ph ? (
+                  <span className="text-[11.5px] sm:text-[12px] font-medium text-rose truncate max-w-[60%]" title={ph.name}>
+                    {ph.name}
+                  </span>
+                ) : sh ? (
+                  <span className="text-[11.5px] sm:text-[12px] font-medium text-amber truncate max-w-[60%]" title={sh.name}>
+                    {sh.name}
+                  </span>
+                ) : onDay.length > 0 ? (
                   <span className="text-[12.5px] text-muted tnum opacity-0 group-hover:opacity-100 transition-opacity">
                     {onDay.length} {onDay.length === 1 ? "event" : "events"}
                   </span>
-                )}
+                ) : null}
               </div>
               <div className="flex flex-col gap-1 min-h-0">
                 {visible.map((occ, i) => (
