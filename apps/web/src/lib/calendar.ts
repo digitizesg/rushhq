@@ -21,7 +21,10 @@ const WEEK_OPTS = { weekStartsOn: 1 as const };
 // View ranges
 // ----------------------------------------------------------------------------
 
-export type CalendarView = "month" | "week" | "day";
+export type CalendarView = "agenda" | "month" | "week" | "day";
+
+/** Days into the future the agenda view looks at. */
+export const AGENDA_DAYS = 30;
 
 export interface ViewRange {
   start: Date;
@@ -33,6 +36,11 @@ export interface ViewRange {
 }
 
 export function rangeFor(view: CalendarView, anchor: Date): ViewRange {
+  if (view === "agenda") {
+    const start = startOfDay(anchor);
+    const end = endOfDay(addDays(start, AGENDA_DAYS - 1));
+    return { start, end, gridStart: start, gridEnd: end };
+  }
   if (view === "month") {
     const start = startOfMonth(anchor);
     const end = endOfMonth(anchor);
@@ -58,12 +66,20 @@ export function rangeFor(view: CalendarView, anchor: Date): ViewRange {
 }
 
 export function shiftAnchor(view: CalendarView, anchor: Date, direction: -1 | 1): Date {
+  if (view === "agenda") return addDays(anchor, AGENDA_DAYS * direction);
   if (view === "month") return addMonths(anchor, direction);
   if (view === "week") return addDays(anchor, 7 * direction);
   return addDays(anchor, direction);
 }
 
 export function viewLabel(view: CalendarView, anchor: Date): string {
+  if (view === "agenda") {
+    const r = rangeFor("agenda", anchor);
+    if (isSameMonth(r.start, r.end)) {
+      return `${format(r.start, "d")} – ${format(r.end, "d LLL yyyy")}`;
+    }
+    return `${format(r.start, "d LLL")} – ${format(r.end, "d LLL yyyy")}`;
+  }
   if (view === "month") return format(anchor, "LLLL yyyy");
   if (view === "week") {
     const r = rangeFor("week", anchor);

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   expandOccurrences,
   rangeFor,
@@ -8,6 +8,7 @@ import {
   type EventOccurrence,
 } from "@/lib/calendar";
 import { useCalendarData, type FullEvent } from "@/calendar/use-calendar-data";
+import { CalendarAgenda } from "@/calendar/calendar-agenda";
 import { CalendarMonth } from "@/calendar/calendar-month";
 import { CalendarWeek } from "@/calendar/calendar-week";
 import { CalendarDay } from "@/calendar/calendar-day";
@@ -25,17 +26,34 @@ interface FormState {
 }
 
 const VIEW_OPTIONS: ReadonlyArray<{ value: CalendarView; label: string }> = [
+  { value: "agenda", label: "List" },
   { value: "month", label: "Month" },
   { value: "week", label: "Week" },
   { value: "day", label: "Day" },
 ];
 
+const VIEW_STORAGE_KEY = "rushhq.calendar.view";
+
+function defaultView(): CalendarView {
+  if (typeof window === "undefined") return "month";
+  const saved = window.localStorage.getItem(VIEW_STORAGE_KEY) as CalendarView | null;
+  if (saved && ["agenda", "month", "week", "day"].includes(saved)) return saved;
+  // No prior choice — agenda is the right default on mobile, month on desktop.
+  return window.matchMedia("(max-width: 640px)").matches ? "agenda" : "month";
+}
+
 export default function CalendarPage() {
   const { isParent } = useAuth();
   const { loading, events, members, error, reload } = useCalendarData();
 
-  const [view, setView] = useState<CalendarView>("month");
+  const [view, setView] = useState<CalendarView>(defaultView);
   const [anchor, setAnchor] = useState<Date>(() => new Date());
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(VIEW_STORAGE_KEY, view);
+    }
+  }, [view]);
   const [form, setForm] = useState<FormState>({
     open: false,
     event: null,
@@ -140,6 +158,12 @@ export default function CalendarPage() {
         <div className="bg-white border border-line rounded-lg p-10 text-center text-muted text-[14px]">
           Loading…
         </div>
+      ) : view === "agenda" ? (
+        <CalendarAgenda
+          start={range.start}
+          occurrences={occurrences}
+          onSelectEvent={openEvent}
+        />
       ) : view === "month" ? (
         <CalendarMonth
           anchor={anchor}
