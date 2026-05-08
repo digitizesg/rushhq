@@ -292,14 +292,15 @@ export default function CountPage() {
                   </p>
                 </div>
                 <input
-                  type="number"
+                  type="text"
                   inputMode="numeric"
-                  min={0}
+                  pattern="[0-9]*"
                   disabled={!editable}
                   value={state.counts[c.id] ?? 0}
                   onChange={(e) => setCount(c.id, e.target.value)}
+                  onFocus={(e) => e.target.select()}
                   aria-label={`${c.name} count`}
-                  className="w-24 h-12 rounded-md border border-line bg-white px-3 text-[22px] font-medium text-ink tnum text-right focus:outline-2 focus:outline-offset-0 focus:outline-primary disabled:opacity-60"
+                  className="w-24 h-12 rounded-md border border-line bg-white px-3 text-[22px] font-medium text-ink tnum text-center focus:outline-2 focus:outline-offset-0 focus:outline-primary disabled:opacity-60"
                 />
               </li>
             ))}
