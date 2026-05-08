@@ -12,6 +12,7 @@ import { CalendarMonth } from "@/calendar/calendar-month";
 import { CalendarWeek } from "@/calendar/calendar-week";
 import { CalendarDay } from "@/calendar/calendar-day";
 import { EventForm } from "@/calendar/event-form";
+import { EventDetails } from "@/calendar/event-details";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/button";
 import { useAuth } from "@/auth/auth-context";
@@ -19,6 +20,7 @@ import { useAuth } from "@/auth/auth-context";
 interface FormState {
   open: boolean;
   event: FullEvent | null;
+  occurrence: EventOccurrence | null;
   defaultDay: Date | undefined;
 }
 
@@ -34,7 +36,12 @@ export default function CalendarPage() {
 
   const [view, setView] = useState<CalendarView>("month");
   const [anchor, setAnchor] = useState<Date>(() => new Date());
-  const [form, setForm] = useState<FormState>({ open: false, event: null, defaultDay: undefined });
+  const [form, setForm] = useState<FormState>({
+    open: false,
+    event: null,
+    occurrence: null,
+    defaultDay: undefined,
+  });
 
   const range = useMemo(() => rangeFor(view, anchor), [view, anchor]);
   const occurrences = useMemo<EventOccurrence[]>(() => {
@@ -45,19 +52,22 @@ export default function CalendarPage() {
 
   function openCreateAt(day: Date) {
     if (!canEdit) return;
-    setForm({ open: true, event: null, defaultDay: day });
+    setForm({ open: true, event: null, occurrence: null, defaultDay: day });
   }
 
   function openEvent(occ: EventOccurrence) {
-    // Helpers can view but only parents can edit. We still surface the form
-    // for parents — for helpers we show a read-only summary modal in future.
-    // For v1, helpers see no-op clicks; we'd add a view-only modal here.
-    if (!canEdit) return;
-    setForm({ open: true, event: events.find((e) => e.id === occ.event.id) ?? null, defaultDay: undefined });
+    // Parents see the editable EventForm; helpers see a read-only
+    // EventDetails. Both branches share the same modal shell below.
+    setForm({
+      open: true,
+      event: events.find((e) => e.id === occ.event.id) ?? null,
+      occurrence: occ,
+      defaultDay: undefined,
+    });
   }
 
   function closeForm() {
-    setForm({ open: false, event: null, defaultDay: undefined });
+    setForm({ open: false, event: null, occurrence: null, defaultDay: undefined });
   }
 
   return (
@@ -156,23 +166,35 @@ export default function CalendarPage() {
       <Modal
         open={form.open}
         onClose={closeForm}
-        title={form.event ? "Edit event" : "New event"}
+        title={
+          canEdit
+            ? form.event ? "Edit event" : "New event"
+            : "Event"
+        }
         size="lg"
       >
-        <EventForm
-          members={members}
-          event={form.event}
-          defaultDay={form.defaultDay}
-          onSaved={async () => {
-            closeForm();
-            await reload();
-          }}
-          onCancelled={closeForm}
-          onDeleted={async () => {
-            closeForm();
-            await reload();
-          }}
-        />
+        {canEdit ? (
+          <EventForm
+            members={members}
+            event={form.event}
+            defaultDay={form.defaultDay}
+            onSaved={async () => {
+              closeForm();
+              await reload();
+            }}
+            onCancelled={closeForm}
+            onDeleted={async () => {
+              closeForm();
+              await reload();
+            }}
+          />
+        ) : form.event && form.occurrence ? (
+          <EventDetails
+            event={form.event}
+            occurrence={form.occurrence}
+            members={members}
+          />
+        ) : null}
       </Modal>
     </section>
   );

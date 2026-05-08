@@ -31,10 +31,12 @@ rushhq/
 │   ├── migrations/
 │   │   ├── 0001_foundation.sql           tables, enums, RLS, helper funcs
 │   │   ├── 0002_dispatch_helpers.sql     fetch_dispatch_candidates(...)
-│   │   └── 0003_schedule_dispatcher.sql  pg_cron + pg_net wiring
+│   │   ├── 0003_schedule_dispatcher.sql  pg_cron + pg_net, vault-backed
+│   │   └── 0004_event_rpcs.sql           create_/update_calendar_event(...)
 │   └── functions/
-│       ├── dispatch-reminders/   sends Telegram + email every 5 min
-│       └── telegram-webhook/     handles /start <token> from the bot
+│       ├── dispatch-reminders/    sends Telegram + email every 5 min
+│       ├── telegram-webhook/      handles /start <token> from the bot
+│       └── create-family-member/  parent-only invite + linked row insert
 ├── .env.example
 ├── CLAUDE.md
 └── README.md
@@ -104,8 +106,10 @@ surfaces against the cream background.
   text on `calendar_events`
 - **No public signup flow.** Supabase email signups are disabled at the
   project level. New users are created by parents from the Admin page,
-  via a server-side function that uses service_role to call
-  `auth.admin.createUser`, then inserts the `family_members` row
+  which calls the `create-family-member` edge function. That function
+  verifies the caller is a parent, optionally invites the new user via
+  `auth.admin.inviteUserByEmail` (Resend SMTP delivers the link), and
+  inserts the linked `family_members` row
 - **Helpers see only `visibility = 'family'` events.** Diwen has zero
   visibility into beads, stocks, finance (which don't exist yet — make
   sure the nav doesn't tease them either)
@@ -148,9 +152,12 @@ goes out).
 
 ### Dispatch loop
 
-`pg_cron` triggers `dispatch-reminders` every 5 minutes. The function
-calls `fetch_dispatch_candidates(window_start, window_end)`, expands
-RRULEs in TypeScript, then for each (occurrence × attendee × channel):
+`pg_cron` triggers `dispatch-reminders` every 5 minutes. The cron
+body reads the service-role bearer from Vault on every fire (modern
+Supabase locks `ALTER DATABASE`, so the older "GUC" pattern doesn't
+work). The function then calls
+`fetch_dispatch_candidates(window_start, window_end)`, expands RRULEs
+in TypeScript, then for each (occurrence × attendee × channel):
 
 1. Pre-claim a row in `notification_dispatch_log` with status `queued`
 2. Send the Telegram message and/or email
