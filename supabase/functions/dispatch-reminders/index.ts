@@ -796,6 +796,48 @@ function renderOutboxMessage(
     maximumFractionDigits: 2,
   })}`;
 
+  if (eventType === "calendar_event_created") {
+    const title = String(payload.title ?? "New event");
+    const startsAt = payload.starts_at
+      ? new Date(String(payload.starts_at))
+      : null;
+    const allDay = !!payload.all_day;
+    const location = payload.location ? String(payload.location) : null;
+    const recurring = !!payload.rrule;
+    const when = startsAt ? formatDateTime(startsAt, allDay) : "";
+    const link = `${APP_URL}/calendar`;
+
+    const tgLines: string[] = [
+      `📅 <b>${escapeHtml(title)}</b>`,
+      `New on the calendar${when ? ` · ${escapeHtml(when)}` : ""}${recurring ? " · repeats" : ""}`,
+    ];
+    if (location) {
+      tgLines.push(`📍 <a href="${mapsLink(location)}">${escapeHtml(location)}</a>`);
+    }
+    tgLines.push("", `<a href="${link}">Open Rush HQ</a>`);
+    const tg = tgLines.join("\n");
+
+    const html = richEmail({
+      kicker: "Rush HQ · New event",
+      title,
+      when,
+      location,
+      notes: recurring ? "Recurring event." : null,
+      buttonUrl: link,
+      buttonText: "Open calendar",
+    });
+    const text =
+      `New on the calendar: ${title}${when ? ` · ${when}` : ""}` +
+      `${location ? ` at ${location}` : ""}` +
+      ` ${link}`;
+    return {
+      telegramText: tg,
+      emailSubject: `New event: ${title}${when ? ` · ${when}` : ""}`,
+      emailHtml: html,
+      emailText: text,
+    };
+  }
+
   if (eventType === "bead_chart_published") {
     const link = `${APP_URL}/beads`;
     const title = `${childName}'s new bead chart is live`;

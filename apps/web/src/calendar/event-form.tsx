@@ -134,6 +134,9 @@ export function EventForm({
   const [notifyExtraRoles, setNotifyExtraRoles] = useState<boolean>(
     event?.notify_extra_roles ?? false,
   );
+  // For new events only: ping attendees right after save. Existing
+  // events skip this so editing doesn't accidentally re-blast.
+  const [notifyOnCreate, setNotifyOnCreate] = useState<boolean>(true);
   const [attendeeIds, setAttendeeIds] = useState<string[]>(
     event?.attendee_ids ?? (currentMember ? [currentMember.id] : []),
   );
@@ -252,7 +255,10 @@ export function EventForm({
         if (rpcErr) throw rpcErr;
         eventId = event!.id;
       } else {
-        const { data, error: rpcErr } = await supabase.rpc("create_calendar_event", payload);
+        const { data, error: rpcErr } = await supabase.rpc("create_calendar_event", {
+          ...payload,
+          p_notify_on_create: notifyOnCreate,
+        });
         if (rpcErr) throw rpcErr;
         eventId = (data as string | null) ?? "";
       }
@@ -547,6 +553,25 @@ export function EventForm({
             </span>
           </span>
         </label>
+
+        {!isEditing && (
+          <label className="flex items-start gap-2.5 rounded-md border border-line bg-soft px-3 py-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-4 rounded border-line accent-primary"
+              checked={notifyOnCreate}
+              onChange={(e) => setNotifyOnCreate(e.target.checked)}
+            />
+            <span className="text-[15px] text-ink">
+              Notify attendees on save
+              <span className="block text-[13.5px] text-muted mt-0.5">
+                Sends a Telegram + email ping right away so people know
+                it's on the calendar (separate from the lead-time
+                reminders below).
+              </span>
+            </span>
+          </label>
+        )}
 
         <div className="grid sm:grid-cols-2 gap-3">
           <Select
