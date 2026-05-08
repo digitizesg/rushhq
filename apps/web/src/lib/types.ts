@@ -28,6 +28,14 @@ export interface FamilyMember {
   updated_at: string;
 }
 
+export type EventType =
+  | "school"
+  | "activity"
+  | "family"
+  | "personal"
+  | "travel"
+  | "other";
+
 export interface CalendarEvent {
   id: string;
   title: string;
@@ -39,10 +47,20 @@ export interface CalendarEvent {
   rrule: string | null;
   visibility: EventVisibility;
   notify_extra_roles: boolean;
+  event_type: EventType;
   created_by: string;
   created_at: string;
   updated_at: string;
 }
+
+export const EVENT_TYPE_OPTIONS: ReadonlyArray<{ value: EventType; label: string }> = [
+  { value: "school",   label: "School" },
+  { value: "activity", label: "Activity" },
+  { value: "family",   label: "Family" },
+  { value: "personal", label: "Personal" },
+  { value: "travel",   label: "Travel" },
+  { value: "other",    label: "Other" },
+];
 
 export interface CalendarReminder {
   id: string;

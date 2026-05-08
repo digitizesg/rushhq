@@ -11,11 +11,13 @@ import {
   toLocalInputValue,
   type RecurrencePreset,
 } from "@/lib/calendar";
-import type {
-  EventAttachment,
-  EventVisibility,
-  FamilyMember,
-  ReminderChannel,
+import {
+  EVENT_TYPE_OPTIONS,
+  type EventAttachment,
+  type EventType,
+  type EventVisibility,
+  type FamilyMember,
+  type ReminderChannel,
 } from "@/lib/types";
 import type { FullEvent } from "@/calendar/use-calendar-data";
 import { Button } from "@/components/button";
@@ -128,6 +130,7 @@ export function EventForm({
   const [untilDate, setUntilDate] = useState<string>(initialPreset.until ?? "");
 
   const [visibility, setVisibility] = useState<EventVisibility>(event?.visibility ?? "family");
+  const [eventType, setEventType] = useState<EventType>(event?.event_type ?? "other");
   const [notifyExtraRoles, setNotifyExtraRoles] = useState<boolean>(
     event?.notify_extra_roles ?? false,
   );
@@ -231,6 +234,7 @@ export function EventForm({
       p_visibility: visibility,
       p_attendee_ids: attendeeIds,
       p_notify_extra_roles: notifyExtraRoles,
+      p_event_type: eventType,
       p_reminders: reminders.map(({ lead_time_minutes, channel }) => ({
         lead_time_minutes,
         channel,
@@ -544,20 +548,33 @@ export function EventForm({
           </span>
         </label>
 
-        <Select
-          label="Visibility"
-          containerClassName="max-w-xs"
-          value={visibility}
-          onChange={(e) => setVisibility(e.target.value as EventVisibility)}
-          hint={
-            visibility === "family"
-              ? "Family members and helpers can see this."
-              : "Only parents can see this."
-          }
-        >
-          <option value="family">Family (everyone)</option>
-          <option value="parents">Parents only</option>
-        </Select>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <Select
+            label="Type"
+            value={eventType}
+            onChange={(e) => setEventType(e.target.value as EventType)}
+            hint="Sets the chip colour on the calendar."
+          >
+            {EVENT_TYPE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="Visibility"
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value as EventVisibility)}
+            hint={
+              visibility === "family"
+                ? "Family members and helpers can see this."
+                : "Only parents can see this."
+            }
+          >
+            <option value="family">Family (everyone)</option>
+            <option value="parents">Parents only</option>
+          </Select>
+        </div>
       </Section>
 
       <Section

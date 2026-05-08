@@ -1,8 +1,9 @@
 import type { MouseEvent } from "react";
-import { colourForEvent } from "@/lib/colours";
+import { colourFor, colourForType } from "@/lib/colours";
 import { formatTime24 } from "@/lib/calendar";
 import type { EventOccurrence } from "@/lib/calendar";
 import type { FamilyMember } from "@/lib/types";
+import { Avatar } from "@/components/avatar";
 
 interface EventChipProps {
   occurrence: EventOccurrence;
@@ -17,7 +18,13 @@ export function EventChip({ occurrence, members, detailed = false, onClick }: Ev
   const attendees = event.attendee_ids
     .map((id) => members.find((m) => m.id === id))
     .filter((m): m is FamilyMember => !!m);
-  const colour = colourForEvent(attendees, event.created_by);
+  // Type sets the chip colour; the avatar shows whose event it is.
+  const colour = colourForType(event.event_type);
+  const primaryKid =
+    attendees.find((m) => m.member_type === "child" || m.role === "child") ?? null;
+  const kidColour = primaryKid
+    ? colourFor(primaryKid.id, primaryKid.short_name)
+    : null;
   const recurring = !!event.rrule;
 
   return (
@@ -37,12 +44,23 @@ export function EventChip({ occurrence, members, detailed = false, onClick }: Ev
       }}
     >
       {detailed ? (
-        <div className="flex items-start gap-3">
-          <span
-            className="mt-1 inline-block size-2 rounded-full shrink-0"
-            style={{ background: colour.accent }}
-            aria-hidden
-          />
+        <div className="flex items-center gap-3">
+          {primaryKid ? (
+            <Avatar
+              size={32}
+              name={primaryKid.short_name}
+              url={primaryKid.avatar_url}
+              accent={kidColour?.accent ?? colour.accent}
+              text="#ffffff"
+              alt=""
+            />
+          ) : (
+            <span
+              className="inline-block size-2 rounded-full shrink-0"
+              style={{ background: colour.accent }}
+              aria-hidden
+            />
+          )}
           <div className="min-w-0 flex-1">
             <p className="text-[15.5px] font-medium truncate">{event.title}</p>
             <p className="text-[13.5px] tnum opacity-80">
@@ -53,7 +71,18 @@ export function EventChip({ occurrence, members, detailed = false, onClick }: Ev
           </div>
         </div>
       ) : (
-        <div className="flex items-baseline gap-1 sm:gap-1.5">
+        <div className="flex items-center gap-1.5">
+          {primaryKid && (
+            <Avatar
+              size={18}
+              name={primaryKid.short_name}
+              url={primaryKid.avatar_url}
+              accent={kidColour?.accent ?? colour.accent}
+              text="#ffffff"
+              alt=""
+              className="hidden sm:block"
+            />
+          )}
           {!event.all_day && (
             <span
               className="hidden sm:inline text-[13px] font-semibold tnum shrink-0"

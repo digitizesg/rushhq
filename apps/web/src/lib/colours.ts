@@ -57,6 +57,23 @@ export function colourForRole(
   return colourFor(memberId, shortName);
 }
 
+/** Fixed hue per event type so the calendar reads at a glance —
+ *  "school" blocks blue, "activity" amber, family events emerald,
+ *  travel cyan, etc. */
+export function colourForType(
+  type: string | null | undefined,
+): MemberColour {
+  switch (type) {
+    case "school":   return INDIGO;
+    case "activity": return AMBER;
+    case "family":   return EMERALD;
+    case "personal": return VIOLET;
+    case "travel":   return CYAN;
+    case "other":    return BLUE;
+    default:         return BLUE;
+  }
+}
+
 /** Picks an event's colour by who it's for, not who created it. */
 export function colourForEvent(
   attendees: ReadonlyArray<{

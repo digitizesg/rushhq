@@ -1,8 +1,9 @@
 import { addDays, format, isSameDay, isToday, isTomorrow, startOfDay } from "date-fns";
 import { occurrencesOnDay, AGENDA_DAYS, type EventOccurrence } from "@/lib/calendar";
-import { colourForEvent } from "@/lib/colours";
+import { colourFor, colourForType } from "@/lib/colours";
 import { formatTime24 } from "@/lib/calendar";
 import type { FamilyMember } from "@/lib/types";
+import { Avatar } from "@/components/avatar";
 
 interface AgendaProps {
   /** Start of the agenda window (today, by default). */
@@ -101,7 +102,12 @@ function AgendaRow({
   const attendees = event.attendee_ids
     .map((id) => members.find((m) => m.id === id))
     .filter((m): m is FamilyMember => !!m);
-  const colour = colourForEvent(attendees, event.created_by);
+  const colour = colourForType(event.event_type);
+  const primaryKid =
+    attendees.find((m) => m.member_type === "child" || m.role === "child") ?? null;
+  const kidColour = primaryKid
+    ? colourFor(primaryKid.id, primaryKid.short_name)
+    : null;
   const recurring = !!event.rrule;
 
   return (
@@ -109,13 +115,23 @@ function AgendaRow({
       <button
         type="button"
         onClick={onClick}
-        className="w-full flex items-start gap-3 px-4 py-3 text-left bg-white hover:bg-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left bg-white hover:bg-soft transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
       >
         <span
-          className="mt-1.5 inline-block w-1 self-stretch min-h-6 rounded-full shrink-0"
+          className="inline-block w-1 self-stretch min-h-6 rounded-full shrink-0"
           style={{ background: colour.accent }}
           aria-hidden
         />
+        {primaryKid && (
+          <Avatar
+            size={32}
+            name={primaryKid.short_name}
+            url={primaryKid.avatar_url}
+            accent={kidColour?.accent ?? colour.accent}
+            text="#ffffff"
+            alt=""
+          />
+        )}
         <div className="min-w-0 flex-1">
           <p className="text-[16.5px] font-medium text-ink truncate">
             {event.title}
