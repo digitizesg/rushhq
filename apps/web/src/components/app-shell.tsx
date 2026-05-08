@@ -39,12 +39,28 @@ export function AppShell() {
                 Beads
               </NavLink>
             )}
+            {isParent() && (
+              <NavLink
+                to="/stocks"
+                className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+              >
+                Stocks
+              </NavLink>
+            )}
             {isChild && (
               <NavLink
                 to="/beads/me"
                 className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
               >
                 My beads
+              </NavLink>
+            )}
+            {isChild && (
+              <NavLink
+                to="/stocks/me"
+                className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+              >
+                My investment
               </NavLink>
             )}
             <NavLink
@@ -123,6 +139,15 @@ export function AppShell() {
                   Beads
                 </NavLink>
               )}
+              {isParent() && (
+                <NavLink
+                  to="/stocks"
+                  className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Stocks
+                </NavLink>
+              )}
               {isChild && (
                 <NavLink
                   to="/beads/me"
@@ -130,6 +155,15 @@ export function AppShell() {
                   onClick={() => setMenuOpen(false)}
                 >
                   My beads
+                </NavLink>
+              )}
+              {isChild && (
+                <NavLink
+                  to="/stocks/me"
+                  className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  My investment
                 </NavLink>
               )}
               <NavLink
