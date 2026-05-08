@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/auth/auth-context";
 import {
@@ -7,10 +7,65 @@ import {
   type NotificationPreference,
 } from "@/lib/types";
 import { TelegramCard } from "@/components/telegram-card";
+import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/button";
+import { colourFor } from "@/lib/colours";
 
 export default function SettingsPage() {
-  const { user, member } = useAuth();
+  const { user, member, refresh } = useAuth();
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const colour = colourFor(member?.id, member?.short_name);
+
+  async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !member) return;
+    setAvatarBusy(true);
+    setAvatarError(null);
+    try {
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("Pick a photo under 5 MB.");
+      }
+      const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase();
+      const path = `${member.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const { error: updErr } = await supabase
+        .from("family_members")
+        .update({ avatar_url: pub.publicUrl })
+        .eq("id", member.id);
+      if (updErr) throw updErr;
+      await refresh();
+    } catch (err) {
+      setAvatarError((err as Error).message);
+    } finally {
+      setAvatarBusy(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleAvatarRemove() {
+    if (!member) return;
+    setAvatarBusy(true);
+    setAvatarError(null);
+    try {
+      const { error } = await supabase
+        .from("family_members")
+        .update({ avatar_url: null })
+        .eq("id", member.id);
+      if (error) throw error;
+      await refresh();
+    } catch (err) {
+      setAvatarError((err as Error).message);
+    } finally {
+      setAvatarBusy(false);
+    }
+  }
+
   const [prefs, setPrefs] = useState<Record<NotificationEventType, { telegram: boolean; email: boolean }>>(() =>
     Object.fromEntries(
       NOTIFICATION_EVENT_TYPES.map((t) => [t.value, { telegram: true, email: true }]),
@@ -89,6 +144,44 @@ export default function SettingsPage() {
         <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Settings</p>
         <h1 className="text-[30px] font-medium text-ink">Your account</h1>
       </div>
+
+      <section className="bg-white border border-line rounded-lg p-6">
+        <p className="text-[20px] font-medium text-ink mb-4">Profile photo</p>
+        <div className="flex items-center gap-5">
+          <Avatar
+            size={80}
+            name={member?.short_name}
+            url={member?.avatar_url}
+            accent={colour.soft}
+            text={colour.accent}
+          />
+          <div className="space-y-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              disabled={avatarBusy}
+              className="block text-[14.5px] text-ink file:mr-3 file:rounded-md file:border-0 file:bg-primary file:text-white file:px-3 file:py-2 file:text-[14px] file:font-medium file:cursor-pointer hover:file:bg-primary-strong disabled:opacity-50"
+            />
+            <p className="text-[13px] text-muted">JPG or PNG, up to 5 MB.</p>
+            {member?.avatar_url && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleAvatarRemove}
+                disabled={avatarBusy}
+                className="text-muted hover:text-danger"
+              >
+                Remove photo
+              </Button>
+            )}
+            {avatarError && (
+              <p className="text-danger text-[13px]">{avatarError}</p>
+            )}
+          </div>
+        </div>
+      </section>
 
       <section className="bg-white border border-line rounded-lg p-6">
         <p className="text-[20px] font-medium text-ink mb-3">Profile</p>

@@ -22,6 +22,7 @@ export interface FamilyMember {
   role: MemberRole;
   member_type: MemberType;
   email: string | null;
+  avatar_url: string | null;
   active: boolean;
   created_at: string;
   updated_at: string;

@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { useAuth } from "@/auth/auth-context";
 import { colourFor } from "@/lib/colours";
+import { Avatar } from "@/components/avatar";
 
 const navBase =
   "px-3.5 py-2.5 rounded-md text-[17px] font-medium text-muted hover:text-ink transition-colors";
@@ -13,12 +14,6 @@ export function AppShell() {
   const [menuOpen, setMenuOpen] = useState(false);
   const isChild = member?.member_type === "child";
   const colour = colourFor(member?.id, member?.short_name);
-
-  const initials = (member?.short_name ?? "?")
-    .split(/\s+/)
-    .map((p) => p[0]?.toUpperCase() ?? "")
-    .slice(0, 2)
-    .join("");
 
   return (
     <div className="min-h-dvh flex flex-col">
@@ -103,7 +98,7 @@ export function AppShell() {
             <div className="hidden sm:block">
               <UserMenu
                 shortName={member?.short_name ?? ""}
-                initials={initials}
+                avatarUrl={member?.avatar_url ?? null}
                 accent={colour.accent}
                 soft={colour.soft}
                 isParent={isParent()}
@@ -237,14 +232,14 @@ export function AppShell() {
 
 interface UserMenuProps {
   shortName: string;
-  initials: string;
+  avatarUrl: string | null;
   accent: string;
   soft: string;
   isParent: boolean;
   onSignOut: () => void;
 }
 
-function UserMenu({ shortName, initials, accent, soft, isParent, onSignOut }: UserMenuProps) {
+function UserMenu({ shortName, avatarUrl, accent, soft, isParent, onSignOut }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -273,13 +268,14 @@ function UserMenu({ shortName, initials, accent, soft, isParent, onSignOut }: Us
         aria-expanded={open}
         className="inline-flex items-center gap-2 h-9 pl-1 pr-2.5 rounded-full hover:bg-soft transition-colors"
       >
-        <span
-          className="grid place-items-center size-7 rounded-full text-[14px] font-semibold"
-          style={{ background: soft, color: accent }}
-          aria-hidden
-        >
-          {initials}
-        </span>
+        <Avatar
+          size={28}
+          name={shortName}
+          url={avatarUrl}
+          accent={soft}
+          text={accent}
+          alt=""
+        />
         <span className="text-[15.5px] font-medium text-ink">{shortName}</span>
         <ChevronDown size={14} className="text-muted" aria-hidden />
       </button>
