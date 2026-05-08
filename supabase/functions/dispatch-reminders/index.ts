@@ -384,9 +384,198 @@ Deno.serve(async (_req) => {
     }
   }
 
-  const summary = { ok: true, candidates: list.length, dispatched, skipped, failed };
+  // ----------------------------------------------------------------------------
+  // Outbox drain — bead module + future ad-hoc events
+  // ----------------------------------------------------------------------------
+
+  const { data: outboxRows, error: outboxErr } = await supabase
+    .from("notification_outbox_pending")
+    .select("*");
+
+  let outboxSent = 0;
+  let outboxFailed = 0;
+  let outboxSkipped = 0;
+
+  if (outboxErr) {
+    console.error("[dispatch] outbox fetch failed:", outboxErr.message);
+  } else {
+    // Group rows by outbox_id so a single event spans multiple recipients.
+    type OutboxRow = {
+      outbox_id: string;
+      event_type: string;
+      payload: Record<string, unknown>;
+      member_id: string;
+      short_name: string;
+      email: string | null;
+      role: string;
+      telegram_chat_id: number | null;
+      telegram_enabled: boolean;
+      email_enabled: boolean;
+    };
+
+    const rows = (outboxRows ?? []) as OutboxRow[];
+    // Ensure each outbox row gets processed once per attempt, regardless
+    // of how many recipients share its outbox_id (the view returns one
+    // row per (outbox_id × member_id), but here each row already has
+    // a single member_id baked in — so we treat each row as its own job).
+    const handledIds = new Set<string>();
+
+    for (const row of rows) {
+      const channels: Array<"telegram" | "email"> = [];
+      const wantTelegram =
+        row.telegram_enabled && row.telegram_chat_id != null;
+      const wantEmail = row.email_enabled && !!row.email;
+      if (wantTelegram) channels.push("telegram");
+      if (wantEmail) channels.push("email");
+
+      if (channels.length === 0) {
+        await supabase.from("notification_dispatch_log").insert({
+          event_id: null,
+          member_id: row.member_id,
+          channel: "telegram",
+          status: "skipped",
+          error_message: "No enabled channel or contact details",
+          payload: { outbox_id: row.outbox_id, event_type: row.event_type },
+        });
+        outboxSkipped++;
+        handledIds.add(row.outbox_id);
+        continue;
+      }
+
+      const message = renderOutboxMessage(row.event_type, row.payload, row.short_name);
+      let anyFailure = false;
+
+      for (const ch of channels) {
+        let result: { ok: true } | { ok: false; error: string };
+        if (ch === "telegram") {
+          result = await sendTelegram(row.telegram_chat_id!, message.telegramText);
+        } else {
+          result = await sendEmail(
+            row.email!,
+            message.emailSubject,
+            message.emailHtml,
+            message.emailText,
+          );
+        }
+
+        await supabase.from("notification_dispatch_log").insert({
+          event_id: null,
+          member_id: row.member_id,
+          channel: ch,
+          status: result.ok ? "sent" : "failed",
+          error_message: result.ok ? null : result.error,
+          payload: { outbox_id: row.outbox_id, event_type: row.event_type },
+        });
+
+        if (result.ok) outboxSent++;
+        else {
+          outboxFailed++;
+          anyFailure = true;
+        }
+      }
+
+      handledIds.add(row.outbox_id);
+
+      // Mark the outbox row processed (per recipient — but our schema
+      // stores one outbox row per recipient already, so this is 1:1).
+      await supabase
+        .from("notification_outbox")
+        .update({
+          processed_at: new Date().toISOString(),
+          attempts: (row as { attempts?: number }).attempts != null
+            ? Number((row as { attempts?: number }).attempts) + 1
+            : 1,
+          last_error: anyFailure ? "One or more channels failed" : null,
+        })
+        .eq("id", row.outbox_id);
+    }
+  }
+
+  const summary = {
+    ok: true,
+    candidates: list.length,
+    dispatched,
+    skipped,
+    failed,
+    outbox: { sent: outboxSent, skipped: outboxSkipped, failed: outboxFailed },
+  };
   console.log("[dispatch] summary:", JSON.stringify(summary));
   return new Response(JSON.stringify(summary), {
     headers: { "content-type": "application/json" },
   });
 });
+
+// ----------------------------------------------------------------------------
+// Outbox message rendering
+// ----------------------------------------------------------------------------
+
+function renderOutboxMessage(
+  eventType: string,
+  payload: Record<string, unknown>,
+  recipientShortName: string,
+): {
+  telegramText: string;
+  emailSubject: string;
+  emailHtml: string;
+  emailText: string;
+} {
+  const childName = String(payload.child_short_name ?? "");
+  const totalSgd =
+    typeof payload.total_sgd === "number"
+      ? payload.total_sgd
+      : Number(payload.total_sgd ?? 0);
+  const formattedTotal = `S$${totalSgd.toLocaleString("en-SG", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+  if (eventType === "bead_chart_published") {
+    const link = `${APP_URL}/beads`;
+    const tg =
+      `<b>📋 ${escapeHtml(childName)}'s new bead chart is live</b>\n` +
+      `Hi ${escapeHtml(recipientShortName)}, the chart for the new month has just been published.\n\n` +
+      `<a href="${link}">Open Rush HQ</a>`;
+    const subject = `${childName}'s new bead chart is live`;
+    const html = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; line-height: 1.5;">
+        <h2 style="font-weight: 600; margin: 0 0 8px;">📋 ${escapeHtml(childName)}'s new bead chart is live</h2>
+        <p style="margin: 0; color: #475569;">Open Rush HQ to take a look.</p>
+        <p style="margin: 24px 0 0; font-size: 13px;">
+          <a href="${link}" style="color: #2563eb;">View on Rush HQ</a>
+        </p>
+      </div>
+    `;
+    const text = `${childName}'s new bead chart is live. Open Rush HQ: ${link}`;
+    return { telegramText: tg, emailSubject: subject, emailHtml: html, emailText: text };
+  }
+
+  if (eventType === "bead_period_locked") {
+    const link = `${APP_URL}/beads`;
+    const tg =
+      `<b>🎉 ${escapeHtml(childName)} counted ${escapeHtml(formattedTotal)}!</b>\n` +
+      `The period is now locked and ready for investment.\n\n` +
+      `<a href="${link}">Open Rush HQ</a>`;
+    const subject = `${childName} counted ${formattedTotal}`;
+    const html = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; line-height: 1.5;">
+        <h2 style="font-weight: 600; margin: 0 0 8px;">🎉 ${escapeHtml(childName)} counted ${escapeHtml(formattedTotal)}</h2>
+        <p style="margin: 0; color: #475569;">The period is now locked and ready for investment.</p>
+        <p style="margin: 24px 0 0; font-size: 13px;">
+          <a href="${link}" style="color: #2563eb;">Open Rush HQ</a>
+        </p>
+      </div>
+    `;
+    const text = `${childName} counted ${formattedTotal}. Period locked, ready for investment. ${link}`;
+    return { telegramText: tg, emailSubject: subject, emailHtml: html, emailText: text };
+  }
+
+  // Fallback for unknown event types — surface the payload so debugging
+  // is possible without a code change.
+  const safe = JSON.stringify(payload);
+  return {
+    telegramText: `<b>Notification</b>\n${escapeHtml(eventType)}\n${escapeHtml(safe)}`,
+    emailSubject: `Rush HQ · ${eventType}`,
+    emailHtml: `<pre>${escapeHtml(safe)}</pre>`,
+    emailText: safe,
+  };
+}
