@@ -271,6 +271,52 @@ interface ChildCardProps {
   pendingCount: number;
 }
 
+function KidGainHeadline({
+  name,
+  shares,
+  gainSgd,
+  gainPct,
+}: {
+  name: string;
+  shares: number;
+  gainSgd: number;
+  gainPct: number;
+}) {
+  if (shares <= 0) {
+    return (
+      <div className="rounded-md bg-soft border border-line px-4 py-3">
+        <p className="text-[14.5px] text-ink">
+          Hey {name}, your investing journey hasn't started yet. Once your first
+          purchase is recorded, your gains will show up here.
+        </p>
+      </div>
+    );
+  }
+  const positive = gainSgd > 0;
+  const negative = gainSgd < 0;
+  const absSgd = formatSGD(Math.abs(gainSgd));
+  const tone = positive
+    ? "bg-emerald-soft/50 border-emerald/30 text-emerald"
+    : negative
+      ? "bg-danger/[0.06] border-danger/30 text-danger"
+      : "bg-soft border-line text-ink";
+  const message = positive
+    ? `Hey ${name}, you've made ${absSgd} since you started investing!`
+    : negative
+      ? `Hey ${name}, you're ${absSgd} down on your investment right now. Markets go up and down, that's normal.`
+      : `Hey ${name}, you're break-even right now. Watch this space!`;
+  return (
+    <div className={["rounded-md border px-4 py-3", tone].join(" ")}>
+      <p className="text-[15px] font-medium">{message}</p>
+      {gainPct !== 0 && (
+        <p className="text-[12.5px] mt-0.5 opacity-80 tnum">
+          {positive ? "+" : "−"}{Math.abs(gainPct).toFixed(2)}% on what you put in
+        </p>
+      )}
+    </div>
+  );
+}
+
 function ChildCard({ memberId, name, holding, snaps, voo, fx, pendingCount }: ChildCardProps) {
   const colour = colourFor(memberId, name);
   const shares = holding?.shares_held ?? 0;
@@ -303,6 +349,7 @@ function ChildCard({ memberId, name, holding, snaps, voo, fx, pendingCount }: Ch
         )}
       </header>
       <div className="p-5 space-y-4">
+        <KidGainHeadline name={name} shares={shares} gainSgd={gainSgd} gainPct={gainPct} />
         <div className="grid grid-cols-2 gap-3">
           <Stat label="Shares" value={formatShares(shares)} />
           <Stat label="Value (SGD)" value={formatSGD(valueSgd)} sub={formatUSD(valueUsd)} />
