@@ -252,7 +252,7 @@ function Chart({ points }: { points: Array<{ snapshot_month: string; total_sgd: 
   return (
     <div className="bg-white border border-line rounded-lg p-5">
       <p className="text-[12.5px] uppercase tracking-wider text-muted mb-3">Total assets over time</p>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-48 sm:h-64 text-emerald" preserveAspectRatio="none">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto block text-emerald" style={{ aspectRatio: `${W} / ${H}` }}>
         {/* Grid lines + y labels */}
         {gridValues.map((v, i) => {
           const y = yFor(v);

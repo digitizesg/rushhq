@@ -495,7 +495,7 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
         </p>
       </div>
 
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-56 sm:h-72" preserveAspectRatio="none">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto block" style={{ aspectRatio: `${W} / ${H}` }}>
         {/* Grid lines + y labels */}
         {gridValues.map((v, i) => {
           const y = yFor(v);
