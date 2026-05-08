@@ -38,6 +38,7 @@ export interface CalendarEvent {
   all_day: boolean;
   rrule: string | null;
   visibility: EventVisibility;
+  notify_extra_roles: boolean;
   created_by: string;
   created_at: string;
   updated_at: string;

@@ -42,9 +42,16 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
             {event.title}
           </h2>
           {event.location && (
-            <p className="mt-1.5 text-[16px] text-muted inline-flex items-center gap-1.5">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                event.location,
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1.5 text-[16px] text-primary hover:underline underline-offset-2 inline-flex items-center gap-1.5"
+            >
               <MapPin size={14} aria-hidden /> {event.location}
-            </p>
+            </a>
           )}
         </div>
       </header>

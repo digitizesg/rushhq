@@ -105,6 +105,9 @@ export function EventForm({
   const [customRrule, setCustomRrule] = useState(initialPreset.custom);
 
   const [visibility, setVisibility] = useState<EventVisibility>(event?.visibility ?? "family");
+  const [notifyExtraRoles, setNotifyExtraRoles] = useState<boolean>(
+    event?.notify_extra_roles ?? false,
+  );
   const [attendeeIds, setAttendeeIds] = useState<string[]>(
     event?.attendee_ids ?? (currentMember ? [currentMember.id] : []),
   );
@@ -193,6 +196,7 @@ export function EventForm({
       p_rrule: rrule,
       p_visibility: visibility,
       p_attendee_ids: attendeeIds,
+      p_notify_extra_roles: notifyExtraRoles,
       p_reminders: reminders.map(({ lead_time_minutes, channel }) => ({
         lead_time_minutes,
         channel,
@@ -370,6 +374,23 @@ export function EventForm({
             })}
           </div>
         </div>
+
+        <label className="flex items-start gap-2.5 rounded-md border border-line bg-soft px-3 py-2.5 cursor-pointer">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-4 rounded border-line accent-primary"
+            checked={notifyExtraRoles}
+            onChange={(e) => setNotifyExtraRoles(e.target.checked)}
+          />
+          <span className="text-[15px] text-ink">
+            Also notify all parents and the helper
+            <span className="block text-[13.5px] text-muted mt-0.5">
+              Useful for kid-only events (e.g. Riley's tap class) where the
+              grown-ups still want the reminder ping without being listed
+              as attendees.
+            </span>
+          </span>
+        </label>
 
         <Select
           label="Visibility"
