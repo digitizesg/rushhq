@@ -239,14 +239,14 @@ export default function BuyPage() {
 
   return (
     <section className="mx-auto max-w-[820px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
-      <Link to="/stocks" className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-ink">
+      <Link to="/stocks" className="inline-flex items-center gap-1 text-[14px] text-muted hover:text-ink">
         <ChevronLeft size={14} /> Stocks overview
       </Link>
 
       <div>
-        <p className="text-[12px] uppercase tracking-wider text-muted mb-1">Stocks</p>
-        <h1 className="text-[26px] font-medium text-ink">Record a purchase</h1>
-        <p className="mt-2 text-[13.5px] text-muted">
+        <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Stocks</p>
+        <h1 className="text-[28px] font-medium text-ink">Record a purchase</h1>
+        <p className="mt-2 text-[14.5px] text-muted">
           This records what you already bought on moomoo. Enter the actual numbers from the trade confirmation.
         </p>
       </div>
@@ -258,7 +258,7 @@ export default function BuyPage() {
             type="button"
             onClick={() => setMode(m)}
             className={[
-              "px-3 h-8 rounded-full text-[13px] font-medium transition-colors",
+              "px-3 h-8 rounded-full text-[14px] font-medium transition-colors",
               mode === m ? "bg-primary text-white" : "text-muted hover:text-ink",
             ].join(" ")}
           >
@@ -268,7 +268,7 @@ export default function BuyPage() {
       </div>
 
       {error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[13px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
           {error}
         </div>
       )}
@@ -277,10 +277,10 @@ export default function BuyPage() {
         <form onSubmit={handleBeadSubmit} className="space-y-5">
           <section className="bg-white border border-line rounded-lg overflow-hidden">
             <header className="px-5 py-3 bg-soft border-b border-line">
-              <p className="text-[14px] font-semibold text-ink">Bead periods</p>
+              <p className="text-[15px] font-semibold text-ink">Bead periods</p>
             </header>
             {counted.length === 0 ? (
-              <p className="px-5 py-4 text-[13.5px] text-muted">
+              <p className="px-5 py-4 text-[14.5px] text-muted">
                 No counted bead periods yet. Lock a period from the beads page first.
               </p>
             ) : (
@@ -297,11 +297,11 @@ export default function BuyPage() {
                         className="size-4 accent-primary"
                       />
                       <div className="flex-1">
-                        <p className="text-[14px] text-ink">
+                        <p className="text-[15px] text-ink">
                           {member?.short_name ?? "?"} · {formatPeriodLabel(p.period_start)}
                         </p>
                       </div>
-                      <p className="text-[14px] text-ink tnum">{formatSGD(t?.total_sgd ?? 0)}</p>
+                      <p className="text-[15px] text-ink tnum">{formatSGD(t?.total_sgd ?? 0)}</p>
                     </li>
                   );
                 })}
@@ -311,10 +311,10 @@ export default function BuyPage() {
 
           <section className="bg-white border border-line rounded-lg overflow-hidden">
             <header className="px-5 py-3 bg-soft border-b border-line">
-              <p className="text-[14px] font-semibold text-ink">Pending deposits (optional)</p>
+              <p className="text-[15px] font-semibold text-ink">Pending deposits (optional)</p>
             </header>
             {pending.length === 0 ? (
-              <p className="px-5 py-4 text-[13.5px] text-muted">No pending deposits.</p>
+              <p className="px-5 py-4 text-[14.5px] text-muted">No pending deposits.</p>
             ) : (
               <ul className="divide-y divide-line">
                 {pending.map((d) => {
@@ -328,10 +328,10 @@ export default function BuyPage() {
                         className="size-4 accent-primary"
                       />
                       <div className="flex-1">
-                        <p className="text-[14px] text-ink">{member?.short_name} · {d.source}</p>
-                        <p className="text-[12.5px] text-muted">{d.received_date}</p>
+                        <p className="text-[15px] text-ink">{member?.short_name} · {d.source}</p>
+                        <p className="text-[13.5px] text-muted">{d.received_date}</p>
                       </div>
-                      <p className="text-[14px] text-ink tnum">{formatSGD(d.amount_sgd)}</p>
+                      <p className="text-[15px] text-ink tnum">{formatSGD(d.amount_sgd)}</p>
                     </li>
                   );
                 })}
@@ -363,7 +363,7 @@ export default function BuyPage() {
           />
 
           <div className="flex justify-end gap-2 pt-3 border-t border-line">
-            <Link to="/stocks" className="inline-flex h-10 items-center px-4 rounded-md border border-line text-[14px]">
+            <Link to="/stocks" className="inline-flex h-10 items-center px-4 rounded-md border border-line text-[15px]">
               Cancel
             </Link>
             <Button type="submit" loading={submitting} disabled={submitting}>
@@ -407,7 +407,7 @@ export default function BuyPage() {
           />
 
           <div className="flex justify-end gap-2 pt-3 border-t border-line">
-            <Link to="/stocks" className="inline-flex h-10 items-center px-4 rounded-md border border-line text-[14px]">
+            <Link to="/stocks" className="inline-flex h-10 items-center px-4 rounded-md border border-line text-[15px]">
               Cancel
             </Link>
             <Button type="submit" loading={submitting} disabled={submitting}>
@@ -417,7 +417,7 @@ export default function BuyPage() {
         </form>
       ) : (
         <form onSubmit={handleDirectSubmit} className="space-y-5">
-          <p className="text-[13.5px] text-muted">
+          <p className="text-[14.5px] text-muted">
             For purchases that aren't tied to bead periods or earmarked deposits.
             Useful for backfilling history or when you've decided the split yourself.
             Enter the USD trade details from moomoo, then split the shares per child below.
@@ -441,7 +441,7 @@ export default function BuyPage() {
           />
 
           <div className="flex justify-end gap-2 pt-3 border-t border-line">
-            <Link to="/stocks" className="inline-flex h-10 items-center px-4 rounded-md border border-line text-[14px]">
+            <Link to="/stocks" className="inline-flex h-10 items-center px-4 rounded-md border border-line text-[15px]">
               Cancel
             </Link>
             <Button type="submit" loading={submitting} disabled={submitting}>
@@ -483,12 +483,12 @@ function DirectAllocation({
   return (
     <section className="bg-white border border-line rounded-lg overflow-hidden">
       <header className="flex items-center justify-between px-5 py-3 bg-soft border-b border-line">
-        <p className="text-[14px] font-semibold text-ink">Allocate shares per child</p>
+        <p className="text-[15px] font-semibold text-ink">Allocate shares per child</p>
         {sharesNum > 0 && childList.length > 0 && (
           <button
             type="button"
             onClick={onSplitEvenly}
-            className="text-[12.5px] font-medium text-primary hover:underline"
+            className="text-[13.5px] font-medium text-primary hover:underline"
           >
             Split evenly
           </button>
@@ -501,7 +501,7 @@ function DirectAllocation({
           const sgd = n * sgdPerShare;
           return (
             <li key={c.id} className="px-5 py-3 grid grid-cols-[1fr_auto_auto] gap-3 items-center">
-              <p className="text-[14px] text-ink">{c.short_name}</p>
+              <p className="text-[15px] text-ink">{c.short_name}</p>
               <input
                 type="text"
                 inputMode="decimal"
@@ -509,16 +509,16 @@ function DirectAllocation({
                 onChange={(e) => onChange(c.id, e.target.value)}
                 placeholder="0.000000"
                 aria-label={`${c.short_name} share allocation`}
-                className="w-32 h-10 rounded-md border border-line bg-white px-3 text-right text-[15px] tnum focus:outline-2 focus:outline-offset-0 focus:outline-primary"
+                className="w-32 h-10 rounded-md border border-line bg-white px-3 text-right text-[16px] tnum focus:outline-2 focus:outline-offset-0 focus:outline-primary"
               />
-              <p className="text-[12.5px] text-muted tnum w-24 text-right">
+              <p className="text-[13.5px] text-muted tnum w-24 text-right">
                 {n > 0 && sgdPerShare > 0 ? `≈ ${formatSGD(sgd)}` : "—"}
               </p>
             </li>
           );
         })}
       </ul>
-      <div className="flex items-center justify-between bg-soft border-t border-line px-5 py-3 text-[13px]">
+      <div className="flex items-center justify-between bg-soft border-t border-line px-5 py-3 text-[14px]">
         <span className="text-muted">
           Allocated {formatShares(allocSum)} of {formatShares(sharesNum || 0)} shares
         </span>
@@ -556,7 +556,7 @@ interface TransactionFieldsProps {
 function TransactionFields(p: TransactionFieldsProps) {
   return (
     <section className="bg-white border border-line rounded-lg p-5 space-y-4">
-      <p className="text-[14px] font-semibold text-ink">Trade details (from moomoo)</p>
+      <p className="text-[15px] font-semibold text-ink">Trade details (from moomoo)</p>
       <div className="grid sm:grid-cols-2 gap-3">
         <TextField
           label="Total shares purchased"
@@ -585,18 +585,18 @@ function TransactionFields(p: TransactionFieldsProps) {
         />
       </div>
       {p.totalSgd > 0 && p.derivedFx > 0 && (
-        <p className="text-[12.5px] text-muted">
+        <p className="text-[13.5px] text-muted">
           Recorded at USD/SGD <span className="text-ink tnum">{p.derivedFx.toFixed(4)}</span>{" "}
           ≈ <span className="text-ink tnum">{formatSGD(p.totalSgd)}</span>
         </p>
       )}
       <label className="block">
-        <span className="block text-[13px] font-medium text-ink mb-1.5">Notes (optional)</span>
+        <span className="block text-[14px] font-medium text-ink mb-1.5">Notes (optional)</span>
         <textarea
           rows={2}
           value={p.notes}
           onChange={(e) => p.setNotes(e.target.value)}
-          className="w-full rounded-md border border-line bg-white px-3 py-2 text-[14px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
+          className="w-full rounded-md border border-line bg-white px-3 py-2 text-[15px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
         />
       </label>
     </section>
@@ -614,8 +614,8 @@ function Preview({ beadGrandTotalSgd, sharesNum, allocations }: PreviewProps) {
   const factor = sharesNum / beadGrandTotalSgd;
   return (
     <section className="bg-soft border border-line rounded-lg p-5 space-y-3">
-      <p className="text-[14px] font-semibold text-ink">Allocation preview</p>
-      <ul className="space-y-1.5 text-[13.5px]">
+      <p className="text-[15px] font-semibold text-ink">Allocation preview</p>
+      <ul className="space-y-1.5 text-[14.5px]">
         {allocations.map((a, i) => {
           const sharesAlloc = a.amount_sgd * factor;
           return (
@@ -628,7 +628,7 @@ function Preview({ beadGrandTotalSgd, sharesNum, allocations }: PreviewProps) {
           );
         })}
       </ul>
-      <div className="text-[12.5px] text-muted pt-2 border-t border-line">
+      <div className="text-[13.5px] text-muted pt-2 border-t border-line">
         Pool total: {formatSGD(beadGrandTotalSgd)}
       </div>
     </section>

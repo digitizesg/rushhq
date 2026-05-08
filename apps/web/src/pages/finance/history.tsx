@@ -24,15 +24,15 @@ export default function FinanceHistoryPage() {
 
   return (
     <section className="mx-auto max-w-[1100px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
-      <Link to="/finance" className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-ink">
+      <Link to="/finance" className="inline-flex items-center gap-1 text-[14px] text-muted hover:text-ink">
         <ChevronLeft size={14} /> Finance overview
       </Link>
 
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-[12px] uppercase tracking-wider text-muted mb-1">Finance</p>
-          <h1 className="text-[26px] font-medium text-ink">History</h1>
-          <p className="mt-2 text-[13.5px] text-muted">
+          <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Finance</p>
+          <h1 className="text-[28px] font-medium text-ink">History</h1>
+          <p className="mt-2 text-[14.5px] text-muted">
             Click any month to edit, or add a past month to backfill earlier data.
           </p>
         </div>
@@ -42,13 +42,13 @@ export default function FinanceHistoryPage() {
       </div>
 
       {months.length === 0 ? (
-        <div className="bg-white border border-line rounded-lg p-6 text-[14px] text-muted">
+        <div className="bg-white border border-line rounded-lg p-6 text-[15px] text-muted">
           No snapshots yet.
         </div>
       ) : (
         <div className="bg-white border border-line rounded-lg overflow-x-auto">
-          <table className="w-full text-[13.5px] min-w-[640px]">
-            <thead className="bg-soft text-muted text-left text-[12px]">
+          <table className="w-full text-[14.5px] min-w-[640px]">
+            <thead className="bg-soft text-muted text-left text-[13px]">
               <tr>
                 <th className="font-medium px-4 py-2.5">Month</th>
                 {activeAccounts.map((a) => (
@@ -133,7 +133,7 @@ function PastMonthPicker({ existingMonths, onPick, onCancelled }: PastMonthPicke
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <p className="text-[13.5px] text-muted">
+      <p className="text-[14.5px] text-muted">
         Pick a past month to backfill. We'll create empty rows for each
         active account and prefill from whatever month is closest before
         it. You can adjust on the next screen.
@@ -155,7 +155,7 @@ function PastMonthPicker({ existingMonths, onPick, onCancelled }: PastMonthPicke
 
       {quickPicks.length > 0 && (
         <div>
-          <p className="text-[12px] uppercase tracking-wider text-muted mb-2">Quick pick</p>
+          <p className="text-[13px] uppercase tracking-wider text-muted mb-2">Quick pick</p>
           <div className="flex flex-wrap gap-1.5">
             {quickPicks.map((q) => (
               <button
@@ -163,7 +163,7 @@ function PastMonthPicker({ existingMonths, onPick, onCancelled }: PastMonthPicke
                 type="button"
                 onClick={() => setChosen(q)}
                 className={[
-                  "px-2.5 h-7 rounded-full border text-[12.5px] tnum",
+                  "px-2.5 h-7 rounded-full border text-[13.5px] tnum",
                   chosen === q
                     ? "bg-primary text-white border-primary"
                     : "border-line text-muted hover:text-ink hover:bg-soft",

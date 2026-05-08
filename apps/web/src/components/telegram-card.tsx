@@ -151,13 +151,13 @@ export function TelegramCard({ memberId, heading }: TelegramCardProps) {
 
   return (
     <div className="bg-white border border-line rounded-lg p-6">
-      <p className="text-[18px] font-medium text-ink mb-1">{heading}</p>
-      <p className="text-muted text-[13.5px] mb-4">
+      <p className="text-[20px] font-medium text-ink mb-1">{heading}</p>
+      <p className="text-muted text-[14.5px] mb-4">
         Reminders go to Telegram. Linking is one-tap on a phone.
       </p>
 
       {state.kind === "loading" && (
-        <p className="text-muted text-[13.5px]">Loading…</p>
+        <p className="text-muted text-[14.5px]">Loading…</p>
       )}
 
       {state.kind === "not-setup" && (
@@ -168,7 +168,7 @@ export function TelegramCard({ memberId, heading }: TelegramCardProps) {
 
       {state.kind === "pending" && (
         <div className="space-y-3">
-          <p className="text-[13.5px] text-ink">
+          <p className="text-[14.5px] text-ink">
             Open this link on a phone with Telegram installed, then tap Start.
             <span className="text-muted"> · {countdown}</span>
           </p>
@@ -177,7 +177,7 @@ export function TelegramCard({ memberId, heading }: TelegramCardProps) {
               href={deepLinkFor(state.token)}
               target="_blank"
               rel="noopener"
-              className="inline-flex h-10 items-center px-4 rounded-md bg-primary text-white text-[14px] font-medium hover:bg-[#4f7741]"
+              className="inline-flex h-10 items-center px-4 rounded-md bg-primary text-white text-[15px] font-medium hover:bg-[#4f7741]"
             >
               Open in Telegram
             </a>
@@ -188,7 +188,7 @@ export function TelegramCard({ memberId, heading }: TelegramCardProps) {
               Regenerate
             </Button>
           </div>
-          <code className="block text-[12px] bg-soft border border-line rounded-md p-2 text-ink break-all">
+          <code className="block text-[13px] bg-soft border border-line rounded-md p-2 text-ink break-all">
             {deepLinkFor(state.token)}
           </code>
         </div>
@@ -196,7 +196,7 @@ export function TelegramCard({ memberId, heading }: TelegramCardProps) {
 
       {state.kind === "expired" && (
         <div className="space-y-3">
-          <p className="text-danger text-[13.5px]">
+          <p className="text-danger text-[14.5px]">
             That setup link has expired. Generate a new one.
           </p>
           <Button onClick={generateLink} loading={busy}>
@@ -207,7 +207,7 @@ export function TelegramCard({ memberId, heading }: TelegramCardProps) {
 
       {state.kind === "linked" && (
         <div className="space-y-3">
-          <p className="text-[14px] text-ink">
+          <p className="text-[15px] text-ink">
             <span className="text-primary font-medium">✓ Telegram linked</span>
             {state.username ? (
               <span className="text-muted"> · @{state.username}</span>
@@ -220,7 +220,7 @@ export function TelegramCard({ memberId, heading }: TelegramCardProps) {
       )}
 
       {error && (
-        <p className="mt-3 text-danger text-[13px]" role="alert">
+        <p className="mt-3 text-danger text-[14px]" role="alert">
           {error}
         </p>
       )}

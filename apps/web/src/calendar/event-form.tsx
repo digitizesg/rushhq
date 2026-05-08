@@ -255,20 +255,20 @@ export function EventForm({
           placeholder="Singapore Sports Hub"
         />
         <label className="block">
-          <span className="block text-[13px] font-medium text-ink mb-1.5">Notes</span>
+          <span className="block text-[14px] font-medium text-ink mb-1.5">Notes</span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             placeholder="Anything to remember…"
-            className="w-full rounded-md border border-line bg-white px-3 py-2.5 text-[14px] text-ink placeholder:text-muted/70 hover:border-ink/20 focus:outline-2 focus:outline-offset-0 focus:outline-primary"
+            className="w-full rounded-md border border-line bg-white px-3 py-2.5 text-[15px] text-ink placeholder:text-muted/70 hover:border-ink/20 focus:outline-2 focus:outline-offset-0 focus:outline-primary"
           />
         </label>
       </Section>
 
       <Section title="When">
         <div className="flex flex-wrap items-center gap-4">
-          <label className="inline-flex items-center gap-2 text-[14px] text-ink cursor-pointer select-none">
+          <label className="inline-flex items-center gap-2 text-[15px] text-ink cursor-pointer select-none">
             <input
               type="checkbox"
               className="size-4 rounded border-line accent-primary"
@@ -328,7 +328,7 @@ export function EventForm({
 
       <Section title="Who">
         <div>
-          <span className="block text-[13px] font-medium text-ink mb-2">Attendees</span>
+          <span className="block text-[14px] font-medium text-ink mb-2">Attendees</span>
           <div className="flex flex-wrap gap-2">
             {members.map((m) => {
               const selected = attendeeIds.includes(m.id);
@@ -340,7 +340,7 @@ export function EventForm({
                   onClick={() => toggleAttendee(m.id)}
                   aria-pressed={selected}
                   className={[
-                    "inline-flex items-center gap-2 h-9 px-3 rounded-full border text-[13.5px] transition-colors",
+                    "inline-flex items-center gap-2 h-9 px-3 rounded-full border text-[14.5px] transition-colors",
                     "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary",
                   ].join(" ")}
                   style={
@@ -362,7 +362,7 @@ export function EventForm({
                   <span className={selected ? "font-medium" : "text-ink"}>
                     {m.short_name}
                   </span>
-                  <span className="text-[11.5px] capitalize opacity-70">{m.role}</span>
+                  <span className="text-[12.5px] capitalize opacity-70">{m.role}</span>
                 </button>
               );
             })}
@@ -391,14 +391,14 @@ export function EventForm({
           <button
             type="button"
             onClick={addReminder}
-            className="text-[13px] font-medium text-primary hover:underline underline-offset-2"
+            className="text-[14px] font-medium text-primary hover:underline underline-offset-2"
           >
             + Add reminder
           </button>
         }
       >
         {reminders.length === 0 ? (
-          <p className="text-[13px] text-muted">No reminders set.</p>
+          <p className="text-[14px] text-muted">No reminders set.</p>
         ) : (
           <div className="space-y-2.5">
             {reminders.map((r) => (
@@ -447,7 +447,7 @@ export function EventForm({
       </Section>
 
       {error && (
-        <p role="alert" className="text-danger text-[13px]">
+        <p role="alert" className="text-danger text-[14px]">
           {error}
         </p>
       )}
@@ -456,7 +456,7 @@ export function EventForm({
         {isEditing && onDeleted && (
           confirmingDelete ? (
             <div className="flex items-center gap-2">
-              <span className="text-[13px] text-danger">Sure?</span>
+              <span className="text-[14px] text-danger">Sure?</span>
               <Button
                 type="button"
                 size="sm"
@@ -513,7 +513,7 @@ function Section({
       {(title || action) && (
         <div className="flex items-baseline justify-between gap-3">
           {title && (
-            <h3 className="text-[12px] font-semibold uppercase tracking-wider text-muted">
+            <h3 className="text-[13px] font-semibold uppercase tracking-wider text-muted">
               {title}
             </h3>
           )}

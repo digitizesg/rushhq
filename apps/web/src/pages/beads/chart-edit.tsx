@@ -190,7 +190,7 @@ export default function ChartEditPage() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <Link
           to="/beads"
-          className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-ink"
+          className="inline-flex items-center gap-1 text-[14px] text-muted hover:text-ink"
         >
           <ChevronLeft size={14} /> All children
         </Link>
@@ -205,10 +205,10 @@ export default function ChartEditPage() {
       </div>
 
       <div>
-        <p className="text-[12px] uppercase tracking-wider text-muted mb-1">
+        <p className="text-[13px] uppercase tracking-wider text-muted mb-1">
           {child.short_name}'s chart
         </p>
-        <h1 className="text-[26px] font-medium text-ink">
+        <h1 className="text-[28px] font-medium text-ink">
           {activeChart
             ? formatPeriodLabel(activeChart.effective_from)
             : "No active chart"}
@@ -216,13 +216,13 @@ export default function ChartEditPage() {
       </div>
 
       {error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[13px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
           {error}
         </div>
       )}
 
       {!activeChart ? (
-        <div className="bg-white border border-line rounded-lg p-6 text-[14px] text-muted">
+        <div className="bg-white border border-line rounded-lg p-6 text-[15px] text-muted">
           No active chart. Use "Clone for next month" once a previous chart exists,
           or contact your admin.
         </div>
@@ -230,19 +230,19 @@ export default function ChartEditPage() {
         <form onSubmit={handleSave} className="space-y-4">
           <div className="bg-white border border-line rounded-lg overflow-hidden">
             <header className="flex items-center justify-between px-4 sm:px-5 py-3 bg-soft border-b border-line">
-              <span className="text-[14px] font-semibold text-ink">
+              <span className="text-[15px] font-semibold text-ink">
                 Tasks ({visibleDraft.length})
               </span>
               <button
                 type="button"
                 onClick={addItem}
-                className="inline-flex items-center gap-1 text-[12.5px] font-medium text-primary hover:underline"
+                className="inline-flex items-center gap-1 text-[13.5px] font-medium text-primary hover:underline"
               >
                 <Plus size={13} /> Add task
               </button>
             </header>
             {visibleDraft.length === 0 ? (
-              <p className="px-5 py-6 text-[13px] text-muted text-center">
+              <p className="px-5 py-6 text-[14px] text-muted text-center">
                 No tasks yet. Add one above.
               </p>
             ) : (
@@ -281,10 +281,10 @@ export default function ChartEditPage() {
             onClick={() => setPastOpen((v) => !v)}
             className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-soft transition-colors"
           >
-            <span className="text-[14.5px] font-medium text-ink">
+            <span className="text-[15.5px] font-medium text-ink">
               Past charts
             </span>
-            <span className="text-[12.5px] text-muted">
+            <span className="text-[13.5px] text-muted">
               {pastCharts.length} {pastCharts.length === 1 ? "chart" : "charts"}{" "}
               · {pastOpen ? "hide" : "show"}
             </span>
@@ -349,13 +349,13 @@ function ItemRow({ item, colours, onPatch, onRemove, onMoveUp, onMoveDown }: Ite
         value={item.description}
         onChange={(e) => onPatch(item.id, { description: e.target.value })}
         placeholder="Task description"
-        className="w-full h-9 rounded-md border border-line bg-white px-3 text-[14px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
+        className="w-full h-9 rounded-md border border-line bg-white px-3 text-[15px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
       />
       <select
         value={item.bead_colour_id}
         onChange={(e) => onPatch(item.id, { bead_colour_id: e.target.value })}
         aria-label="Bead colour"
-        className="h-9 rounded-md border border-line bg-white px-2.5 text-[13px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
+        className="h-9 rounded-md border border-line bg-white px-2.5 text-[14px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
       >
         {colours.map((c) => (
           <option key={c.id} value={c.id}>
@@ -397,13 +397,13 @@ function PastChartRow({ chart, items, colours }: PastChartRowProps) {
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-soft transition-colors"
       >
-        <span className="text-[13.5px] text-ink tnum">
+        <span className="text-[14.5px] text-ink tnum">
           {formatPeriodLabel(chart.effective_from)}
           {chart.effective_until && (
             <span className="text-muted"> · ended {chart.effective_until}</span>
           )}
         </span>
-        <span className="text-[12.5px] text-muted">
+        <span className="text-[13.5px] text-muted">
           {items.length} {items.length === 1 ? "task" : "tasks"}
         </span>
       </button>
@@ -412,14 +412,14 @@ function PastChartRow({ chart, items, colours }: PastChartRowProps) {
           {sorted.map((item) => {
             const colour = colours.find((c) => c.id === item.bead_colour_id);
             return (
-              <li key={item.id} className="flex items-center gap-2 text-[13px] text-ink">
+              <li key={item.id} className="flex items-center gap-2 text-[14px] text-ink">
                 <BeadDot
                   hex={colour?.hex ?? "#ccc"}
                   sparkly={colour?.id === "sparkly_pink"}
                   size={12}
                 />
                 <span className="flex-1">{item.description}</span>
-                <span className="text-muted text-[12px] tnum">
+                <span className="text-muted text-[13px] tnum">
                   {colour ? formatSGD(Number(colour.sgd_value)) : ""}
                 </span>
               </li>

@@ -34,20 +34,20 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
           aria-hidden
         />
         <div className="min-w-0">
-          <p className="text-[20px] font-semibold text-ink leading-tight">
+          <p className="text-[22px] font-semibold text-ink leading-tight">
             {event.title}
           </p>
           {event.location && (
-            <p className="mt-1 text-[14px] text-muted">📍 {event.location}</p>
+            <p className="mt-1 text-[15px] text-muted">📍 {event.location}</p>
           )}
         </div>
       </div>
 
       <div className="rounded-md border border-line bg-soft px-4 py-3">
-        <p className="text-[12px] uppercase tracking-wider text-muted mb-1">
+        <p className="text-[13px] uppercase tracking-wider text-muted mb-1">
           When
         </p>
-        <p className="text-[14px] text-ink tnum">
+        <p className="text-[15px] text-ink tnum">
           {event.all_day
             ? format(occurrence.start, "EEEE d LLLL yyyy") + " · all day"
             : `${format(occurrence.start, "EEEE d LLLL yyyy")} · ${formatTime24(
@@ -55,16 +55,16 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
               )} – ${formatTime24(occurrence.end)}`}
         </p>
         {event.rrule && (
-          <p className="mt-1 text-[12.5px] text-muted">{presetLabel}</p>
+          <p className="mt-1 text-[13.5px] text-muted">{presetLabel}</p>
         )}
       </div>
 
       {event.description && (
         <div>
-          <p className="text-[12px] uppercase tracking-wider text-muted mb-1.5">
+          <p className="text-[13px] uppercase tracking-wider text-muted mb-1.5">
             Notes
           </p>
-          <p className="text-[14px] text-ink whitespace-pre-wrap leading-relaxed">
+          <p className="text-[15px] text-ink whitespace-pre-wrap leading-relaxed">
             {event.description}
           </p>
         </div>
@@ -72,7 +72,7 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
 
       {attendees.length > 0 && (
         <div>
-          <p className="text-[12px] uppercase tracking-wider text-muted mb-1.5">
+          <p className="text-[13px] uppercase tracking-wider text-muted mb-1.5">
             Attendees
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -81,7 +81,7 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
               return (
                 <span
                   key={m.id}
-                  className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full text-[13px]"
+                  className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full text-[14px]"
                   style={{ background: c.soft, color: c.text }}
                 >
                   <span
@@ -97,7 +97,7 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
         </div>
       )}
 
-      <p className="text-[12px] text-subtle pt-2 border-t border-line">
+      <p className="text-[13px] text-subtle pt-2 border-t border-line">
         You're viewing as a helper. Ask Ben or Alice if you need this changed.
       </p>
     </div>

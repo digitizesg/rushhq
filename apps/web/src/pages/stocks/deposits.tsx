@@ -30,15 +30,15 @@ export default function DepositsPage() {
 
   return (
     <section className="mx-auto max-w-[820px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
-      <Link to="/stocks" className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-ink">
+      <Link to="/stocks" className="inline-flex items-center gap-1 text-[14px] text-muted hover:text-ink">
         <ChevronLeft size={14} /> Stocks overview
       </Link>
 
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-[12px] uppercase tracking-wider text-muted mb-1">Stocks</p>
-          <h1 className="text-[26px] font-medium text-ink">Pending deposits</h1>
-          <p className="mt-2 text-[13.5px] text-muted">
+          <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Stocks</p>
+          <h1 className="text-[28px] font-medium text-ink">Pending deposits</h1>
+          <p className="mt-2 text-[14.5px] text-muted">
             Money waiting to be invested. Use this for gifts when you're not investing the same day.
           </p>
         </div>
@@ -46,7 +46,7 @@ export default function DepositsPage() {
       </div>
 
       {sorted.length === 0 ? (
-        <div className="bg-white border border-line rounded-lg p-6 text-[14px] text-muted">
+        <div className="bg-white border border-line rounded-lg p-6 text-[15px] text-muted">
           No deposits yet.
         </div>
       ) : (
@@ -57,16 +57,16 @@ export default function DepositsPage() {
               return (
                 <li key={d.id} className="px-5 py-4 grid sm:grid-cols-[1fr_auto_auto] gap-3 items-center">
                   <div>
-                    <p className="text-[14.5px] font-medium text-ink">
+                    <p className="text-[15.5px] font-medium text-ink">
                       {child?.short_name ?? "?"} · {d.source}
                     </p>
-                    <p className="text-[12.5px] text-muted">
+                    <p className="text-[13.5px] text-muted">
                       Received {format(new Date(d.received_date), "d LLL yyyy")}
                     </p>
                   </div>
                   <StatusBadge status={d.status} />
                   <div className="flex items-center gap-3">
-                    <span className="text-[14px] text-ink tnum">{formatSGD(d.amount_sgd)}</span>
+                    <span className="text-[15px] text-ink tnum">{formatSGD(d.amount_sgd)}</span>
                     {d.status === "pending" && (
                       <CancelButton
                         depositId={d.id}
@@ -105,7 +105,7 @@ function StatusBadge({ status }: { status: PendingDepositStatus }) {
   };
   const s = styles[status];
   return (
-    <span className={`inline-flex items-center px-2 h-6 rounded-full text-[12px] ${s.bg} ${s.text}`}>
+    <span className={`inline-flex items-center px-2 h-6 rounded-full text-[13px] ${s.bg} ${s.text}`}>
       {s.label}
     </span>
   );
@@ -130,7 +130,7 @@ function CancelButton({
         setBusy(false);
         onCancelled();
       }}
-      className="text-[12.5px] text-muted hover:text-danger disabled:opacity-50"
+      className="text-[13.5px] text-muted hover:text-danger disabled:opacity-50"
     >
       Cancel
     </button>
@@ -209,7 +209,7 @@ function AddForm({ createdBy, onAdded, onCancelled }: AddFormProps) {
         value={date}
         onChange={(e) => setDate(e.target.value)}
       />
-      {error && <p role="alert" className="text-danger text-[13px]">{error}</p>}
+      {error && <p role="alert" className="text-danger text-[14px]">{error}</p>}
       <div className="flex justify-end gap-2 pt-2 border-t border-line">
         <Button type="button" variant="secondary" onClick={onCancelled}>Cancel</Button>
         <Button type="submit" loading={submitting}>Add</Button>

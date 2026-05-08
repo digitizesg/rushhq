@@ -78,10 +78,10 @@ export default function StocksOverviewPage() {
     <section className="mx-auto max-w-[1100px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[12px] uppercase tracking-wider text-muted mb-1">Stocks</p>
-          <h1 className="text-[28px] font-medium text-ink">VOO holdings</h1>
+          <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Stocks</p>
+          <h1 className="text-[30px] font-medium text-ink">VOO holdings</h1>
         </div>
-        <div className="flex items-center gap-2 text-[12.5px] text-muted">
+        <div className="flex items-center gap-2 text-[13.5px] text-muted">
           {lastUpdated ? (
             <>
               <span>VOO {formatUSD(voo)} · USD/SGD {fx.toFixed(4)}</span>
@@ -103,12 +103,12 @@ export default function StocksOverviewPage() {
       </div>
 
       {data.error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[13px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
           {data.error}
         </div>
       )}
 
-      <div className="flex items-start gap-2 text-[12.5px] text-muted bg-soft border border-line rounded-md px-3 py-2">
+      <div className="flex items-start gap-2 text-[13.5px] text-muted bg-soft border border-line rounded-md px-3 py-2">
         <Info size={14} className="mt-0.5 shrink-0" />
         <p>
           Shares are bought in USD. SGD figures use current or recent FX
@@ -130,10 +130,10 @@ export default function StocksOverviewPage() {
           <div className="flex items-start gap-3">
             <Sparkles size={18} className="text-emerald mt-0.5" />
             <div>
-              <p className="text-[15px] font-semibold text-ink">
+              <p className="text-[16px] font-semibold text-ink">
                 {formatSGD(readyTotal)} ready to invest
               </p>
-              <p className="text-[13px] text-muted mt-0.5">
+              <p className="text-[14px] text-muted mt-0.5">
                 {countedPeriods.length} bead {countedPeriods.length === 1 ? "period" : "periods"}{" "}
                 · {pendingDepositsActive.length} pending{" "}
                 {pendingDepositsActive.length === 1 ? "deposit" : "deposits"}
@@ -142,7 +142,7 @@ export default function StocksOverviewPage() {
           </div>
           <Link
             to="/stocks/buy"
-            className="inline-flex items-center justify-center h-10 px-4 rounded-md bg-primary text-white text-[14px] font-medium hover:bg-primary-strong transition-colors"
+            className="inline-flex items-center justify-center h-10 px-4 rounded-md bg-primary text-white text-[15px] font-medium hover:bg-primary-strong transition-colors"
           >
             Record monthly purchase
           </Link>
@@ -183,11 +183,11 @@ export default function StocksOverviewPage() {
 
       {/* Actions */}
       <section className="bg-white border border-line rounded-lg p-5 sm:p-6 space-y-4">
-        <p className="text-[12.5px] uppercase tracking-wider text-muted">Quick actions</p>
+        <p className="text-[13.5px] uppercase tracking-wider text-muted">Quick actions</p>
         <div className="flex flex-wrap gap-2.5">
           <Link
             to="/stocks/buy"
-            className="inline-flex items-center gap-2 h-11 px-4 rounded-md bg-primary text-white text-[14px] font-medium hover:bg-primary-strong transition-colors shadow-sm"
+            className="inline-flex items-center gap-2 h-11 px-4 rounded-md bg-primary text-white text-[15px] font-medium hover:bg-primary-strong transition-colors shadow-sm"
           >
             <Plus size={16} /> Record purchase
           </Link>
@@ -221,7 +221,7 @@ function ActionButton({
   return (
     <Link
       to={to}
-      className="inline-flex items-center gap-2 h-11 px-4 rounded-md bg-white border border-line text-ink text-[14px] font-medium hover:bg-soft hover:border-ink/15 transition-colors"
+      className="inline-flex items-center gap-2 h-11 px-4 rounded-md bg-white border border-line text-ink text-[15px] font-medium hover:bg-soft hover:border-ink/15 transition-colors"
     >
       <span className="text-muted">{icon}</span> {children}
     </Link>
@@ -231,9 +231,9 @@ function ActionButton({
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div>
-      <p className="text-[11.5px] uppercase tracking-wider text-muted mb-1">{label}</p>
-      <p className="text-[20px] font-semibold text-ink tnum">{value}</p>
-      {sub && <p className="text-[12px] text-muted mt-0.5 tnum">{sub}</p>}
+      <p className="text-[12.5px] uppercase tracking-wider text-muted mb-1">{label}</p>
+      <p className="text-[22px] font-semibold text-ink tnum">{value}</p>
+      {sub && <p className="text-[13px] text-muted mt-0.5 tnum">{sub}</p>}
     </div>
   );
 }
@@ -242,10 +242,10 @@ function GainStat({ label, amount, pct }: { label: string; amount: number; pct?:
   const positive = amount >= 0;
   return (
     <div>
-      <p className="text-[11.5px] uppercase tracking-wider text-muted mb-1">{label}</p>
+      <p className="text-[12.5px] uppercase tracking-wider text-muted mb-1">{label}</p>
       <p
         className={[
-          "text-[20px] font-semibold tnum inline-flex items-center gap-1",
+          "text-[22px] font-semibold tnum inline-flex items-center gap-1",
           positive ? "text-emerald" : "text-danger",
         ].join(" ")}
       >
@@ -253,7 +253,7 @@ function GainStat({ label, amount, pct }: { label: string; amount: number; pct?:
         {positive ? "+" : "−"}{formatSGD(Math.abs(amount))}
       </p>
       {pct !== undefined && pct !== 0 && (
-        <p className={["text-[12px] mt-0.5 tnum", positive ? "text-emerald" : "text-danger"].join(" ")}>
+        <p className={["text-[13px] mt-0.5 tnum", positive ? "text-emerald" : "text-danger"].join(" ")}>
           {positive ? "+" : ""}{pct.toFixed(2)}%
         </p>
       )}
@@ -285,7 +285,7 @@ function KidGainHeadline({
   if (shares <= 0) {
     return (
       <div className="rounded-md bg-soft border border-line px-4 py-3">
-        <p className="text-[14.5px] text-ink">
+        <p className="text-[15.5px] text-ink">
           Hey {name}, your investing journey hasn't started yet. Once your first
           purchase is recorded, your gains will show up here.
         </p>
@@ -307,9 +307,9 @@ function KidGainHeadline({
       : `Hey ${name}, you're break-even right now. Watch this space!`;
   return (
     <div className={["rounded-md border px-4 py-3", tone].join(" ")}>
-      <p className="text-[15px] font-medium">{message}</p>
+      <p className="text-[16px] font-medium">{message}</p>
       {gainPct !== 0 && (
-        <p className="text-[12.5px] mt-0.5 opacity-80 tnum">
+        <p className="text-[13.5px] mt-0.5 opacity-80 tnum">
           {positive ? "+" : "−"}{Math.abs(gainPct).toFixed(2)}% on what you put in
         </p>
       )}
@@ -338,12 +338,12 @@ function ChildCard({ memberId, name, holding, snaps, voo, fx, pendingCount }: Ch
       >
         <div className="flex items-center gap-2.5">
           <span className="size-2 rounded-full" style={{ backgroundColor: colour.accent }} />
-          <h2 className="text-[16px] font-semibold" style={{ color: colour.text }}>
+          <h2 className="text-[18px] font-semibold" style={{ color: colour.text }}>
             {name}
           </h2>
         </div>
         {pendingCount > 0 && (
-          <span className="inline-flex items-center px-2 h-6 rounded-full text-[12px] bg-amber-soft text-amber">
+          <span className="inline-flex items-center px-2 h-6 rounded-full text-[13px] bg-amber-soft text-amber">
             {pendingCount} pending
           </span>
         )}
@@ -540,8 +540,8 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
   return (
     <div className="bg-white border border-line rounded-lg p-5 sm:p-6 space-y-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <p className="text-[12.5px] uppercase tracking-wider text-muted">Portfolio over time</p>
-        <p className="text-[12.5px] text-muted">
+        <p className="text-[13.5px] uppercase tracking-wider text-muted">Portfolio over time</p>
+        <p className="text-[13.5px] text-muted">
           Today: <span className="text-ink tnum">{formatSGD(last.total)}</span>{" "}
           ·{" "}
           <span className={lastGainPositive ? "text-emerald" : "text-danger"}>
@@ -656,7 +656,7 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
       </svg>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12.5px]">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13.5px]">
         {childList.map((c) => {
           const colour = colourFor(c.id);
           const v = last.perKid[c.id] ?? 0;
@@ -678,7 +678,7 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
       </div>
 
       {rows.length === 1 && (
-        <p className="text-[12px] text-muted text-center">
+        <p className="text-[13px] text-muted text-center">
           The chart will fill out over time as more entries are added.
         </p>
       )}

@@ -209,28 +209,28 @@ export default function CountPage() {
     <section className="mx-auto max-w-[640px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
       <Link
         to="/beads"
-        className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-ink"
+        className="inline-flex items-center gap-1 text-[14px] text-muted hover:text-ink"
       >
         <ChevronLeft size={14} /> All children
       </Link>
 
       <div>
-        <p className="text-[12px] uppercase tracking-wider text-muted mb-1">
+        <p className="text-[13px] uppercase tracking-wider text-muted mb-1">
           Counting beads
         </p>
-        <h1 className="text-[26px] font-medium text-ink">
+        <h1 className="text-[28px] font-medium text-ink">
           {state.child.short_name} · {formatPeriodLabel(periodStart)}
         </h1>
       </div>
 
       {state.error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[13px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
           {state.error}
         </div>
       )}
 
       {!editable && (
-        <div className="rounded-md border border-line bg-soft p-4 text-[13.5px] text-ink">
+        <div className="rounded-md border border-line bg-soft p-4 text-[14.5px] text-ink">
           {status === "counted" ? (
             <>
               Locked
@@ -274,8 +274,8 @@ export default function CountPage() {
                   size={26}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14.5px] font-medium text-ink">{c.name}</p>
-                  <p className="text-[12.5px] text-muted tnum">
+                  <p className="text-[15.5px] font-medium text-ink">{c.name}</p>
+                  <p className="text-[13.5px] text-muted tnum">
                     {formatSGD(Number(c.sgd_value))} each
                   </p>
                 </div>
@@ -287,23 +287,23 @@ export default function CountPage() {
                   value={state.counts[c.id] ?? 0}
                   onChange={(e) => setCount(c.id, e.target.value)}
                   aria-label={`${c.name} count`}
-                  className="w-24 h-12 rounded-md border border-line bg-white px-3 text-[20px] font-medium text-ink tnum text-right focus:outline-2 focus:outline-offset-0 focus:outline-primary disabled:opacity-60"
+                  className="w-24 h-12 rounded-md border border-line bg-white px-3 text-[22px] font-medium text-ink tnum text-right focus:outline-2 focus:outline-offset-0 focus:outline-primary disabled:opacity-60"
                 />
               </li>
             ))}
           </ul>
           <div className="flex items-center justify-between bg-soft px-4 py-3 border-t border-line">
-            <p className="text-[13px] uppercase tracking-wider text-muted">
+            <p className="text-[14px] uppercase tracking-wider text-muted">
               Total
             </p>
-            <p className="text-[24px] font-semibold text-ink tnum">
+            <p className="text-[26px] font-semibold text-ink tnum">
               {formatSGD(total)}
             </p>
           </div>
         </div>
 
         <label className="block">
-          <span className="block text-[13px] font-medium text-ink mb-1.5">
+          <span className="block text-[14px] font-medium text-ink mb-1.5">
             Notes (optional)
           </span>
           <textarea
@@ -312,7 +312,7 @@ export default function CountPage() {
             onChange={(e) => setState((s) => ({ ...s, notes: e.target.value }))}
             rows={2}
             placeholder="Anything worth remembering about this month's counting"
-            className="w-full rounded-md border border-line bg-white px-3 py-2 text-[14px] text-ink focus:outline-2 focus:outline-offset-0 focus:outline-primary disabled:opacity-60"
+            className="w-full rounded-md border border-line bg-white px-3 py-2 text-[15px] text-ink focus:outline-2 focus:outline-offset-0 focus:outline-primary disabled:opacity-60"
           />
         </label>
 
@@ -359,8 +359,8 @@ export default function CountPage() {
           onClick={(e) => e.target === e.currentTarget && setConfirmingLock(false)}
         >
           <div className="w-full max-w-sm bg-white rounded-lg border border-line p-5">
-            <p className="text-[18px] font-semibold text-ink mb-2">Lock this period?</p>
-            <p className="text-[13.5px] text-muted leading-relaxed mb-4">
+            <p className="text-[20px] font-semibold text-ink mb-2">Lock this period?</p>
+            <p className="text-[14.5px] text-muted leading-relaxed mb-4">
               This locks {state.child.short_name}'s beads for {formatPeriodLabel(periodStart)} at{" "}
               <span className="text-ink font-medium tnum">{formatSGD(total)}</span>.
               You can reopen later if needed, but once invested it can't be edited.

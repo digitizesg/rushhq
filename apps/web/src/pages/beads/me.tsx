@@ -108,16 +108,16 @@ export default function MyBeadsPage() {
   return (
     <section className="mx-auto max-w-[820px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
       <div>
-        <p className="text-[12px] uppercase tracking-wider text-muted mb-1">
+        <p className="text-[13px] uppercase tracking-wider text-muted mb-1">
           {formatPeriodLabel(thisMonthStart)}
         </p>
-        <h1 className="text-[28px] font-medium text-ink">
+        <h1 className="text-[30px] font-medium text-ink">
           Hi {member.short_name}
         </h1>
       </div>
 
       {state.error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[13px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
           {state.error}
         </div>
       )}
@@ -131,17 +131,17 @@ export default function MyBeadsPage() {
       </div>
 
       {!state.chart ? (
-        <div className="bg-white border border-line rounded-lg p-6 text-[14px] text-muted">
+        <div className="bg-white border border-line rounded-lg p-6 text-[15px] text-muted">
           No chart yet. Ask Mum or Dad.
         </div>
       ) : state.items.length === 0 ? (
-        <div className="bg-white border border-line rounded-lg p-6 text-[14px] text-muted">
+        <div className="bg-white border border-line rounded-lg p-6 text-[15px] text-muted">
           Your chart is empty for now.
         </div>
       ) : (
         <div className="bg-white border border-line rounded-lg overflow-hidden">
           <header className="px-5 py-3 bg-soft border-b border-line">
-            <span className="text-[14px] font-semibold text-ink">
+            <span className="text-[15px] font-semibold text-ink">
               Your tasks ({state.items.length})
             </span>
           </header>
@@ -151,7 +151,7 @@ export default function MyBeadsPage() {
               return (
                 <li
                   key={item.id}
-                  className="flex items-center gap-3 px-5 py-3 text-[14.5px] text-ink"
+                  className="flex items-center gap-3 px-5 py-3 text-[15.5px] text-ink"
                 >
                   <BeadDot
                     hex={c?.hex ?? "#cccccc"}
@@ -159,7 +159,7 @@ export default function MyBeadsPage() {
                     size={18}
                   />
                   <span className="flex-1">{item.description}</span>
-                  <span className="text-muted text-[13px] tnum">
+                  <span className="text-muted text-[14px] tnum">
                     {c ? formatSGD(Number(c.sgd_value)) : ""}
                   </span>
                 </li>
@@ -177,8 +177,8 @@ export default function MyBeadsPage() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-white border border-line rounded-lg p-5">
-      <p className="text-[12px] uppercase tracking-wider text-muted mb-1">{label}</p>
-      <p className="text-[24px] font-semibold text-ink tnum">{value}</p>
+      <p className="text-[13px] uppercase tracking-wider text-muted mb-1">{label}</p>
+      <p className="text-[26px] font-semibold text-ink tnum">{value}</p>
     </div>
   );
 }
@@ -187,7 +187,7 @@ function GrowthChart({ points }: { points: BeadPeriodTotal[] }) {
   const max = Math.max(1, ...points.map((p) => p.total_sgd));
   return (
     <div className="bg-white border border-line rounded-lg p-5">
-      <p className="text-[12px] uppercase tracking-wider text-muted mb-3">
+      <p className="text-[13px] uppercase tracking-wider text-muted mb-3">
         Last {points.length} months
       </p>
       <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${points.length}, 1fr)` }}>
@@ -201,10 +201,10 @@ function GrowthChart({ points }: { points: BeadPeriodTotal[] }) {
                   style={{ height: `${h}px` }}
                 />
               </div>
-              <p className="text-[11px] text-muted tnum">
+              <p className="text-[12px] text-muted tnum">
                 {formatPeriodLabel(p.period_start).slice(0, 3)}
               </p>
-              <p className="text-[12px] text-ink tnum">{formatSGD(p.total_sgd)}</p>
+              <p className="text-[13px] text-ink tnum">{formatSGD(p.total_sgd)}</p>
             </div>
           );
         })}

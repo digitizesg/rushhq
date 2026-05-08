@@ -41,7 +41,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
         className={`w-full ${widthClass} bg-page sm:rounded-lg shadow-[0_20px_50px_-20px_rgba(42,33,24,0.4)] border border-line max-h-[92vh] flex flex-col`}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-line">
-          <p className="text-[18px] font-medium text-ink">{title}</p>
+          <p className="text-[20px] font-medium text-ink">{title}</p>
           <button
             type="button"
             onClick={onClose}

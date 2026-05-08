@@ -5,7 +5,7 @@ import { useAuth } from "@/auth/auth-context";
 import { colourFor } from "@/lib/colours";
 
 const navBase =
-  "px-3 py-2 rounded-md text-[14px] font-medium text-muted hover:text-ink transition-colors";
+  "px-3 py-2 rounded-md text-[15px] font-medium text-muted hover:text-ink transition-colors";
 const navActive = "bg-primary-soft text-primary";
 
 export function AppShell() {
@@ -30,12 +30,12 @@ export function AppShell() {
             onClick={() => setMenuOpen(false)}
           >
             <span
-              className="grid place-items-center size-7 rounded-md bg-primary text-white text-[13px] font-semibold"
+              className="grid place-items-center size-7 rounded-md bg-primary text-white text-[14px] font-semibold"
               aria-hidden
             >
               R
             </span>
-            <span className="text-[16px] font-semibold text-ink tracking-[-0.01em]">
+            <span className="text-[18px] font-semibold text-ink tracking-[-0.01em]">
               Rush HQ
             </span>
           </Link>
@@ -219,7 +219,7 @@ export function AppShell() {
                   setMenuOpen(false);
                   void signOut();
                 }}
-                className="text-left px-3 py-2 rounded-md text-[14px] text-muted hover:text-ink hover:bg-soft"
+                className="text-left px-3 py-2 rounded-md text-[15px] text-muted hover:text-ink hover:bg-soft"
               >
                 Sign out
               </button>
@@ -274,13 +274,13 @@ function UserMenu({ shortName, initials, accent, soft, isParent, onSignOut }: Us
         className="inline-flex items-center gap-2 h-9 pl-1 pr-2.5 rounded-full hover:bg-soft transition-colors"
       >
         <span
-          className="grid place-items-center size-7 rounded-full text-[12px] font-semibold"
+          className="grid place-items-center size-7 rounded-full text-[13px] font-semibold"
           style={{ background: soft, color: accent }}
           aria-hidden
         >
           {initials}
         </span>
-        <span className="text-[13.5px] font-medium text-ink">{shortName}</span>
+        <span className="text-[14.5px] font-medium text-ink">{shortName}</span>
         <ChevronDown size={14} className="text-muted" aria-hidden />
       </button>
       {open && (
@@ -292,7 +292,7 @@ function UserMenu({ shortName, initials, accent, soft, isParent, onSignOut }: Us
             to="/settings"
             role="menuitem"
             onClick={() => setOpen(false)}
-            className="block px-3 py-2 text-[13.5px] text-ink hover:bg-soft"
+            className="block px-3 py-2 text-[14.5px] text-ink hover:bg-soft"
           >
             Settings
           </Link>
@@ -301,7 +301,7 @@ function UserMenu({ shortName, initials, accent, soft, isParent, onSignOut }: Us
               to="/admin"
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="block px-3 py-2 text-[13.5px] text-ink hover:bg-soft"
+              className="block px-3 py-2 text-[14.5px] text-ink hover:bg-soft"
             >
               Admin
             </Link>
@@ -314,7 +314,7 @@ function UserMenu({ shortName, initials, accent, soft, isParent, onSignOut }: Us
               setOpen(false);
               onSignOut();
             }}
-            className="block w-full text-left px-3 py-2 text-[13.5px] text-muted hover:text-danger hover:bg-soft"
+            className="block w-full text-left px-3 py-2 text-[14.5px] text-muted hover:text-danger hover:bg-soft"
           >
             Sign out
           </button>
