@@ -58,6 +58,14 @@ export function AppShell() {
             ) : null}
             {isParent() && (
               <NavLink
+                to="/finance"
+                className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+              >
+                Finance
+              </NavLink>
+            )}
+            {isParent() && (
+              <NavLink
                 to="/beads"
                 className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
               >
@@ -69,15 +77,7 @@ export function AppShell() {
                 to="/stocks"
                 className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
               >
-                Stocks
-              </NavLink>
-            )}
-            {isParent() && (
-              <NavLink
-                to="/finance"
-                className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
-              >
-                Finance
+                Kids Stocks
               </NavLink>
             )}
             {isChild && (
@@ -152,6 +152,15 @@ export function AppShell() {
               )}
               {isParent() && (
                 <NavLink
+                  to="/finance"
+                  className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Finance
+                </NavLink>
+              )}
+              {isParent() && (
+                <NavLink
                   to="/beads"
                   className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
                   onClick={() => setMenuOpen(false)}
@@ -165,16 +174,7 @@ export function AppShell() {
                   className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
                   onClick={() => setMenuOpen(false)}
                 >
-                  Stocks
-                </NavLink>
-              )}
-              {isParent() && (
-                <NavLink
-                  to="/finance"
-                  className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Finance
+                  Kids Stocks
                 </NavLink>
               )}
               {isChild && (
