@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { useStocksData } from "@/stocks/use-stocks-data";
+import { useStocksData, priceOf } from "@/stocks/use-stocks-data";
 import {
   formatSGD,
   formatShares,
@@ -53,9 +53,6 @@ export default function BuyPage() {
   const [giftAmount, setGiftAmount] = useState("");
   const [giftSource, setGiftSource] = useState("");
 
-  // Direct flow extra: total SGD spent on this purchase.
-  const [directTotalSgd, setDirectTotalSgd] = useState("");
-
   if (data.loading) return <LoadingScreen />;
 
   // ---- bead-mode allocation preview ----
@@ -80,17 +77,22 @@ export default function BuyPage() {
 
   const sharesNum = parseFloat(shares) || 0;
   const priceNum = parseFloat(pricePerShare) || 0;
-  // Total SGD comes from one of three sources depending on mode.
-  const directTotalSgdNum = parseFloat(directTotalSgd) || 0;
   const giftAmountNum = parseFloat(giftAmount) || 0;
+  const totalUsd = sharesNum * priceNum;
+  // Bead and gift modes have a natural SGD anchor (pool / gift amount),
+  // so FX is implied. Direct mode has no anchor — fall back to the
+  // cached USD/SGD price (refreshed every 15 min by the cron).
+  const cachedFx = priceOf(data.priceCache, "USDSGD");
+  const fxNum =
+    mode === "bead"
+      ? totalUsd > 0 && beadGrandTotalSgd > 0 ? beadGrandTotalSgd / totalUsd : 0
+      : mode === "gift"
+        ? totalUsd > 0 && giftAmountNum > 0 ? giftAmountNum / totalUsd : 0
+        : cachedFx;
   const totalSgdForMode =
     mode === "bead" ? beadGrandTotalSgd
       : mode === "gift" ? giftAmountNum
-      : directTotalSgdNum;
-  // Derive the FX rate from the SGD spent. Zero when inputs aren't
-  // ready yet.
-  const totalUsd = sharesNum * priceNum;
-  const fxNum = totalUsd > 0 && totalSgdForMode > 0 ? totalSgdForMode / totalUsd : 0;
+      : totalUsd * cachedFx;
 
   function togglePeriod(id: string, checked: boolean) {
     setPeriodIds((s) => {
@@ -143,8 +145,12 @@ export default function BuyPage() {
   async function handleDirectSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (sharesNum <= 0 || priceNum <= 0 || fxNum <= 0) {
-      setError("Shares, price, and the SGD spent must all be positive numbers.");
+    if (sharesNum <= 0 || priceNum <= 0) {
+      setError("Shares and USD price must both be positive numbers.");
+      return;
+    }
+    if (fxNum <= 0) {
+      setError("USD/SGD rate isn't loaded yet — wait a moment and try again.");
       return;
     }
     const allocs = data.children
@@ -414,7 +420,7 @@ export default function BuyPage() {
           <p className="text-[13.5px] text-muted">
             For purchases that aren't tied to bead periods or earmarked deposits.
             Useful for backfilling history or when you've decided the split yourself.
-            Enter the trade details from moomoo, then split the shares per child below.
+            Enter the USD trade details from moomoo, then split the shares per child below.
           </p>
 
           <TransactionFields
@@ -424,19 +430,6 @@ export default function BuyPage() {
             txDate={txDate} setTxDate={setTxDate}
             notes={notes} setNotes={setNotes}
           />
-
-          <section className="bg-white border border-line rounded-lg p-5 space-y-2">
-            <TextField
-              label="Total SGD spent on this purchase"
-              required
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              value={directTotalSgd}
-              onChange={(e) => setDirectTotalSgd(e.target.value)}
-              hint="The SGD amount you converted into your moomoo USD wallet to fund this trade. Used to back out the FX rate."
-            />
-          </section>
 
           <DirectAllocation
             childList={data.children}
@@ -593,8 +586,8 @@ function TransactionFields(p: TransactionFieldsProps) {
       </div>
       {p.totalSgd > 0 && p.derivedFx > 0 && (
         <p className="text-[12.5px] text-muted">
-          Implied USD/SGD rate: <span className="text-ink tnum">{p.derivedFx.toFixed(4)}</span>{" "}
-          (derived from SGD ÷ shares × USD price)
+          Recorded at USD/SGD <span className="text-ink tnum">{p.derivedFx.toFixed(4)}</span>{" "}
+          ≈ <span className="text-ink tnum">{formatSGD(p.totalSgd)}</span>
         </p>
       )}
       <label className="block">
