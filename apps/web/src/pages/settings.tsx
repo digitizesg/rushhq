@@ -5,15 +5,59 @@ import {
   NOTIFICATION_EVENT_TYPES,
   type NotificationEventType,
   type NotificationPreference,
+  type PreferredChannel,
 } from "@/lib/types";
 import { TelegramCard } from "@/components/telegram-card";
 import { AvatarUploader } from "@/components/avatar-uploader";
 import { Button } from "@/components/button";
+import { Select } from "@/components/select";
 import { colourFor } from "@/lib/colours";
 
 export default function SettingsPage() {
   const { user, member, refresh } = useAuth();
   const colour = colourFor(member?.id, member?.short_name);
+  const [savingPref, setSavingPref] = useState(false);
+
+  async function setPreferredChannel(next: PreferredChannel) {
+    if (!member) return;
+    setSavingPref(true);
+    try {
+      const { error } = await supabase
+        .from("family_members")
+        .update({ preferred_channel: next })
+        .eq("id", member.id);
+      if (error) throw error;
+      await refresh();
+    } finally {
+      setSavingPref(false);
+    }
+  }
+
+  function PreferredChannelSelect() {
+    const value: PreferredChannel = member?.preferred_channel ?? "both";
+    return (
+      <div className="mb-5">
+        <Select
+          label="Preferred channel"
+          containerClassName="max-w-sm"
+          value={value}
+          onChange={(e) => setPreferredChannel(e.target.value as PreferredChannel)}
+          disabled={savingPref}
+          hint={
+            value === "both"
+              ? "Send to whichever channels are enabled below."
+              : value === "telegram"
+                ? "Telegram only — emails are suppressed."
+                : "Email only — Telegram messages are suppressed."
+          }
+        >
+          <option value="both">Both Telegram and email</option>
+          <option value="telegram">Telegram only</option>
+          <option value="email">Email only</option>
+        </Select>
+      </div>
+    );
+  }
 
   const [prefs, setPrefs] = useState<Record<NotificationEventType, { telegram: boolean; email: boolean }>>(() =>
     Object.fromEntries(
@@ -127,6 +171,19 @@ export default function SettingsPage() {
         </p>
         <p className="text-muted text-[15.5px] mb-4">
           Pick how you'd like each kind of message to reach you.
+        </p>
+
+        <PreferredChannelSelect />
+      </section>
+
+      <section className="bg-white border border-line rounded-lg p-6">
+        <p className="text-[20px] font-medium text-ink mb-1">
+          Per-event channels
+        </p>
+        <p className="text-muted text-[15.5px] mb-4">
+          Fine control by event type. Your "Preferred channel" above
+          narrows whatever's enabled here, so muting a channel here
+          means you'll never receive it for that event type.
         </p>
         <div className="overflow-hidden rounded-md border border-line">
           <table className="w-full text-[16px]">

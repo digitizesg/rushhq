@@ -14,6 +14,8 @@ export type NotificationEventType =
   | "calendar_event_cancelled"
   | "task_reminder";
 
+export type PreferredChannel = "both" | "telegram" | "email";
+
 export interface FamilyMember {
   id: string;
   auth_user_id: string | null;
@@ -23,6 +25,7 @@ export interface FamilyMember {
   member_type: MemberType;
   email: string | null;
   avatar_url: string | null;
+  preferred_channel: PreferredChannel;
   active: boolean;
   created_at: string;
   updated_at: string;
