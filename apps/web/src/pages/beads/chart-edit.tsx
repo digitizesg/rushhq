@@ -319,76 +319,100 @@ interface ItemRowProps {
 function ItemRow({ item, colours, onPatch, onRemove, onMoveUp, onMoveDown }: ItemRowProps) {
   const colour = colours.find((c) => c.id === item.bead_colour_id) ?? colours[0];
   return (
-    <li className="group px-2 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 hover:bg-soft/50 transition-colors">
-      {/* Reorder column */}
-      <div className="flex flex-col text-muted shrink-0" aria-hidden>
-        <button
-          type="button"
-          onClick={onMoveUp}
-          disabled={!onMoveUp}
-          aria-label="Move up"
-          className="size-5 grid place-items-center rounded hover:bg-soft disabled:opacity-25"
-        >
-          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 6l3-3 3 3" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" /></svg>
-        </button>
-        <button
-          type="button"
-          onClick={onMoveDown}
-          disabled={!onMoveDown}
-          aria-label="Move down"
-          className="size-5 grid place-items-center rounded hover:bg-soft disabled:opacity-25"
-        >
-          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" /></svg>
-        </button>
-      </div>
+    <li className="group px-2 sm:px-4 py-2 hover:bg-soft/50 transition-colors">
+      {/* Top row: arrows · dot · description · (colour pill on desktop) · trash */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex flex-col text-muted shrink-0" aria-hidden>
+          <button
+            type="button"
+            onClick={onMoveUp}
+            disabled={!onMoveUp}
+            aria-label="Move up"
+            className="size-5 grid place-items-center rounded hover:bg-soft disabled:opacity-25"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 6l3-3 3 3" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" /></svg>
+          </button>
+          <button
+            type="button"
+            onClick={onMoveDown}
+            disabled={!onMoveDown}
+            aria-label="Move down"
+            className="size-5 grid place-items-center rounded hover:bg-soft disabled:opacity-25"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" /></svg>
+          </button>
+        </div>
 
-      {/* Bead dot — leads the row visually */}
-      <BeadDot
-        hex={colour?.hex ?? "#cccccc"}
-        sparkly={colour?.id === "sparkly_pink"}
-        size={22}
-        className="shrink-0"
-      />
-
-      {/* Description: borderless until focused */}
-      <input
-        type="text"
-        required
-        value={item.description}
-        onChange={(e) => onPatch(item.id, { description: e.target.value })}
-        placeholder="Task description"
-        className="flex-1 min-w-0 h-9 px-2 text-[16px] bg-transparent border border-transparent rounded-md hover:bg-white hover:border-line focus:bg-white focus:border-primary focus:outline-none"
-      />
-
-      {/* Bead colour + price selector — borderless until interacted */}
-      <div className="relative shrink-0">
-        <select
-          value={item.bead_colour_id}
-          onChange={(e) => onPatch(item.id, { bead_colour_id: e.target.value })}
-          aria-label="Bead colour"
-          className="h-9 pl-2 pr-7 text-[14px] tnum bg-transparent border border-transparent rounded-md cursor-pointer hover:bg-white hover:border-line focus:bg-white focus:border-primary focus:outline-none appearance-none"
-        >
-          {colours.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name} · {formatSGD(Number(c.sgd_value))}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          size={14}
-          className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-muted"
-          aria-hidden
+        <BeadDot
+          hex={colour?.hex ?? "#cccccc"}
+          sparkly={colour?.id === "sparkly_pink"}
+          size={22}
+          className="shrink-0"
         />
+
+        <input
+          type="text"
+          required
+          value={item.description}
+          onChange={(e) => onPatch(item.id, { description: e.target.value })}
+          placeholder="Task description"
+          className="flex-1 min-w-0 h-9 px-2 text-[16px] bg-transparent border border-transparent rounded-md hover:bg-white hover:border-line focus:bg-white focus:border-primary focus:outline-none"
+        />
+
+        {/* Colour selector — desktop only, hidden on phones (drops below). */}
+        <div className="relative shrink-0 hidden sm:block">
+          <select
+            value={item.bead_colour_id}
+            onChange={(e) => onPatch(item.id, { bead_colour_id: e.target.value })}
+            aria-label="Bead colour"
+            className="h-9 pl-2 pr-7 text-[14px] tnum bg-transparent border border-transparent rounded-md cursor-pointer hover:bg-white hover:border-line focus:bg-white focus:border-primary focus:outline-none appearance-none"
+          >
+            {colours.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} · {formatSGD(Number(c.sgd_value))}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            size={14}
+            className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-muted"
+            aria-hidden
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onRemove(item.id)}
+          aria-label="Remove task"
+          className="size-9 shrink-0 grid place-items-center text-muted hover:text-danger rounded-md hover:bg-white sm:opacity-50 sm:group-hover:opacity-100 transition-opacity"
+        >
+          <Trash2 size={14} />
+        </button>
       </div>
 
-      <button
-        type="button"
-        onClick={() => onRemove(item.id)}
-        aria-label="Remove task"
-        className="size-9 shrink-0 grid place-items-center text-muted hover:text-danger rounded-md hover:bg-white opacity-50 group-hover:opacity-100 transition-opacity"
-      >
-        <Trash2 size={14} />
-      </button>
+      {/* Mobile-only second row: colour selector full-width, indented to
+          line up with the description. */}
+      <div className="sm:hidden mt-1.5 pl-[60px] pr-1">
+        <div className="relative">
+          <select
+            value={item.bead_colour_id}
+            onChange={(e) => onPatch(item.id, { bead_colour_id: e.target.value })}
+            aria-label="Bead colour"
+            className="w-full h-9 pl-3 pr-9 text-[14.5px] tnum bg-white border border-line rounded-md cursor-pointer focus:border-primary focus:outline-none appearance-none"
+          >
+            {colours.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} · {formatSGD(Number(c.sgd_value))}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            size={14}
+            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted"
+            aria-hidden
+          />
+        </div>
+      </div>
     </li>
   );
 }
@@ -424,14 +448,15 @@ function PastChartRow({ chart, items, colours }: PastChartRowProps) {
           {sorted.map((item) => {
             const colour = colours.find((c) => c.id === item.bead_colour_id);
             return (
-              <li key={item.id} className="flex items-center gap-2 text-[15px] text-ink">
+              <li key={item.id} className="flex items-start gap-2 text-[15px] text-ink">
                 <BeadDot
                   hex={colour?.hex ?? "#ccc"}
                   sparkly={colour?.id === "sparkly_pink"}
                   size={12}
+                  className="mt-1 shrink-0"
                 />
-                <span className="flex-1">{item.description}</span>
-                <span className="text-muted text-[14px] tnum">
+                <span className="flex-1 min-w-0 break-words">{item.description}</span>
+                <span className="text-muted text-[14px] tnum shrink-0">
                   {colour ? formatSGD(Number(colour.sgd_value)) : ""}
                 </span>
               </li>
