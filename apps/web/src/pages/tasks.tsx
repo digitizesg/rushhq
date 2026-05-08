@@ -316,24 +316,28 @@ function TaskListItem({
   const due = dueLabel(task);
   const time = formatDueTime(task.due_time);
   return (
-    <li className="px-4 sm:px-5 py-3 flex items-start gap-3">
+    <li className="px-3 sm:px-5 py-3 flex items-start gap-2 sm:gap-3">
       <button
         type="button"
         onClick={onComplete}
         disabled={busy}
         aria-label="Mark done"
-        className="mt-0.5 size-6 grid place-items-center rounded-full border-2 hover:bg-soft disabled:opacity-50 transition-colors"
+        className="mt-0.5 size-9 sm:size-7 shrink-0 grid place-items-center rounded-full border-2 hover:bg-soft active:bg-soft disabled:opacity-50 transition-colors"
         style={{ borderColor: accent }}
       >
-        <Check size={13} className="opacity-0 hover:opacity-100" style={{ color: accent }} />
+        <Check
+          size={15}
+          className="opacity-25 group-hover:opacity-100 transition-opacity"
+          style={{ color: accent }}
+        />
       </button>
 
       <div className="flex-1 min-w-0">
-        <p className="text-[15.5px] font-medium text-ink truncate">{task.title}</p>
+        <p className="text-[15.5px] font-medium text-ink break-words">{task.title}</p>
         {task.description && (
           <p className="text-[13.5px] text-muted truncate">{task.description}</p>
         )}
-        <p className="text-[13px] mt-1 flex items-center gap-2 flex-wrap">
+        <p className="text-[13px] mt-1 flex items-center gap-x-2 gap-y-0.5 flex-wrap">
           <span
             className={[
               "inline-flex items-center gap-1",
@@ -351,16 +355,16 @@ function TaskListItem({
         </p>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-0.5 shrink-0">
         <button
           type="button"
           onClick={() => onSnooze(1)}
           disabled={busy}
           aria-label="Snooze 1 day"
           title="Snooze 1 day"
-          className="size-8 grid place-items-center rounded-md text-muted hover:text-ink hover:bg-soft disabled:opacity-50"
+          className="size-10 sm:size-9 grid place-items-center rounded-md text-muted hover:text-ink hover:bg-soft active:bg-soft disabled:opacity-50"
         >
-          <MoonStar size={14} />
+          <MoonStar size={16} />
         </button>
         {canEdit && (
           <button
@@ -369,9 +373,9 @@ function TaskListItem({
             disabled={busy}
             aria-label="Edit task"
             title="Edit"
-            className="size-8 grid place-items-center rounded-md text-muted hover:text-ink hover:bg-soft disabled:opacity-50"
+            className="size-10 sm:size-9 grid place-items-center rounded-md text-muted hover:text-ink hover:bg-soft active:bg-soft disabled:opacity-50"
           >
-            <Pencil size={14} />
+            <Pencil size={16} />
           </button>
         )}
       </div>

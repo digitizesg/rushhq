@@ -11,7 +11,8 @@ export type NotificationEventType =
   | "calendar_reminder"
   | "calendar_event_created"
   | "calendar_event_updated"
-  | "calendar_event_cancelled";
+  | "calendar_event_cancelled"
+  | "task_reminder";
 
 export interface FamilyMember {
   id: string;
@@ -89,4 +90,5 @@ export const NOTIFICATION_EVENT_TYPES: ReadonlyArray<{
   { value: "calendar_event_created", label: "New events" },
   { value: "calendar_event_updated", label: "Event updates" },
   { value: "calendar_event_cancelled", label: "Cancellations" },
+  { value: "task_reminder", label: "Task reminders" },
 ];

@@ -1,9 +1,11 @@
 import { format } from "date-fns";
+import { Clock, Lock, MapPin, Repeat, StickyNote, Users } from "lucide-react";
 import { rruleToPreset, RECURRENCE_OPTIONS, formatTime24 } from "@/lib/calendar";
-import { colourFor } from "@/lib/colours";
+import { colourFor, colourForRole } from "@/lib/colours";
 import type { FamilyMember } from "@/lib/types";
 import type { FullEvent } from "@/calendar/use-calendar-data";
-import type { EventOccurrence } from "@/lib/calendar";
+import type { EventOccurrence, RecurrencePreset } from "@/lib/calendar";
+import type { ReactNode } from "react";
 
 interface EventDetailsProps {
   event: FullEvent;
@@ -13,76 +15,76 @@ interface EventDetailsProps {
 
 /**
  * Read-only summary of an event. Used for helpers (and any future role
- * without edit rights). Same data shape as the EventForm sees, just
- * presented as plain text.
+ * without edit rights).
  */
 export function EventDetails({ event, occurrence, members }: EventDetailsProps) {
   const colour = colourFor(event.created_by);
+  const preset = rruleToPreset(event.rrule).preset;
   const presetLabel =
-    RECURRENCE_OPTIONS.find((o) => o.value === rruleToPreset(event.rrule).preset)?.label ?? "Custom";
+    RECURRENCE_OPTIONS.find((o) => o.value === preset)?.label ?? "Custom";
+  const isOneShot = preset === ("none" as RecurrencePreset);
 
   const attendees = event.attendee_ids
     .map((id) => members.find((m) => m.id === id))
     .filter((m): m is FamilyMember => !!m);
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-start gap-3">
+    <div className="space-y-6">
+      <header className="flex items-start gap-3">
         <span
           className="mt-2 inline-block size-3 rounded-full shrink-0"
           style={{ background: colour.accent }}
           aria-hidden
         />
         <div className="min-w-0">
-          <p className="text-[22px] font-semibold text-ink leading-tight">
+          <h2 className="text-[24px] font-semibold text-ink leading-tight">
             {event.title}
-          </p>
+          </h2>
           {event.location && (
-            <p className="mt-1 text-[15px] text-muted">📍 {event.location}</p>
+            <p className="mt-1.5 text-[15px] text-muted inline-flex items-center gap-1.5">
+              <MapPin size={14} aria-hidden /> {event.location}
+            </p>
           )}
         </div>
-      </div>
+      </header>
 
-      <div className="rounded-md border border-line bg-soft px-4 py-3">
-        <p className="text-[13px] uppercase tracking-wider text-muted mb-1">
-          When
-        </p>
-        <p className="text-[15px] text-ink tnum">
+      <Section title="When" icon={<Clock size={14} />}>
+        <p className="text-[16px] text-ink tnum">
           {event.all_day
-            ? format(occurrence.start, "EEEE d LLLL yyyy") + " · all day"
+            ? `${format(occurrence.start, "EEEE d LLLL yyyy")} · all day`
             : `${format(occurrence.start, "EEEE d LLLL yyyy")} · ${formatTime24(
                 occurrence.start,
               )} – ${formatTime24(occurrence.end)}`}
         </p>
-        {event.rrule && (
-          <p className="mt-1 text-[13.5px] text-muted">{presetLabel}</p>
+        {!isOneShot && (
+          <p className="mt-1 text-[14px] text-muted inline-flex items-center gap-1.5">
+            <Repeat size={13} aria-hidden /> {presetLabel}
+          </p>
         )}
-      </div>
+      </Section>
 
       {event.description && (
-        <div>
-          <p className="text-[13px] uppercase tracking-wider text-muted mb-1.5">
-            Notes
-          </p>
+        <Section title="Notes" icon={<StickyNote size={14} />}>
           <p className="text-[15px] text-ink whitespace-pre-wrap leading-relaxed">
             {event.description}
           </p>
-        </div>
+        </Section>
       )}
 
       {attendees.length > 0 && (
-        <div>
-          <p className="text-[13px] uppercase tracking-wider text-muted mb-1.5">
-            Attendees
-          </p>
-          <div className="flex flex-wrap gap-1.5">
+        <Section title="Attendees" icon={<Users size={14} />}>
+          <div className="flex flex-wrap gap-2">
             {attendees.map((m) => {
-              const c = colourFor(m.id);
+              const c = colourForRole(m.id, m.short_name, m.role);
               return (
                 <span
                   key={m.id}
-                  className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full text-[14px]"
-                  style={{ background: c.soft, color: c.text }}
+                  className="inline-flex items-center gap-2 px-3 h-9 rounded-full text-[14px] font-medium border"
+                  style={{
+                    background: c.soft,
+                    color: c.text,
+                    borderColor: c.accent,
+                  }}
                 >
                   <span
                     className="inline-block size-2 rounded-full"
@@ -90,16 +92,43 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
                     aria-hidden
                   />
                   {m.short_name}
+                  <span className="text-[12px] capitalize opacity-70">{m.role}</span>
                 </span>
               );
             })}
           </div>
-        </div>
+        </Section>
       )}
 
-      <p className="text-[13px] text-subtle pt-2 border-t border-line">
+      {event.visibility === "parents" && (
+        <p className="inline-flex items-center gap-1.5 text-[13px] text-muted">
+          <Lock size={12} /> Parents only
+        </p>
+      )}
+
+      <p className="text-[13px] text-muted pt-3 border-t border-line">
         You're viewing as a helper. Ask Ben or Alice if you need this changed.
       </p>
     </div>
+  );
+}
+
+function Section({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="space-y-2">
+      <p className="text-[13px] font-semibold uppercase tracking-wider text-muted inline-flex items-center gap-1.5">
+        {icon}
+        {title}
+      </p>
+      {children}
+    </section>
   );
 }
