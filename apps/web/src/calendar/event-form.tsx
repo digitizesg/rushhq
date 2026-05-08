@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { Trash2 } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/auth/auth-context";
 import {
@@ -690,6 +690,19 @@ function AttachmentsField({
   onRemovePending: (index: number) => void;
 }) {
   const visibleExisting = existing.filter((a) => !removedIds.includes(a.id));
+
+  async function openAttachment(storagePath: string) {
+    try {
+      const { data, error } = await supabase.storage
+        .from("event-attachments")
+        .createSignedUrl(storagePath, 60 * 5);
+      if (error) throw error;
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      alert((e as Error).message);
+    }
+  }
+
   return (
     <div>
       <span className="block text-[15px] font-medium text-ink mb-1.5">
@@ -700,23 +713,39 @@ function AttachmentsField({
           {visibleExisting.map((a) => (
             <li
               key={a.id}
-              className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-soft border border-line text-[14.5px]"
+              className="flex items-center justify-between gap-2 pl-3 pr-1.5 py-1.5 rounded-md bg-soft border border-line text-[14.5px]"
             >
-              <span className="truncate flex items-center gap-2">
-                <Trash2 size={14} className="opacity-0" aria-hidden />
-                {a.file_name}
-                <span className="text-[12.5px] text-muted">
-                  {a.size_bytes ? humanSize(a.size_bytes) : ""}
-                </span>
-              </span>
               <button
                 type="button"
-                onClick={() => onRemoveExisting(a.id)}
-                aria-label={`Remove ${a.file_name}`}
-                className="size-7 grid place-items-center text-muted hover:text-danger rounded-md hover:bg-white"
+                onClick={() => openAttachment(a.storage_path)}
+                className="flex-1 min-w-0 flex items-center gap-2 text-left text-ink hover:text-primary"
+                title="Open"
               >
-                <Trash2 size={14} />
+                <span className="truncate">{a.file_name}</span>
+                <span className="text-[12.5px] text-muted shrink-0">
+                  {a.size_bytes ? humanSize(a.size_bytes) : ""}
+                </span>
               </button>
+              <div className="flex items-center gap-0.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => openAttachment(a.storage_path)}
+                  aria-label={`Download ${a.file_name}`}
+                  title="Download"
+                  className="size-8 grid place-items-center text-muted hover:text-primary rounded-md hover:bg-white"
+                >
+                  <Download size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onRemoveExisting(a.id)}
+                  aria-label={`Remove ${a.file_name}`}
+                  title="Remove"
+                  className="size-8 grid place-items-center text-muted hover:text-danger rounded-md hover:bg-white"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </li>
           ))}
           {pending.map((f, i) => (
