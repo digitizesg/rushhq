@@ -169,9 +169,9 @@ function Stat({
 
 function StatusPill({ status }: { status: BeadPeriodStatus }) {
   const styles: Record<BeadPeriodStatus, { bg: string; text: string; label: string }> = {
-    open:     { bg: "bg-soft",         text: "text-muted",   label: "Counting open" },
+    open:     { bg: "bg-emerald-soft", text: "text-emerald", label: "Counting open" },
     counted:  { bg: "bg-primary-soft", text: "text-primary", label: "Locked" },
-    invested: { bg: "bg-emerald-soft", text: "text-emerald", label: "Invested" },
+    invested: { bg: "bg-amber-soft",   text: "text-amber",   label: "Invested" },
   };
   const s = styles[status];
   return (
