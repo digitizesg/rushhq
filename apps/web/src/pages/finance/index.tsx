@@ -164,10 +164,7 @@ export default function FinanceOverviewPage() {
           <ul className="space-y-3">
             {breakdown.map((b) => (
               <li key={b.name} className="grid grid-cols-[1fr_auto] gap-3 items-baseline">
-                <div>
-                  <p className="text-[14px] text-ink">{b.name}</p>
-                  <p className="text-[12px] text-muted">{b.entity}</p>
-                </div>
+                <p className="text-[14px] text-ink">{b.name}</p>
                 <div className="text-right">
                   <p className="text-[14px] text-ink tnum">{formatSGD(b.balance)}</p>
                   <DeltaBadge delta={b.delta} />
