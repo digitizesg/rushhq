@@ -21,6 +21,10 @@ import WithdrawalPage from "@/pages/stocks/withdrawal";
 import TransactionsPage from "@/pages/stocks/transactions";
 import DepositsPage from "@/pages/stocks/deposits";
 import MyStocksPage from "@/pages/stocks/me";
+import FinanceOverviewPage from "@/pages/finance";
+import FinanceUpdatePage from "@/pages/finance/update";
+import FinanceHistoryPage from "@/pages/finance/history";
+import FinanceAccountsPage from "@/pages/finance/accounts";
 
 export function App() {
   return (
@@ -49,6 +53,10 @@ export function App() {
             <Route path="/stocks/withdrawal" element={<WithdrawalPage />} />
             <Route path="/stocks/transactions" element={<TransactionsPage />} />
             <Route path="/stocks/deposits" element={<DepositsPage />} />
+            <Route path="/finance" element={<FinanceOverviewPage />} />
+            <Route path="/finance/update/:month" element={<FinanceUpdatePage />} />
+            <Route path="/finance/history" element={<FinanceHistoryPage />} />
+            <Route path="/finance/accounts" element={<FinanceAccountsPage />} />
           </Route>
         </Route>
       </Route>

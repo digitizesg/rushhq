@@ -590,6 +590,23 @@ function renderOutboxMessage(
     return { telegramText: tg, emailSubject: subject, emailHtml: html, emailText: `${subject} ${link}` };
   }
 
+  if (eventType === "finance_monthly_reminder") {
+    const link = `${APP_URL}/finance`;
+    const month = String(payload.month ?? "");
+    const headline = `💰 Time for the ${month} finance update`;
+    const tg = `<b>${escapeHtml(headline)}</b>\n<a href="${link}">Open Rush HQ</a>`;
+    const html = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; line-height: 1.5;">
+      <h2 style="font-weight: 600; margin: 0 0 8px;">${escapeHtml(headline)}</h2>
+      <p style="margin: 24px 0 0; font-size: 13px;"><a href="${link}" style="color: #2563eb;">Open Rush HQ</a></p>
+    </div>`;
+    return {
+      telegramText: tg,
+      emailSubject: headline,
+      emailHtml: html,
+      emailText: `${headline}. ${link}`,
+    };
+  }
+
   if (eventType === "stock_monthly_summary") {
     const link = `${APP_URL}/stocks/me`;
     const valueSgd = Number(payload.value_sgd ?? 0);

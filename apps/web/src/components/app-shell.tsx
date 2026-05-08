@@ -47,6 +47,14 @@ export function AppShell() {
                 Stocks
               </NavLink>
             )}
+            {isParent() && (
+              <NavLink
+                to="/finance"
+                className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+              >
+                Finance
+              </NavLink>
+            )}
             {isChild && (
               <NavLink
                 to="/beads/me"
@@ -146,6 +154,15 @@ export function AppShell() {
                   onClick={() => setMenuOpen(false)}
                 >
                   Stocks
+                </NavLink>
+              )}
+              {isParent() && (
+                <NavLink
+                  to="/finance"
+                  className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Finance
                 </NavLink>
               )}
               {isChild && (
