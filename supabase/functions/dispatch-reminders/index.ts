@@ -491,6 +491,127 @@ Deno.serve(async (_req) => {
     }
   }
 
+  // ----------------------------------------------------------------------------
+  // Task reminders — same shape as calendar reminders, but the "due_at"
+  // takes the place of "starts_at" and we send a different message.
+  // ----------------------------------------------------------------------------
+
+  const { data: taskCandidates, error: taskErr } = await supabase.rpc(
+    "fetch_task_dispatch_candidates",
+    {
+      window_start: windowStart.toISOString(),
+      window_end: windowEnd.toISOString(),
+    },
+  );
+
+  let taskDispatched = 0;
+  let taskSkipped = 0;
+  let taskFailed = 0;
+
+  if (taskErr) {
+    console.error("[dispatch] fetch_task_dispatch_candidates failed:", taskErr.message);
+  } else {
+    type TaskCandidate = {
+      reminder_id: string;
+      lead_time_minutes: number;
+      channel: "telegram" | "email" | "both";
+      task_id: string;
+      title: string;
+      description: string | null;
+      assignee_id: string;
+      assignee_short: string;
+      assignee_email: string | null;
+      assignee_role: "parent" | "helper" | "child";
+      telegram_chat_id: number | null;
+      telegram_enabled: boolean;
+      email_enabled: boolean;
+      due_at: string;
+      rrule: string | null;
+    };
+
+    const taskList = (taskCandidates ?? []) as TaskCandidate[];
+
+    for (const t of taskList) {
+      const slots = resolveTaskSlots(t, windowStart, windowEnd);
+      if (slots.length === 0) continue;
+
+      const wantTelegram =
+        (t.channel === "telegram" || t.channel === "both") &&
+        t.telegram_enabled &&
+        t.telegram_chat_id != null;
+      const wantEmail =
+        (t.channel === "email" || t.channel === "both") &&
+        t.email_enabled &&
+        !!t.assignee_email;
+
+      const channels: Array<"telegram" | "email"> = [];
+      if (wantTelegram) channels.push("telegram");
+      if (wantEmail) channels.push("email");
+
+      for (const slot of slots) {
+        if (channels.length === 0) {
+          await supabase.from("notification_dispatch_log").insert({
+            task_reminder_id: t.reminder_id,
+            task_id: t.task_id,
+            member_id: t.assignee_id,
+            channel: "telegram",
+            status: "skipped",
+            scheduled_for: slot.scheduledFor.toISOString(),
+            error_message: "No enabled channel or contact details",
+          });
+          taskSkipped++;
+          continue;
+        }
+
+        for (const ch of channels) {
+          const { error: insertErr } = await supabase
+            .from("notification_dispatch_log")
+            .insert({
+              task_reminder_id: t.reminder_id,
+              task_id: t.task_id,
+              member_id: t.assignee_id,
+              channel: ch,
+              status: "queued",
+              scheduled_for: slot.scheduledFor.toISOString(),
+            });
+
+          if (insertErr) {
+            const msg = insertErr.message ?? "";
+            if (msg.includes("duplicate key") || (insertErr as any).code === "23505") {
+              continue;
+            }
+            console.error("[dispatch] task log pre-claim failed:", insertErr);
+            continue;
+          }
+
+          let result: { ok: true } | { ok: false; error: string };
+          if (ch === "telegram") {
+            const text = renderTaskTelegram(t, slot.dueAt);
+            result = await sendTelegram(t.telegram_chat_id!, text);
+          } else {
+            const { subject, html, text } = renderTaskEmail(t, slot.dueAt);
+            result = await sendEmail(t.assignee_email!, subject, html, text);
+          }
+
+          await supabase
+            .from("notification_dispatch_log")
+            .update({
+              status: result.ok ? "sent" : "failed",
+              error_message: result.ok ? null : result.error,
+              dispatched_at: new Date().toISOString(),
+            })
+            .eq("task_reminder_id", t.reminder_id)
+            .eq("member_id", t.assignee_id)
+            .eq("channel", ch)
+            .eq("scheduled_for", slot.scheduledFor.toISOString());
+
+          if (result.ok) taskDispatched++;
+          else taskFailed++;
+        }
+      }
+    }
+  }
+
   const summary = {
     ok: true,
     candidates: list.length,
@@ -498,12 +619,96 @@ Deno.serve(async (_req) => {
     skipped,
     failed,
     outbox: { sent: outboxSent, skipped: outboxSkipped, failed: outboxFailed },
+    tasks: { dispatched: taskDispatched, skipped: taskSkipped, failed: taskFailed },
   };
   console.log("[dispatch] summary:", JSON.stringify(summary));
   return new Response(JSON.stringify(summary), {
     headers: { "content-type": "application/json" },
   });
 });
+
+// ----------------------------------------------------------------------------
+// Task occurrence resolution + rendering
+// ----------------------------------------------------------------------------
+
+function resolveTaskSlots(
+  t: {
+    lead_time_minutes: number;
+    rrule: string | null;
+    due_at: string;
+    task_id: string;
+  },
+  windowStart: Date,
+  windowEnd: Date,
+): Array<{ scheduledFor: Date; dueAt: Date }> {
+  const leadMs = t.lead_time_minutes * 60 * 1000;
+  const baseDue = new Date(t.due_at);
+
+  if (!t.rrule) {
+    const scheduledFor = new Date(baseDue.getTime() - leadMs);
+    if (scheduledFor >= windowStart && scheduledFor <= windowEnd) {
+      return [{ scheduledFor, dueAt: baseDue }];
+    }
+    return [];
+  }
+
+  const occurrenceWindowStart = new Date(windowStart.getTime() + leadMs);
+  const occurrenceWindowEnd = new Date(windowEnd.getTime() + leadMs);
+
+  const dtstartLine = `DTSTART:${formatDateForRrule(baseDue)}`;
+  const rruleText = t.rrule.startsWith("DTSTART") ? t.rrule : `${dtstartLine}\n${t.rrule}`;
+
+  let set: ReturnType<typeof rrulestr>;
+  try {
+    set = rrulestr(rruleText, { forceset: true });
+  } catch (e) {
+    console.error(`[dispatch] failed to parse RRULE for task ${t.task_id}:`, (e as Error).message);
+    return [];
+  }
+
+  const occs = set.between(occurrenceWindowStart, occurrenceWindowEnd, true);
+  return occs.map((occ: Date) => ({
+    scheduledFor: new Date(occ.getTime() - leadMs),
+    dueAt: occ,
+  }));
+}
+
+function renderTaskTelegram(
+  t: { title: string; description: string | null; lead_time_minutes: number; assignee_short: string },
+  dueAt: Date,
+): string {
+  const lines: string[] = [
+    `<b>📝 ${escapeHtml(t.title)}</b>`,
+    `Hey ${escapeHtml(t.assignee_short)} — due ${escapeHtml(leadLabel(t.lead_time_minutes))} (${formatDateTime(dueAt, false)})`,
+  ];
+  if (t.description) lines.push("", escapeHtml(t.description));
+  lines.push("", `<a href="${APP_URL}/tasks">Open Rush HQ</a>`);
+  return lines.join("\n");
+}
+
+function renderTaskEmail(
+  t: { title: string; description: string | null; lead_time_minutes: number; assignee_short: string },
+  dueAt: Date,
+): { subject: string; html: string; text: string } {
+  const when = formatDateTime(dueAt, false);
+  const subject = `Task reminder · ${t.title} · due ${when}`;
+  const lines = [
+    `Hey ${t.assignee_short},`,
+    `${t.title} is due ${leadLabel(t.lead_time_minutes)} (${when}).`,
+  ];
+  if (t.description) lines.push("", t.description);
+  lines.push("", `View on Rush HQ: ${APP_URL}/tasks`);
+  const text = lines.join("\n");
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; line-height: 1.5;">
+      <h2 style="font-weight: 600; margin: 0 0 8px;">📝 ${escapeHtml(t.title)}</h2>
+      <p style="margin: 0; color: #475569;">Hey ${escapeHtml(t.assignee_short)} — due ${escapeHtml(leadLabel(t.lead_time_minutes))} (${escapeHtml(when)}).</p>
+      ${t.description ? `<p style="margin: 16px 0 0;">${escapeHtml(t.description).replace(/\n/g, "<br>")}</p>` : ""}
+      <p style="margin: 24px 0 0; font-size: 13px;"><a href="${APP_URL}/tasks" style="color: #2563eb;">Open Rush HQ</a></p>
+    </div>
+  `;
+  return { subject, html, text };
+}
 
 // ----------------------------------------------------------------------------
 // Outbox message rendering

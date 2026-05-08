@@ -8,6 +8,7 @@ import ResetPasswordPage from "@/pages/reset-password";
 import MfaEnrolPage from "@/pages/mfa-enrol";
 import NoProfilePage from "@/pages/no-profile";
 import CalendarPage from "@/pages/calendar";
+import TasksPage from "@/pages/tasks";
 import SettingsPage from "@/pages/settings";
 import AdminPage from "@/pages/admin";
 import BeadsIndexPage from "@/pages/beads";
@@ -40,6 +41,7 @@ export function App() {
           <Route index element={<CalendarPage />} />
           <Route path="/calendar" element={<Navigate to="/" replace />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/tasks" element={<TasksPage />} />
           <Route path="/beads/me" element={<MyBeadsPage />} />
           <Route path="/stocks/me" element={<MyStocksPage />} />
           <Route element={<RequireRole role="parent" />}>

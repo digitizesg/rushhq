@@ -48,6 +48,14 @@ export function AppShell() {
             >
               Calendar
             </NavLink>
+            {!member?.role || member.role !== "helper" ? (
+              <NavLink
+                to="/tasks"
+                className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+              >
+                Tasks
+              </NavLink>
+            ) : null}
             {isParent() && (
               <NavLink
                 to="/beads"
@@ -133,6 +141,15 @@ export function AppShell() {
               >
                 Calendar
               </NavLink>
+              {(!member?.role || member.role !== "helper") && (
+                <NavLink
+                  to="/tasks"
+                  className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Tasks
+                </NavLink>
+              )}
               {isParent() && (
                 <NavLink
                   to="/beads"
