@@ -78,9 +78,18 @@ export default function FinanceUpdatePage() {
   const total = activeAccounts.reduce((s, a) => s + (parseFloat(balances[a.id] || "0") || 0), 0);
 
   function setBalance(id: string, raw: string) {
-    // Accept both . and , as decimal separator.
-    const normalised = raw.replace(/,/g, ".");
-    setBalances((b) => ({ ...b, [id]: normalised }));
+    // Allow only digits and one decimal point. Strip thousands-separator
+    // commas the user might paste in. Strip leading zeros so "0123"
+    // becomes "123", but keep "0.x" intact.
+    let cleaned = raw.replace(/[^0-9.]/g, "");
+    const firstDot = cleaned.indexOf(".");
+    if (firstDot !== -1) {
+      cleaned =
+        cleaned.slice(0, firstDot + 1) +
+        cleaned.slice(firstDot + 1).replace(/\./g, "");
+    }
+    cleaned = cleaned.replace(/^0+(?=\d)/, "");
+    setBalances((b) => ({ ...b, [id]: cleaned }));
   }
 
   async function persist(): Promise<void> {
@@ -186,8 +195,22 @@ interface RowProps {
 }
 
 function AccountRow({ account, value, previous, onChange }: RowProps) {
+  const [focused, setFocused] = useState(false);
   const current = parseFloat(value || "0") || 0;
   const delta = previous != null ? current - previous : 0;
+
+  // Show raw digits while editing for easy keyboard entry; format with
+  // thousands separators (and up to two decimals) when blurred so big
+  // numbers read naturally.
+  const display = focused
+    ? value
+    : value === ""
+      ? ""
+      : current.toLocaleString("en-SG", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        });
+
   return (
     <li className="grid grid-cols-[1fr_auto] gap-3 sm:gap-5 items-center px-4 sm:px-5 py-3">
       <div>
@@ -206,9 +229,11 @@ function AccountRow({ account, value, previous, onChange }: RowProps) {
       <input
         type="text"
         inputMode="decimal"
-        value={value}
+        value={display}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="0.00"
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        placeholder="0"
         aria-label={`${account.name} balance in SGD`}
         className="w-32 sm:w-48 h-12 rounded-md border border-line bg-white px-3 text-right text-[18px] font-medium text-ink tnum focus:outline-2 focus:outline-offset-0 focus:outline-primary"
       />
