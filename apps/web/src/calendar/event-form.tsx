@@ -124,6 +124,7 @@ export function EventForm({
   const initialPreset = rruleToPreset(event?.rrule ?? null);
   const [preset, setPreset] = useState<RecurrencePreset>(initialPreset.preset);
   const [customRrule, setCustomRrule] = useState(initialPreset.custom);
+  const [untilDate, setUntilDate] = useState<string>(initialPreset.until ?? "");
 
   const [visibility, setVisibility] = useState<EventVisibility>(event?.visibility ?? "family");
   const [notifyExtraRoles, setNotifyExtraRoles] = useState<boolean>(
@@ -196,7 +197,7 @@ export function EventForm({
       }
     }
 
-    const rrule = presetToRrule(preset, customRrule);
+    const rrule = presetToRrule(preset, customRrule, untilDate || null);
     if (preset === "custom" && rrule && !rrule.toUpperCase().includes("FREQ=")) {
       setError("Custom recurrence must be a valid RRULE (e.g. RRULE:FREQ=WEEKLY;INTERVAL=2).");
       return;
@@ -389,6 +390,16 @@ export function EventForm({
             </option>
           ))}
         </Select>
+        {preset !== "none" && preset !== "custom" && (
+          <TextField
+            label="Until (optional)"
+            type="date"
+            containerClassName="max-w-xs"
+            value={untilDate}
+            onChange={(e) => setUntilDate(e.target.value)}
+            hint="Last date the event repeats. Leave blank to repeat forever."
+          />
+        )}
         {preset === "custom" && (
           <TextField
             label="Custom RRULE"

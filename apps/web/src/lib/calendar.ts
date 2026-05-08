@@ -217,35 +217,74 @@ export const RECURRENCE_OPTIONS: ReadonlyArray<{ value: RecurrencePreset; label:
   { value: "custom", label: "Custom" },
 ];
 
-export function presetToRrule(preset: RecurrencePreset, customText: string): string {
-  switch (preset) {
-    case "none":
-      return "";
-    case "daily":
-      return "RRULE:FREQ=DAILY";
-    case "weekly":
-      return "RRULE:FREQ=WEEKLY";
-    case "weekdays":
-      return "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR";
-    case "monthly":
-      return "RRULE:FREQ=MONTHLY";
-    case "yearly":
-      return "RRULE:FREQ=YEARLY";
-    case "custom":
-      return customText.trim();
-  }
+export function presetToRrule(
+  preset: RecurrencePreset,
+  customText: string,
+  untilIsoDate?: string | null,
+): string {
+  const base = (() => {
+    switch (preset) {
+      case "none":
+        return "";
+      case "daily":
+        return "RRULE:FREQ=DAILY";
+      case "weekly":
+        return "RRULE:FREQ=WEEKLY";
+      case "weekdays":
+        return "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR";
+      case "monthly":
+        return "RRULE:FREQ=MONTHLY";
+      case "yearly":
+        return "RRULE:FREQ=YEARLY";
+      case "custom":
+        return customText.trim();
+    }
+  })();
+  if (!base) return "";
+  // For "custom" the user owns the full RRULE string (including any
+  // UNTIL they want), so we don't append.
+  if (preset === "custom") return base;
+  if (!untilIsoDate) return base;
+  // iCal UNTIL is a UTC timestamp. Pick end-of-day local on the chosen
+  // date and render in UTC.
+  const [y, m, d] = untilIsoDate.split("-").map((n) => parseInt(n, 10));
+  if (!y || !m || !d) return base;
+  const dt = new Date(y, m - 1, d, 23, 59, 59);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const until =
+    `${dt.getUTCFullYear()}${pad(dt.getUTCMonth() + 1)}${pad(dt.getUTCDate())}` +
+    `T${pad(dt.getUTCHours())}${pad(dt.getUTCMinutes())}${pad(dt.getUTCSeconds())}Z`;
+  return `${base};UNTIL=${until}`;
 }
 
-export function rruleToPreset(rrule: string | null): { preset: RecurrencePreset; custom: string } {
-  if (!rrule) return { preset: "none", custom: "" };
-  const normalised = rrule.replace(/\s+/g, "");
-  if (normalised === "RRULE:FREQ=DAILY") return { preset: "daily", custom: "" };
-  if (normalised === "RRULE:FREQ=WEEKLY") return { preset: "weekly", custom: "" };
+export function rruleToPreset(
+  rrule: string | null,
+): { preset: RecurrencePreset; custom: string; until: string | null } {
+  if (!rrule) return { preset: "none", custom: "", until: null };
+  // Extract any UNTIL clause so the rest can match a preset.
+  const untilMatch = rrule.match(/UNTIL=([0-9TZ]+)/i);
+  let until: string | null = null;
+  if (untilMatch) {
+    const raw = untilMatch[1];
+    if (raw.length >= 8) {
+      until = `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
+    }
+  }
+  const stripped = rrule
+    .replace(/(;|^)UNTIL=[0-9TZ]+/i, "$1")
+    .replace(/;;+/g, ";")
+    .replace(/;$/, "")
+    .replace(/^;/, "");
+  const normalised = stripped.replace(/\s+/g, "");
+  if (normalised === "RRULE:FREQ=DAILY") return { preset: "daily", custom: "", until };
+  if (normalised === "RRULE:FREQ=WEEKLY") return { preset: "weekly", custom: "", until };
   if (normalised === "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR")
-    return { preset: "weekdays", custom: "" };
-  if (normalised === "RRULE:FREQ=MONTHLY") return { preset: "monthly", custom: "" };
-  if (normalised === "RRULE:FREQ=YEARLY") return { preset: "yearly", custom: "" };
-  return { preset: "custom", custom: rrule };
+    return { preset: "weekdays", custom: "", until };
+  if (normalised === "RRULE:FREQ=MONTHLY") return { preset: "monthly", custom: "", until };
+  if (normalised === "RRULE:FREQ=YEARLY") return { preset: "yearly", custom: "", until };
+  // Custom rules keep their UNTIL inline; we don't surface a separate
+  // date input for them.
+  return { preset: "custom", custom: rrule, until: null };
 }
 
 // ----------------------------------------------------------------------------
