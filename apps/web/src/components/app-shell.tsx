@@ -9,6 +9,7 @@ const navActive = "text-ink bg-soft";
 export function AppShell() {
   const { member, isParent, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const isChild = member?.member_type === "child";
 
   return (
     <div className="min-h-dvh flex flex-col">
@@ -30,6 +31,22 @@ export function AppShell() {
             >
               Calendar
             </NavLink>
+            {isParent() && (
+              <NavLink
+                to="/beads"
+                className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+              >
+                Beads
+              </NavLink>
+            )}
+            {isChild && (
+              <NavLink
+                to="/beads/me"
+                className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+              >
+                My beads
+              </NavLink>
+            )}
             <NavLink
               to="/settings"
               className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
@@ -97,6 +114,24 @@ export function AppShell() {
               >
                 Calendar
               </NavLink>
+              {isParent() && (
+                <NavLink
+                  to="/beads"
+                  className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Beads
+                </NavLink>
+              )}
+              {isChild && (
+                <NavLink
+                  to="/beads/me"
+                  className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  My beads
+                </NavLink>
+              )}
               <NavLink
                 to="/settings"
                 className={({ isActive }) => [navBase, isActive && navActive].filter(Boolean).join(" ")}

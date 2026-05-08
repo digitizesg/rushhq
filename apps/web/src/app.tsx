@@ -10,6 +10,10 @@ import NoProfilePage from "@/pages/no-profile";
 import CalendarPage from "@/pages/calendar";
 import SettingsPage from "@/pages/settings";
 import AdminPage from "@/pages/admin";
+import BeadsIndexPage from "@/pages/beads";
+import ChartEditPage from "@/pages/beads/chart-edit";
+import CountPage from "@/pages/beads/count";
+import MyBeadsPage from "@/pages/beads/me";
 
 export function App() {
   return (
@@ -25,8 +29,12 @@ export function App() {
           <Route index element={<CalendarPage />} />
           <Route path="/calendar" element={<Navigate to="/" replace />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/beads/me" element={<MyBeadsPage />} />
           <Route element={<RequireRole role="parent" />}>
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/beads" element={<BeadsIndexPage />} />
+            <Route path="/beads/charts/:childId" element={<ChartEditPage />} />
+            <Route path="/beads/count/:childId" element={<CountPage />} />
           </Route>
         </Route>
       </Route>
