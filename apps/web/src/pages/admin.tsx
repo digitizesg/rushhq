@@ -293,7 +293,7 @@ function ActiveToggle({
       }}
       className={[
         "relative inline-flex h-5 w-9 rounded-full transition-colors",
-        member.active ? "bg-primary" : "bg-border-warm",
+        member.active ? "bg-primary" : "bg-line",
         busy ? "opacity-60" : "",
       ].join(" ")}
     >
@@ -316,6 +316,7 @@ function AddMemberForm({ onAdded, onCancelled }: AddMemberFormProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<MemberRole>("helper");
   const [memberType, setMemberType] = useState<MemberType>("helper");
+  const [sendInvite, setSendInvite] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -336,15 +337,36 @@ function AddMemberForm({ onAdded, onCancelled }: AddMemberFormProps) {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("family_members").insert({
-        short_name: shortName.trim(),
-        full_name: fullName.trim(),
-        email: email.trim() || null,
-        role,
-        member_type: effectiveType,
-        active: true,
-      });
-      if (error) throw error;
+      // The create-family-member edge function handles auth-user
+      // creation + the family_members insert atomically. Authorization
+      // header is the caller's session token; the function verifies
+      // the caller is a parent before doing anything.
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+      if (!token) throw new Error("Not signed in");
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-family-member`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            short_name: shortName.trim(),
+            full_name: fullName.trim(),
+            email: email.trim() || undefined,
+            role,
+            member_type: effectiveType,
+            invite: !!email.trim() && sendInvite,
+          }),
+        },
+      );
+      const data = (await res.json()) as { id?: string; error?: string; invited?: boolean };
+      if (!res.ok || data.error) {
+        throw new Error(data.error ?? `Request failed with ${res.status}`);
+      }
       await onAdded();
     } catch (e) {
       setError((e as Error).message);
@@ -352,6 +374,8 @@ function AddMemberForm({ onAdded, onCancelled }: AddMemberFormProps) {
       setSubmitting(false);
     }
   }
+
+  const emailPresent = !!email.trim();
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -370,12 +394,29 @@ function AddMemberForm({ onAdded, onCancelled }: AddMemberFormProps) {
         />
       </div>
       <TextField
-        label="Email (optional)"
+        label="Email"
         type="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        hint="Optional. Used by the email-channel reminders. The auth user is linked separately, see README step 11."
+        hint="Leave empty for kids without a sign-in. Otherwise we'll create their account."
       />
+      {emailPresent && (
+        <label className="flex items-start gap-2.5 rounded-md border border-line bg-soft px-3 py-2.5 cursor-pointer">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-4 rounded border-line accent-primary"
+            checked={sendInvite}
+            onChange={(e) => setSendInvite(e.target.checked)}
+          />
+          <span className="text-[13.5px] text-ink">
+            Send them an invite email
+            <span className="block text-[12.5px] text-muted mt-0.5">
+              They'll get a link from {`<notify@rushhq.co>`} to set their own password.
+              Without this, the account is created but you'll need to share credentials another way.
+            </span>
+          </span>
+        </label>
+      )}
       <div className="grid sm:grid-cols-2 gap-3">
         <Select label="Role" value={role} onChange={(e) => setRole(e.target.value as MemberRole)}>
           <option value="parent">Parent</option>
@@ -397,12 +438,6 @@ function AddMemberForm({ onAdded, onCancelled }: AddMemberFormProps) {
           {error}
         </p>
       )}
-      <p className="text-[12.5px] text-muted">
-        This creates a family-member record. To give them a sign-in, create
-        their auth user in Supabase, then link the two by setting
-        <code className="mx-1 px-1 rounded bg-soft">family_members.auth_user_id</code>
-        — see README step 11. A one-click flow is on the roadmap.
-      </p>
       <div className="flex justify-end gap-2 pt-2 border-t border-line">
         <Button type="button" variant="secondary" onClick={onCancelled}>
           Cancel

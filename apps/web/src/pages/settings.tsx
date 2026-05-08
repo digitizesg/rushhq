@@ -195,7 +195,7 @@ function Toggle({
       onClick={() => onChange(!checked)}
       className={[
         "relative inline-flex h-6 w-11 rounded-full transition-colors",
-        checked ? "bg-primary" : "bg-border-warm",
+        checked ? "bg-primary" : "bg-line",
         disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
       ].join(" ")}
     >
