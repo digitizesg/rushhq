@@ -29,28 +29,51 @@ export default function FinanceOverviewPage() {
 
   if (data.loading) return <LoadingScreen />;
 
-  // Build a unified per-month series from the three sources. Snapshots
-  // all land on the 1st of the month so they align cleanly.
+  // Split bank accounts: investment-type accounts (Moomoo) are
+  // Ben & Alice's brokerage holdings, separate from cash. Kids' VOO
+  // is tracked on /stocks and intentionally excluded here so the
+  // kids' earmarked money stays separate from family balance-sheet.
+  const investmentAccountIds = new Set(
+    data.accounts.filter((a) => a.account_type === "investment").map((a) => a.id),
+  );
+  const isInvestmentSnap = (accountId: string) => investmentAccountIds.has(accountId);
+
+  // Build per-month liquid + investments + property series from the
+  // raw snapshot tables (we already have them loaded).
   const monthSet = new Set<string>();
-  for (const r of data.totalsOverTime) monthSet.add(r.snapshot_month);
+  for (const s of data.snapshots) monthSet.add(s.snapshot_month);
   for (const r of data.propertyEquityOverTime) monthSet.add(r.snapshot_month);
-  for (const s of data.portfolioSnapshots) monthSet.add(s.snapshot_date);
   const sortedMonths = Array.from(monthSet).sort();
 
   const liquidByMonth = new Map<string, number>();
-  for (const r of data.totalsOverTime) liquidByMonth.set(r.snapshot_month, r.total_sgd);
+  const investmentsByMonth = new Map<string, number>();
+  for (const s of data.snapshots) {
+    if (isInvestmentSnap(s.account_id)) {
+      investmentsByMonth.set(
+        s.snapshot_month,
+        (investmentsByMonth.get(s.snapshot_month) ?? 0) + s.balance_sgd,
+      );
+    } else {
+      liquidByMonth.set(
+        s.snapshot_month,
+        (liquidByMonth.get(s.snapshot_month) ?? 0) + s.balance_sgd,
+      );
+    }
+  }
   const propertyByMonth = new Map<string, number>();
   for (const r of data.propertyEquityOverTime) propertyByMonth.set(r.snapshot_month, r.total_equity_sgd);
-  const stocksByMonth = new Map<string, number>();
-  for (const s of data.portfolioSnapshots) {
-    stocksByMonth.set(s.snapshot_date, (stocksByMonth.get(s.snapshot_date) ?? 0) + s.value_sgd);
-  }
 
   const netWorthSeries = sortedMonths.map((m) => {
     const liquid = liquidByMonth.get(m) ?? 0;
+    const investments = investmentsByMonth.get(m) ?? 0;
     const property = propertyByMonth.get(m) ?? 0;
-    const stocks = stocksByMonth.get(m) ?? 0;
-    return { month: m, liquid, property, stocks, total: liquid + property + stocks };
+    return {
+      month: m,
+      liquid,
+      investments,
+      property,
+      total: liquid + investments + property,
+    };
   });
 
   const lastSeries = netWorthSeries[netWorthSeries.length - 1];
@@ -59,30 +82,22 @@ export default function FinanceOverviewPage() {
     ? netWorthSeries.find((r) => r.month === shiftMonth(lastSeries.month, -12))
     : undefined;
 
-  // Live "now" stocks value beats the latest snapshot for the headline
-  // since VOO + USDSGD update every 15 min.
-  const voo = data.priceCache.find((p) => p.symbol === "VOO")?.price ?? 0;
-  const fx = data.priceCache.find((p) => p.symbol === "USDSGD")?.price ?? 0;
-  const totalShares = data.childHoldings.reduce((s, h) => s + h.shares_held, 0);
-  const stocksLiveSgd = totalShares * voo * fx;
-
   const liquidNow = lastSeries?.liquid ?? 0;
+  const investmentsNow = lastSeries?.investments ?? 0;
   const propertyEquityNowHeadline = lastSeries?.property ?? 0;
-  const stocksNow = stocksLiveSgd > 0 ? stocksLiveSgd : (lastSeries?.stocks ?? 0);
-  const netWorthNow = liquidNow + propertyEquityNowHeadline + stocksNow;
+  const netWorthNow = liquidNow + investmentsNow + propertyEquityNowHeadline;
 
-  const liquidPrev = prevSeries?.liquid ?? 0;
-  const propertyEquityPrevHeadline = prevSeries?.property ?? 0;
-  const stocksPrev = prevSeries?.stocks ?? 0;
-  const netWorthPrev = prevSeries ? liquidPrev + propertyEquityPrevHeadline + stocksPrev : 0;
+  const netWorthPrev = prevSeries
+    ? prevSeries.liquid + prevSeries.investments + prevSeries.property
+    : 0;
   const monthChange = prevSeries ? netWorthNow - netWorthPrev : 0;
   const monthPct = prevSeries && netWorthPrev > 0 ? (monthChange / netWorthPrev) * 100 : 0;
   const yearChange = yearAgoSeries
-    ? netWorthNow - (yearAgoSeries.liquid + yearAgoSeries.property + yearAgoSeries.stocks)
+    ? netWorthNow - (yearAgoSeries.liquid + yearAgoSeries.investments + yearAgoSeries.property)
     : 0;
-  const liquidDelta = prevSeries ? liquidNow - liquidPrev : 0;
-  const propertyDelta = prevSeries ? propertyEquityNowHeadline - propertyEquityPrevHeadline : 0;
-  const stocksDelta = prevSeries ? stocksNow - stocksPrev : 0;
+  const liquidDelta = prevSeries ? liquidNow - prevSeries.liquid : 0;
+  const investmentsDelta = prevSeries ? investmentsNow - prevSeries.investments : 0;
+  const propertyDelta = prevSeries ? propertyEquityNowHeadline - prevSeries.property : 0;
 
   const totals = data.totalsOverTime;
   const latest = totals[totals.length - 1];
@@ -233,16 +248,16 @@ export default function FinanceOverviewPage() {
                 accent="#0891b2"
               />
               <LayerStat
+                label="Investments (Moomoo)"
+                amount={investmentsNow}
+                delta={prevSeries ? investmentsDelta : null}
+                accent="#059669"
+              />
+              <LayerStat
                 label="Property equity"
                 amount={propertyEquityNowHeadline}
                 delta={prevSeries ? propertyDelta : null}
                 accent="#7c3aed"
-              />
-              <LayerStat
-                label="Investments (live)"
-                amount={stocksNow}
-                delta={prevSeries ? stocksDelta : null}
-                accent="#059669"
               />
             </div>
           </div>
@@ -445,15 +460,15 @@ function LayerStat({
 interface NetWorthPoint {
   month: string;
   liquid: number;
+  investments: number;
   property: number;
-  stocks: number;
   total: number;
 }
 
 const LAYER_COLORS = {
-  liquid: "#0891b2",  // cyan
-  property: "#7c3aed", // violet
-  stocks: "#059669",   // emerald
+  liquid: "#0891b2",      // cyan
+  investments: "#059669", // emerald — Moomoo
+  property: "#7c3aed",    // violet
 };
 
 function NetWorthChart({ points }: { points: NetWorthPoint[] }) {
@@ -481,8 +496,8 @@ function NetWorthChart({ points }: { points: NetWorthPoint[] }) {
   // Build cumulative top-edges per layer in stable order.
   const layers: Array<{ key: keyof NetWorthPoint; color: string }> = [
     { key: "liquid", color: LAYER_COLORS.liquid },
+    { key: "investments", color: LAYER_COLORS.investments },
     { key: "property", color: LAYER_COLORS.property },
-    { key: "stocks", color: LAYER_COLORS.stocks },
   ];
 
   function cumulativeAt(i: number, layerIdx: number): number {
@@ -533,8 +548,8 @@ function NetWorthChart({ points }: { points: NetWorthPoint[] }) {
         <p className="text-[14.5px] uppercase tracking-wider text-muted">Net worth over time</p>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
           <Legend color={LAYER_COLORS.liquid} label="Liquid" />
+          <Legend color={LAYER_COLORS.investments} label="Investments" />
           <Legend color={LAYER_COLORS.property} label="Property" />
-          <Legend color={LAYER_COLORS.stocks} label="Stocks" />
         </div>
       </div>
       <svg
