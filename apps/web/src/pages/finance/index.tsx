@@ -165,19 +165,19 @@ export default function FinanceOverviewPage() {
           <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Finance</p>
           <h1 className="text-[30px] font-medium text-ink">Net worth</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <Link to="/finance/history" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[15.5px] hover:bg-soft">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link to="/finance/history" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[15px] whitespace-nowrap hover:bg-soft">
             <History size={14} /> History
           </Link>
-          <Link to="/finance/properties" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[15.5px] hover:bg-soft">
+          <Link to="/finance/properties" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[15px] whitespace-nowrap hover:bg-soft">
             <Building2 size={14} /> Properties
           </Link>
-          <Link to="/finance/accounts" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[15.5px] hover:bg-soft">
+          <Link to="/finance/accounts" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[15px] whitespace-nowrap hover:bg-soft">
             <SettingsIcon size={14} /> Accounts
           </Link>
           <Link
             to={`/finance/update/${thisMonth.slice(0, 7)}`}
-            className="inline-flex items-center justify-center h-9 px-4 rounded-md bg-primary text-white text-[15.5px] font-medium hover:bg-primary-strong"
+            className="inline-flex items-center justify-center h-9 px-4 rounded-md bg-primary text-white text-[15px] font-medium whitespace-nowrap hover:bg-primary-strong"
           >
             {ctaLabel}
           </Link>
