@@ -56,3 +56,30 @@ export function colourForRole(
   if (role === "parent" || role === "helper") return EMERALD;
   return colourFor(memberId, shortName);
 }
+
+/** Picks an event's colour by who it's for, not who created it. */
+export function colourForEvent(
+  attendees: ReadonlyArray<{
+    id: string;
+    short_name: string;
+    role: "parent" | "helper" | "child";
+    member_type?: "parent" | "helper" | "child";
+  }>,
+  createdBy: string | null | undefined,
+): MemberColour {
+  const children = attendees.filter(
+    (a) => a.member_type === "child" || a.role === "child",
+  );
+  // 1 kid attending → that kid's colour
+  if (children.length === 1) {
+    return colourFor(children[0].id, children[0].short_name);
+  }
+  // Several kids attending → emerald, treat as a family event
+  if (children.length > 1) return EMERALD;
+  // No kids: solo grown-up → that person's role colour. Multi-grown-up → emerald.
+  if (attendees.length === 1) {
+    return colourForRole(attendees[0].id, attendees[0].short_name, attendees[0].role);
+  }
+  if (attendees.length > 1) return EMERALD;
+  return colourFor(createdBy);
+}

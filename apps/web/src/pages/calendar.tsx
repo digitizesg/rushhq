@@ -162,12 +162,14 @@ export default function CalendarPage() {
         <CalendarAgenda
           start={range.start}
           occurrences={occurrences}
+          members={members}
           onSelectEvent={openEvent}
         />
       ) : view === "month" ? (
         <CalendarMonth
           anchor={anchor}
           occurrences={occurrences}
+          members={members}
           onSelectDay={openCreateAt}
           onSelectEvent={openEvent}
         />
@@ -175,6 +177,7 @@ export default function CalendarPage() {
         <CalendarWeek
           weekStart={range.gridStart}
           occurrences={occurrences}
+          members={members}
           onSelectDay={openCreateAt}
           onSelectEvent={openEvent}
         />
@@ -182,6 +185,7 @@ export default function CalendarPage() {
         <CalendarDay
           day={anchor}
           occurrences={occurrences}
+          members={members}
           onAdd={() => openCreateAt(anchor)}
           onSelectEvent={openEvent}
         />

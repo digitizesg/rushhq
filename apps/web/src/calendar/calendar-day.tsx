@@ -2,15 +2,17 @@ import { format } from "date-fns";
 import { occurrencesOnDay, type EventOccurrence } from "@/lib/calendar";
 import { EventChip } from "@/calendar/event-chip";
 import { Button } from "@/components/button";
+import type { FamilyMember } from "@/lib/types";
 
 interface DayViewProps {
   day: Date;
   occurrences: EventOccurrence[];
+  members: FamilyMember[];
   onAdd: () => void;
   onSelectEvent: (occurrence: EventOccurrence) => void;
 }
 
-export function CalendarDay({ day, occurrences, onAdd, onSelectEvent }: DayViewProps) {
+export function CalendarDay({ day, occurrences, members, onAdd, onSelectEvent }: DayViewProps) {
   const onDay = occurrencesOnDay(occurrences, day);
   return (
     <div className="bg-white border border-line rounded-lg p-5">
@@ -33,7 +35,7 @@ export function CalendarDay({ day, occurrences, onAdd, onSelectEvent }: DayViewP
         <ul className="flex flex-col gap-1.5">
           {onDay.map((occ, i) => (
             <li key={`${occ.event.id}-${i}`}>
-              <EventChip occurrence={occ} detailed onClick={() => onSelectEvent(occ)} />
+              <EventChip occurrence={occ} members={members} detailed onClick={() => onSelectEvent(occ)} />
             </li>
           ))}
         </ul>

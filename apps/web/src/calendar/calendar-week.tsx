@@ -2,10 +2,12 @@ import { format, isSameDay, isToday } from "date-fns";
 import { occurrencesOnDay, type EventOccurrence } from "@/lib/calendar";
 import { EventChip } from "@/calendar/event-chip";
 import { addDays } from "date-fns";
+import type { FamilyMember } from "@/lib/types";
 
 interface WeekViewProps {
   weekStart: Date;
   occurrences: EventOccurrence[];
+  members: FamilyMember[];
   onSelectDay: (day: Date) => void;
   onSelectEvent: (occurrence: EventOccurrence) => void;
 }
@@ -13,6 +15,7 @@ interface WeekViewProps {
 export function CalendarWeek({
   weekStart,
   occurrences,
+  members,
   onSelectDay,
   onSelectEvent,
 }: WeekViewProps) {
@@ -61,6 +64,7 @@ export function CalendarWeek({
                   <EventChip
                     key={`${occ.event.id}-${i}`}
                     occurrence={occ}
+                    members={members}
                     detailed
                     onClick={() => onSelectEvent(occ)}
                   />

@@ -6,10 +6,12 @@ import {
   type EventOccurrence,
 } from "@/lib/calendar";
 import { EventChip } from "@/calendar/event-chip";
+import type { FamilyMember } from "@/lib/types";
 
 interface MonthGridProps {
   anchor: Date;
   occurrences: EventOccurrence[];
+  members: FamilyMember[];
   onSelectDay: (day: Date) => void;
   onSelectEvent: (occurrence: EventOccurrence) => void;
 }
@@ -17,6 +19,7 @@ interface MonthGridProps {
 export function CalendarMonth({
   anchor,
   occurrences,
+  members,
   onSelectDay,
   onSelectEvent,
 }: MonthGridProps) {
@@ -87,6 +90,7 @@ export function CalendarMonth({
                   <EventChip
                     key={`${occ.event.id}-${i}-${occ.start.toISOString()}`}
                     occurrence={occ}
+                    members={members}
                     onClick={(e) => {
                       e.stopPropagation();
                       onSelectEvent(occ);

@@ -121,8 +121,15 @@ export function weekDayLabels(): string[] {
 // Occurrences (RRULE expansion)
 // ----------------------------------------------------------------------------
 
+/** The expanded event shape carried through the occurrence pipeline.
+ *  attendee_ids comes from the join in useCalendarData; the colouring
+ *  logic in EventChip needs it to resolve the dominant attendee. */
+export type ExpandedEvent = CalendarEvent & {
+  attendee_ids: string[];
+};
+
 export interface EventOccurrence {
-  event: CalendarEvent;
+  event: ExpandedEvent;
   start: Date;
   end: Date;
 }
@@ -136,7 +143,7 @@ const durationMs = (e: CalendarEvent) =>
  * (those with an rrule) are expanded with rrulestr — all client-side.
  */
 export function expandOccurrences(
-  events: CalendarEvent[],
+  events: ExpandedEvent[],
   window: { start: Date; end: Date },
 ): EventOccurrence[] {
   const out: EventOccurrence[] = [];

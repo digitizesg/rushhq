@@ -1,12 +1,14 @@
 import { addDays, format, isSameDay, isToday, isTomorrow, startOfDay } from "date-fns";
 import { occurrencesOnDay, AGENDA_DAYS, type EventOccurrence } from "@/lib/calendar";
-import { colourFor } from "@/lib/colours";
+import { colourForEvent } from "@/lib/colours";
 import { formatTime24 } from "@/lib/calendar";
+import type { FamilyMember } from "@/lib/types";
 
 interface AgendaProps {
   /** Start of the agenda window (today, by default). */
   start: Date;
   occurrences: EventOccurrence[];
+  members: FamilyMember[];
   onSelectEvent: (occurrence: EventOccurrence) => void;
 }
 
@@ -15,7 +17,7 @@ interface AgendaProps {
  * a chunky tappable row. Empty days collapse so the list stays useful
  * for sparse weeks.
  */
-export function CalendarAgenda({ start, occurrences, onSelectEvent }: AgendaProps) {
+export function CalendarAgenda({ start, occurrences, members, onSelectEvent }: AgendaProps) {
   const days = Array.from({ length: AGENDA_DAYS }, (_, i) => startOfDay(addDays(start, i)));
   const grouped = days
     .map((d) => ({ day: d, occs: occurrencesOnDay(occurrences, d) }))
@@ -43,6 +45,7 @@ export function CalendarAgenda({ start, occurrences, onSelectEvent }: AgendaProp
                 <AgendaRow
                   key={`${occ.event.id}-${i}-${occ.start.toISOString()}`}
                   occurrence={occ}
+                  members={members}
                   onClick={() => onSelectEvent(occ)}
                 />
               ))}
@@ -87,13 +90,18 @@ function DayHeader({ day, count }: { day: Date; count: number }) {
 
 function AgendaRow({
   occurrence,
+  members,
   onClick,
 }: {
   occurrence: EventOccurrence;
+  members: FamilyMember[];
   onClick: () => void;
 }) {
   const { event, start } = occurrence;
-  const colour = colourFor(event.created_by);
+  const attendees = event.attendee_ids
+    .map((id) => members.find((m) => m.id === id))
+    .filter((m): m is FamilyMember => !!m);
+  const colour = colourForEvent(attendees, event.created_by);
   const recurring = !!event.rrule;
 
   return (

@@ -1,18 +1,23 @@
 import type { MouseEvent } from "react";
-import { colourFor } from "@/lib/colours";
+import { colourForEvent } from "@/lib/colours";
 import { formatTime24 } from "@/lib/calendar";
 import type { EventOccurrence } from "@/lib/calendar";
+import type { FamilyMember } from "@/lib/types";
 
 interface EventChipProps {
   occurrence: EventOccurrence;
+  members: FamilyMember[];
   /** When false (default) the chip is dense for month-view cells. */
   detailed?: boolean;
   onClick: (e: MouseEvent<HTMLButtonElement>) => void;
 }
 
-export function EventChip({ occurrence, detailed = false, onClick }: EventChipProps) {
+export function EventChip({ occurrence, members, detailed = false, onClick }: EventChipProps) {
   const { event, start } = occurrence;
-  const colour = colourFor(event.created_by);
+  const attendees = event.attendee_ids
+    .map((id) => members.find((m) => m.id === id))
+    .filter((m): m is FamilyMember => !!m);
+  const colour = colourForEvent(attendees, event.created_by);
   const recurring = !!event.rrule;
 
   return (
