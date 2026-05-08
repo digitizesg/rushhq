@@ -6,6 +6,7 @@ import {
   Banknote,
   Coins,
   History,
+  Info,
   Plus,
   RefreshCw,
   Sparkles,
@@ -106,6 +107,14 @@ export default function StocksOverviewPage() {
           {data.error}
         </div>
       )}
+
+      <div className="flex items-start gap-2 text-[12.5px] text-muted bg-soft border border-line rounded-md px-3 py-2">
+        <Info size={14} className="mt-0.5 shrink-0" />
+        <p>
+          Shares are bought in USD. SGD figures use current or recent FX
+          rates and may fluctuate over time.
+        </p>
+      </div>
 
       {/* Family summary */}
       <div className="bg-white border border-line rounded-lg p-5 sm:p-6 grid gap-5 sm:grid-cols-4">
@@ -263,7 +272,7 @@ interface ChildCardProps {
 }
 
 function ChildCard({ memberId, name, holding, snaps, voo, fx, pendingCount }: ChildCardProps) {
-  const colour = colourFor(memberId);
+  const colour = colourFor(memberId, name);
   const shares = holding?.shares_held ?? 0;
   const costSgd = holding?.cost_basis_sgd ?? 0;
   const valueUsd = shares * voo;
@@ -527,7 +536,7 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
         {/* Stacked area per kid */}
         {rows.length > 1 &&
           childList.map((c) => {
-            const colour = colourFor(c.id);
+            const colour = colourFor(c.id, c.short_name);
             return (
               <path
                 key={c.id}
@@ -566,7 +575,7 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
         {/* If only one data point, draw per-kid dots so it isn't blank */}
         {rows.length === 1 &&
           childList.map((c) => {
-            const colour = colourFor(c.id);
+            const colour = colourFor(c.id, c.short_name);
             const v = rows[0].perKid[c.id] ?? 0;
             if (v <= 0) return null;
             return (
@@ -623,7 +632,7 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
 
       {rows.length === 1 && (
         <p className="text-[12px] text-muted text-center">
-          The chart fills out as monthly snapshots accumulate (1st of each month).
+          The chart will fill out over time as more entries are added.
         </p>
       )}
     </div>

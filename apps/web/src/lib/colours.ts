@@ -12,15 +12,22 @@ export interface MemberColour {
   text: string;
 }
 
-const PALETTE: ReadonlyArray<MemberColour> = [
-  { accent: "#2563eb", soft: "#eff6ff", text: "#1d4ed8" }, // blue
-  { accent: "#7c3aed", soft: "#f5f3ff", text: "#6d28d9" }, // violet
-  { accent: "#059669", soft: "#ecfdf5", text: "#047857" }, // emerald
-  { accent: "#d97706", soft: "#fffbeb", text: "#b45309" }, // amber
-  { accent: "#e11d48", soft: "#fff1f2", text: "#be123c" }, // rose
-  { accent: "#4f46e5", soft: "#eef2ff", text: "#4338ca" }, // indigo
-  { accent: "#0891b2", soft: "#ecfeff", text: "#0e7490" }, // cyan
-];
+const BLUE: MemberColour =   { accent: "#2563eb", soft: "#eff6ff", text: "#1d4ed8" };
+const VIOLET: MemberColour = { accent: "#7c3aed", soft: "#f5f3ff", text: "#6d28d9" };
+const EMERALD: MemberColour = { accent: "#059669", soft: "#ecfdf5", text: "#047857" };
+const AMBER: MemberColour =  { accent: "#d97706", soft: "#fffbeb", text: "#b45309" };
+const ROSE: MemberColour =   { accent: "#ec4899", soft: "#fdf2f8", text: "#be185d" };
+const INDIGO: MemberColour = { accent: "#4f46e5", soft: "#eef2ff", text: "#4338ca" };
+const CYAN: MemberColour =   { accent: "#0891b2", soft: "#ecfeff", text: "#0e7490" };
+
+const PALETTE: ReadonlyArray<MemberColour> = [BLUE, VIOLET, EMERALD, AMBER, ROSE, INDIGO, CYAN];
+
+// Per-name overrides take priority over the hash. Lets the kids own
+// "their" colour even if the auth/member ids change.
+const NAME_OVERRIDES: Record<string, MemberColour> = {
+  Robin: BLUE,
+  Riley: ROSE,
+};
 
 function hash(id: string): number {
   let h = 0;
@@ -30,7 +37,11 @@ function hash(id: string): number {
   return Math.abs(h);
 }
 
-export function colourFor(memberId: string | null | undefined): MemberColour {
+export function colourFor(
+  memberId: string | null | undefined,
+  shortName?: string | null,
+): MemberColour {
+  if (shortName && NAME_OVERRIDES[shortName]) return NAME_OVERRIDES[shortName];
   if (!memberId) return { accent: "#64748b", soft: "#f1f5f9", text: "#475569" };
   return PALETTE[hash(memberId) % PALETTE.length];
 }

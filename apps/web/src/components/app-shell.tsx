@@ -12,7 +12,7 @@ export function AppShell() {
   const { member, isParent, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const isChild = member?.member_type === "child";
-  const colour = colourFor(member?.id);
+  const colour = colourFor(member?.id, member?.short_name);
 
   const initials = (member?.short_name ?? "?")
     .split(/\s+/)
