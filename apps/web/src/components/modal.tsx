@@ -25,7 +25,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
   }, [open, onClose]);
 
   if (!open) return null;
-  const widthClass = size === "lg" ? "max-w-2xl" : "max-w-md";
+  const widthClass = size === "lg" ? "max-w-3xl" : "max-w-md";
 
   return createPortal(
     <div

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/auth/auth-context";
 import {
@@ -19,6 +20,7 @@ import type { FullEvent } from "@/calendar/use-calendar-data";
 import { Button } from "@/components/button";
 import { TextField } from "@/components/text-field";
 import { Select } from "@/components/select";
+import { colourFor } from "@/lib/colours";
 
 interface ReminderRow {
   id: string; // local-only — for stable keys while editing
@@ -237,42 +239,45 @@ export function EventForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <TextField
-        label="Title"
-        required
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Riley's swim class"
-      />
-
-      <TextField
-        label="Location"
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
-        placeholder="Singapore Sports Hub"
-      />
-
-      <label className="block">
-        <span className="block text-[13px] font-medium text-ink mb-1.5">Notes</span>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className="w-full rounded-md border border-line bg-white px-3 py-2 text-[14px] text-ink focus:outline-2 focus:outline-offset-0 focus:outline-primary"
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <Section>
+        <TextField
+          label="Title"
+          required
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Riley's swim class"
         />
-      </label>
-
-      <div className="bg-white border border-line rounded-md p-4 space-y-3">
-        <label className="flex items-center gap-2 text-[14px] text-ink cursor-pointer">
-          <input
-            type="checkbox"
-            className="size-4 rounded border-line accent-primary"
-            checked={allDay}
-            onChange={(e) => setAllDay(e.target.checked)}
+        <TextField
+          label="Location"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="Singapore Sports Hub"
+        />
+        <label className="block">
+          <span className="block text-[13px] font-medium text-ink mb-1.5">Notes</span>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            placeholder="Anything to remember…"
+            className="w-full rounded-md border border-line bg-white px-3 py-2.5 text-[14px] text-ink placeholder:text-muted/70 hover:border-ink/20 focus:outline-2 focus:outline-offset-0 focus:outline-primary"
           />
-          All day
         </label>
+      </Section>
+
+      <Section title="When">
+        <div className="flex flex-wrap items-center gap-4">
+          <label className="inline-flex items-center gap-2 text-[14px] text-ink cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="size-4 rounded border-line accent-primary"
+              checked={allDay}
+              onChange={(e) => setAllDay(e.target.checked)}
+            />
+            All day
+          </label>
+        </div>
 
         {allDay ? (
           <TextField
@@ -317,64 +322,86 @@ export function EventForm({
             hint="iCal RRULE syntax. Example: RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=TU"
           />
         )}
-      </div>
+      </Section>
 
-      <div>
-        <p className="block text-[13px] font-medium text-ink mb-1.5">Attendees</p>
-        <div className="bg-white border border-line rounded-md p-3 grid sm:grid-cols-2 gap-1">
-          {members.map((m) => (
-            <label
-              key={m.id}
-              className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-soft cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                className="size-4 rounded border-line accent-primary"
-                checked={attendeeIds.includes(m.id)}
-                onChange={() => toggleAttendee(m.id)}
-              />
-              <span className="text-[14px] text-ink">{m.short_name}</span>
-              <span className="text-[12px] text-muted ml-auto capitalize">
-                {m.role}
-              </span>
-            </label>
-          ))}
+      <Section title="Who">
+        <div>
+          <span className="block text-[13px] font-medium text-ink mb-2">Attendees</span>
+          <div className="flex flex-wrap gap-2">
+            {members.map((m) => {
+              const selected = attendeeIds.includes(m.id);
+              const colour = colourFor(m.id, m.short_name);
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => toggleAttendee(m.id)}
+                  aria-pressed={selected}
+                  className={[
+                    "inline-flex items-center gap-2 h-9 px-3 rounded-full border text-[13.5px] transition-colors",
+                    "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary",
+                  ].join(" ")}
+                  style={
+                    selected
+                      ? {
+                          backgroundColor: colour.soft,
+                          borderColor: colour.accent,
+                          color: colour.text,
+                        }
+                      : undefined
+                  }
+                >
+                  <span
+                    className="size-2 rounded-full"
+                    style={{
+                      backgroundColor: selected ? colour.accent : "#cbd5e1",
+                    }}
+                  />
+                  <span className={selected ? "font-medium" : "text-ink"}>
+                    {m.short_name}
+                  </span>
+                  <span className="text-[11.5px] capitalize opacity-70">{m.role}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      <Select
-        label="Visibility"
-        value={visibility}
-        onChange={(e) => setVisibility(e.target.value as EventVisibility)}
-        hint={
-          visibility === "family"
-            ? "Family members and helpers can see this."
-            : "Only parents can see this."
-        }
-      >
-        <option value="family">Family (everyone)</option>
-        <option value="parents">Parents only</option>
-      </Select>
+        <Select
+          label="Visibility"
+          value={visibility}
+          onChange={(e) => setVisibility(e.target.value as EventVisibility)}
+          hint={
+            visibility === "family"
+              ? "Family members and helpers can see this."
+              : "Only parents can see this."
+          }
+        >
+          <option value="family">Family (everyone)</option>
+          <option value="parents">Parents only</option>
+        </Select>
+      </Section>
 
-      <div>
-        <div className="flex items-baseline justify-between mb-1.5">
-          <span className="block text-[13px] font-medium text-ink">Reminders</span>
+      <Section
+        title="Reminders"
+        action={
           <button
             type="button"
             onClick={addReminder}
-            className="text-[13px] text-primary hover:underline underline-offset-2"
+            className="text-[13px] font-medium text-primary hover:underline underline-offset-2"
           >
             + Add reminder
           </button>
-        </div>
+        }
+      >
         {reminders.length === 0 ? (
           <p className="text-[13px] text-muted">No reminders set.</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {reminders.map((r) => (
               <div
                 key={r.id}
-                className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end bg-white border border-line rounded-md p-2.5"
+                className="grid grid-cols-[1fr_1fr_auto] gap-2.5 items-end"
               >
                 <Select
                   label="When"
@@ -406,23 +433,15 @@ export function EventForm({
                   type="button"
                   onClick={() => removeReminder(r.id)}
                   aria-label="Remove reminder"
-                  className="size-10 grid place-items-center text-muted hover:text-danger rounded-md hover:bg-soft"
+                  className="size-11 grid place-items-center text-muted hover:text-danger rounded-md hover:bg-soft"
                 >
-                  <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
-                    <path
-                      d="M3 4h10M6 4V3a1 1 0 011-1h2a1 1 0 011 1v1M5 4l1 9a1 1 0 001 1h2a1 1 0 001-1l1-9"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      fill="none"
-                    />
-                  </svg>
+                  <Trash2 size={16} />
                 </button>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </Section>
 
       {error && (
         <p role="alert" className="text-danger text-[13px]">
@@ -430,7 +449,7 @@ export function EventForm({
         </p>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-line">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-line">
         {isEditing && onDeleted && (
           confirmingDelete ? (
             <div className="flex items-center gap-2">
@@ -474,5 +493,31 @@ export function EventForm({
         </div>
       </div>
     </form>
+  );
+}
+
+function Section({
+  title,
+  action,
+  children,
+}: {
+  title?: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="space-y-3.5">
+      {(title || action) && (
+        <div className="flex items-baseline justify-between gap-3">
+          {title && (
+            <h3 className="text-[12px] font-semibold uppercase tracking-wider text-muted">
+              {title}
+            </h3>
+          )}
+          {action}
+        </div>
+      )}
+      {children}
+    </section>
   );
 }

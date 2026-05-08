@@ -24,9 +24,9 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
         ref={ref}
         id={inputId}
         className={[
-          "w-full h-10 rounded-md border bg-white px-3 text-[14px] text-ink placeholder:text-muted/70",
+          "w-full h-11 rounded-md border bg-white px-3 text-[14px] text-ink placeholder:text-muted/70",
           "focus:outline-2 focus:outline-offset-0 focus:outline-primary",
-          error ? "border-danger" : "border-line",
+          error ? "border-danger" : "border-line hover:border-ink/20",
           className ?? "",
         ].join(" ")}
         aria-invalid={error ? true : undefined}
