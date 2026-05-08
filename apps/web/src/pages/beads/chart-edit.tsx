@@ -7,19 +7,16 @@ import {
   firstOfMonth,
   formatPeriodLabel,
   formatSGD,
-  type BeadCategory,
   type BeadChart,
   type BeadChartItem,
   type BeadColour,
 } from "@/lib/beads";
 import { LoadingScreen } from "@/components/loading-screen";
 import { BeadDot } from "@/components/bead-dot";
-import { CategoryIcon } from "@/components/category-icon";
 import { Button } from "@/components/button";
 
 interface DraftItem {
   id: string;            // either real uuid or "new-..."
-  category_id: string;
   bead_colour_id: string;
   description: string;
   display_order: number;
@@ -55,8 +52,6 @@ export default function ChartEditPage() {
   const [pastOpen, setPastOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialise the draft from the active chart's items whenever the
-  // server data arrives.
   useEffect(() => {
     if (!activeChart) return;
     const items = data.items
@@ -65,7 +60,6 @@ export default function ChartEditPage() {
     setDraft(
       items.map((i) => ({
         id: i.id,
-        category_id: i.category_id,
         bead_colour_id: i.bead_colour_id,
         description: i.description,
         display_order: i.display_order,
@@ -83,27 +77,37 @@ export default function ChartEditPage() {
     setDraft((rows) =>
       rows
         .map((r) => (r.id === id ? { ...r, toDelete: true } : r))
-        // Newly added rows that haven't been persisted can be dropped outright.
         .filter((r) => !(r.isNew && r.toDelete)),
     );
   }
-  function addItem(categoryId: string) {
+  function addItem() {
     setDraft((rows) => {
-      const sameCat = rows.filter((r) => r.category_id === categoryId);
-      const order = sameCat.length > 0
-        ? Math.max(...rows.map((r) => r.display_order)) + 1
-        : rows.length + 1;
+      const order = rows.length > 0 ? Math.max(...rows.map((r) => r.display_order)) + 1 : 1;
       return [
         ...rows,
         {
           id: nextNewId(),
-          category_id: categoryId,
           bead_colour_id: "yellow",
           description: "",
           display_order: order,
           isNew: true,
         },
       ];
+    });
+  }
+
+  function move(id: string, direction: -1 | 1) {
+    setDraft((rows) => {
+      const visible = rows.filter((r) => !r.toDelete);
+      const idx = visible.findIndex((r) => r.id === id);
+      const target = idx + direction;
+      if (idx < 0 || target < 0 || target >= visible.length) return rows;
+      const reordered = [...visible];
+      [reordered[idx], reordered[target]] = [reordered[target], reordered[idx]];
+      // Reapply linear display_order, then merge with the deleted rows.
+      const renumbered = reordered.map((r, i) => ({ ...r, display_order: i + 1 }));
+      const deletedRows = rows.filter((r) => r.toDelete);
+      return [...renumbered, ...deletedRows];
     });
   }
 
@@ -118,10 +122,7 @@ export default function ChartEditPage() {
       if (live.some((r) => !r.description.trim())) {
         throw new Error("Every item needs a description");
       }
-
-      // Re-number display_order linearly so adds/removes don't leave gaps.
       const numbered = live.map((r, idx) => ({ ...r, display_order: idx + 1 }));
-
       const inserts = numbered.filter((r) => r.isNew);
       const updates = numbered.filter((r) => !r.isNew);
       const deletes = draft.filter((r) => r.toDelete && !r.isNew);
@@ -137,7 +138,6 @@ export default function ChartEditPage() {
         const { error } = await supabase
           .from("bead_chart_items")
           .update({
-            category_id: u.category_id,
             bead_colour_id: u.bead_colour_id,
             description: u.description.trim(),
             display_order: u.display_order,
@@ -151,7 +151,6 @@ export default function ChartEditPage() {
           .insert(
             inserts.map((i) => ({
               chart_id: activeChart.id,
-              category_id: i.category_id,
               bead_colour_id: i.bead_colour_id,
               description: i.description.trim(),
               display_order: i.display_order,
@@ -183,6 +182,8 @@ export default function ChartEditPage() {
       setSavingState("idle");
     }
   }
+
+  const visibleDraft = draft.filter((r) => !r.toDelete).sort((a, b) => a.display_order - b.display_order);
 
   return (
     <section className="mx-auto max-w-[820px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
@@ -226,20 +227,39 @@ export default function ChartEditPage() {
           or contact your admin.
         </div>
       ) : (
-        <form onSubmit={handleSave} className="space-y-5">
-          <div className="space-y-5">
-            {data.categories.map((cat) => (
-              <CategoryBlock
-                key={cat.id}
-                category={cat}
-                items={draft.filter((d) => d.category_id === cat.id && !d.toDelete)}
-                colours={data.colours}
-                allCategories={data.categories}
-                onPatch={patch}
-                onRemove={remove}
-                onAdd={() => addItem(cat.id)}
-              />
-            ))}
+        <form onSubmit={handleSave} className="space-y-4">
+          <div className="bg-white border border-line rounded-lg overflow-hidden">
+            <header className="flex items-center justify-between px-4 sm:px-5 py-3 bg-soft border-b border-line">
+              <span className="text-[14px] font-semibold text-ink">
+                Tasks ({visibleDraft.length})
+              </span>
+              <button
+                type="button"
+                onClick={addItem}
+                className="inline-flex items-center gap-1 text-[12.5px] font-medium text-primary hover:underline"
+              >
+                <Plus size={13} /> Add task
+              </button>
+            </header>
+            {visibleDraft.length === 0 ? (
+              <p className="px-5 py-6 text-[13px] text-muted text-center">
+                No tasks yet. Add one above.
+              </p>
+            ) : (
+              <ul className="divide-y divide-line">
+                {visibleDraft.map((item, idx) => (
+                  <ItemRow
+                    key={item.id}
+                    item={item}
+                    colours={data.colours}
+                    onPatch={patch}
+                    onRemove={remove}
+                    onMoveUp={idx > 0 ? () => move(item.id, -1) : undefined}
+                    onMoveDown={idx < visibleDraft.length - 1 ? () => move(item.id, 1) : undefined}
+                  />
+                ))}
+              </ul>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-3 border-t border-line">
@@ -277,7 +297,6 @@ export default function ChartEditPage() {
                   chart={c}
                   items={data.items.filter((i) => i.chart_id === c.id)}
                   colours={data.colours}
-                  categories={data.categories}
                 />
               ))}
             </ul>
@@ -288,74 +307,40 @@ export default function ChartEditPage() {
   );
 }
 
-interface CategoryBlockProps {
-  category: BeadCategory;
-  items: DraftItem[];
-  colours: BeadColour[];
-  allCategories: BeadCategory[];
-  onPatch: (id: string, patch: Partial<DraftItem>) => void;
-  onRemove: (id: string) => void;
-  onAdd: () => void;
-}
-
-function CategoryBlock({
-  category,
-  items,
-  colours,
-  allCategories,
-  onPatch,
-  onRemove,
-  onAdd,
-}: CategoryBlockProps) {
-  return (
-    <fieldset className="bg-white border border-line rounded-lg overflow-hidden">
-      <legend className="sr-only">{category.name}</legend>
-      <header className="flex items-center justify-between px-5 py-3 bg-soft border-b border-line">
-        <span className="inline-flex items-center gap-2 text-[14px] font-semibold text-ink">
-          <CategoryIcon name={category.icon} size={16} className="text-muted" />
-          {category.name}
-        </span>
-        <button
-          type="button"
-          onClick={onAdd}
-          className="inline-flex items-center gap-1 text-[12.5px] font-medium text-primary hover:underline"
-        >
-          <Plus size={13} /> Add task
-        </button>
-      </header>
-      {items.length === 0 ? (
-        <p className="px-5 py-4 text-[13px] text-muted">No tasks yet. Add one above.</p>
-      ) : (
-        <ul className="divide-y divide-line">
-          {items.map((item) => (
-            <ItemRow
-              key={item.id}
-              item={item}
-              colours={colours}
-              categories={allCategories}
-              onPatch={onPatch}
-              onRemove={onRemove}
-            />
-          ))}
-        </ul>
-      )}
-    </fieldset>
-  );
-}
-
 interface ItemRowProps {
   item: DraftItem;
   colours: BeadColour[];
-  categories: BeadCategory[];
   onPatch: (id: string, patch: Partial<DraftItem>) => void;
   onRemove: (id: string) => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
-function ItemRow({ item, colours, categories, onPatch, onRemove }: ItemRowProps) {
+function ItemRow({ item, colours, onPatch, onRemove, onMoveUp, onMoveDown }: ItemRowProps) {
   const colour = colours.find((c) => c.id === item.bead_colour_id) ?? colours[0];
   return (
-    <li className="px-3 sm:px-5 py-3 grid gap-2.5 sm:grid-cols-[auto_1fr_auto_auto_auto] sm:items-center">
-      <span className="hidden sm:inline-flex text-muted" aria-hidden>
+    <li className="px-3 sm:px-5 py-3 grid gap-2 grid-cols-[auto_1fr_auto_auto] sm:grid-cols-[auto_1fr_auto_auto_auto] sm:items-center">
+      <span className="hidden sm:flex flex-col text-muted -ml-1" aria-hidden>
+        <button
+          type="button"
+          onClick={onMoveUp}
+          disabled={!onMoveUp}
+          aria-label="Move up"
+          className="size-5 grid place-items-center rounded hover:bg-soft disabled:opacity-30"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 6l3-3 3 3" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" /></svg>
+        </button>
+        <button
+          type="button"
+          onClick={onMoveDown}
+          disabled={!onMoveDown}
+          aria-label="Move down"
+          className="size-5 grid place-items-center rounded hover:bg-soft disabled:opacity-30"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" /></svg>
+        </button>
+      </span>
+      <span className="sm:hidden text-muted" aria-hidden>
         <GripVertical size={14} />
       </span>
       <input
@@ -374,7 +359,7 @@ function ItemRow({ item, colours, categories, onPatch, onRemove }: ItemRowProps)
       >
         {colours.map((c) => (
           <option key={c.id} value={c.id}>
-            {c.name} · {formatSGD(c.sgd_value)}
+            {c.name} · {formatSGD(Number(c.sgd_value))}
           </option>
         ))}
       </select>
@@ -384,18 +369,6 @@ function ItemRow({ item, colours, categories, onPatch, onRemove }: ItemRowProps)
         size={20}
         className="hidden sm:inline-block"
       />
-      <select
-        value={item.category_id}
-        onChange={(e) => onPatch(item.id, { category_id: e.target.value })}
-        aria-label="Category"
-        className="h-9 rounded-md border border-line bg-white px-2.5 text-[13px] focus:outline-2 focus:outline-offset-0 focus:outline-primary sm:hidden"
-      >
-        {categories.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
       <button
         type="button"
         onClick={() => onRemove(item.id)}
@@ -412,11 +385,11 @@ interface PastChartRowProps {
   chart: BeadChart;
   items: BeadChartItem[];
   colours: BeadColour[];
-  categories: BeadCategory[];
 }
 
-function PastChartRow({ chart, items, colours, categories }: PastChartRowProps) {
+function PastChartRow({ chart, items, colours }: PastChartRowProps) {
   const [open, setOpen] = useState(false);
+  const sorted = [...items].sort((a, b) => a.display_order - b.display_order);
   return (
     <li>
       <button
@@ -427,10 +400,7 @@ function PastChartRow({ chart, items, colours, categories }: PastChartRowProps) 
         <span className="text-[13.5px] text-ink tnum">
           {formatPeriodLabel(chart.effective_from)}
           {chart.effective_until && (
-            <span className="text-muted">
-              {" "}
-              · ended {chart.effective_until}
-            </span>
+            <span className="text-muted"> · ended {chart.effective_until}</span>
           )}
         </span>
         <span className="text-[12.5px] text-muted">
@@ -438,45 +408,25 @@ function PastChartRow({ chart, items, colours, categories }: PastChartRowProps) 
         </span>
       </button>
       {open && (
-        <div className="px-5 pb-3 space-y-1.5">
-          {categories.map((cat) => {
-            const catItems = items
-              .filter((i) => i.category_id === cat.id)
-              .sort((a, b) => a.display_order - b.display_order);
-            if (catItems.length === 0) return null;
+        <ul className="px-5 pb-3 space-y-1.5">
+          {sorted.map((item) => {
+            const colour = colours.find((c) => c.id === item.bead_colour_id);
             return (
-              <div key={cat.id} className="pt-1">
-                <p className="text-[11.5px] uppercase tracking-wider text-muted mb-1 inline-flex items-center gap-1.5">
-                  <CategoryIcon name={cat.icon} size={12} />
-                  {cat.name}
-                </p>
-                <ul className="space-y-1">
-                  {catItems.map((item) => {
-                    const colour = colours.find((c) => c.id === item.bead_colour_id);
-                    return (
-                      <li
-                        key={item.id}
-                        className="flex items-center gap-2 text-[13px] text-ink"
-                      >
-                        <BeadDot
-                          hex={colour?.hex ?? "#ccc"}
-                          sparkly={colour?.id === "sparkly_pink"}
-                          size={12}
-                        />
-                        <span className="flex-1">{item.description}</span>
-                        <span className="text-muted text-[12px] tnum">
-                          {colour ? formatSGD(Number(colour.sgd_value)) : ""}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
+              <li key={item.id} className="flex items-center gap-2 text-[13px] text-ink">
+                <BeadDot
+                  hex={colour?.hex ?? "#ccc"}
+                  sparkly={colour?.id === "sparkly_pink"}
+                  size={12}
+                />
+                <span className="flex-1">{item.description}</span>
+                <span className="text-muted text-[12px] tnum">
+                  {colour ? formatSGD(Number(colour.sgd_value)) : ""}
+                </span>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </li>
   );
 }
-

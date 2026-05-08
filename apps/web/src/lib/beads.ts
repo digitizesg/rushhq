@@ -11,13 +11,6 @@ export interface BeadColour {
   display_order: number;
 }
 
-export interface BeadCategory {
-  id: string;
-  name: string;
-  icon: string;        // lucide-react component name
-  display_order: number;
-}
-
 export interface BeadChart {
   id: string;
   member_id: string;
@@ -30,7 +23,6 @@ export interface BeadChart {
 export interface BeadChartItem {
   id: string;
   chart_id: string;
-  category_id: string;
   bead_colour_id: string;
   description: string;
   display_order: number;

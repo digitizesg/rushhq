@@ -1,12 +1,10 @@
-// Lives in /calendar/ for now — could move to /beads/ later. The hook
-// loads everything the bead pages need in one go: the bead reference
-// data (colours + categories), the active charts per child, the
-// periods + totals, and the kid roster.
+// Loads everything the bead pages need in one go: the bead reference
+// colours, the charts per child, items, periods, totals, counts, plus
+// the kid roster.
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type {
-  BeadCategory,
   BeadChart,
   BeadChartItem,
   BeadColour,
@@ -20,7 +18,6 @@ export interface BeadData {
   loading: boolean;
   error: string | null;
   colours: BeadColour[];
-  categories: BeadCategory[];
   children: FamilyMember[];
   charts: BeadChart[];
   items: BeadChartItem[];
@@ -35,7 +32,6 @@ export function useBeadData(): BeadData {
     loading: true,
     error: null,
     colours: [],
-    categories: [],
     children: [],
     charts: [],
     items: [],
@@ -49,7 +45,6 @@ export function useBeadData(): BeadData {
     try {
       const [
         coloursRes,
-        catsRes,
         childrenRes,
         chartsRes,
         itemsRes,
@@ -58,7 +53,6 @@ export function useBeadData(): BeadData {
         countsRes,
       ] = await Promise.all([
         supabase.from("bead_colours").select("*").order("display_order"),
-        supabase.from("bead_categories").select("*").order("display_order"),
         supabase
           .from("family_members")
           .select("*")
@@ -75,7 +69,7 @@ export function useBeadData(): BeadData {
         supabase.from("bead_counts").select("*"),
       ]);
 
-      for (const r of [coloursRes, catsRes, childrenRes, chartsRes, itemsRes, periodsRes, totalsRes, countsRes]) {
+      for (const r of [coloursRes, childrenRes, chartsRes, itemsRes, periodsRes, totalsRes, countsRes]) {
         if (r.error) throw r.error;
       }
 
@@ -83,7 +77,6 @@ export function useBeadData(): BeadData {
         loading: false,
         error: null,
         colours: (coloursRes.data ?? []) as BeadColour[],
-        categories: (catsRes.data ?? []) as BeadCategory[],
         children: (childrenRes.data ?? []) as FamilyMember[],
         charts: (chartsRes.data ?? []) as BeadChart[],
         items: (itemsRes.data ?? []) as BeadChartItem[],

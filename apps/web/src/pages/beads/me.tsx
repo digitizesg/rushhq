@@ -6,7 +6,6 @@ import {
   firstOfMonth,
   formatPeriodLabel,
   formatSGD,
-  type BeadCategory,
   type BeadChart,
   type BeadChartItem,
   type BeadColour,
@@ -14,7 +13,6 @@ import {
 } from "@/lib/beads";
 import { LoadingScreen } from "@/components/loading-screen";
 import { BeadDot } from "@/components/bead-dot";
-import { CategoryIcon } from "@/components/category-icon";
 
 interface ChildState {
   loading: boolean;
@@ -22,7 +20,6 @@ interface ChildState {
   chart: BeadChart | null;
   items: BeadChartItem[];
   colours: BeadColour[];
-  categories: BeadCategory[];
   totals: BeadPeriodTotal[];
 }
 
@@ -37,7 +34,6 @@ export default function MyBeadsPage() {
     chart: null,
     items: [],
     colours: [],
-    categories: [],
     totals: [],
   });
 
@@ -46,9 +42,8 @@ export default function MyBeadsPage() {
     let cancelled = false;
     (async () => {
       try {
-        const [coloursRes, catsRes, chartRes, totalsRes] = await Promise.all([
+        const [coloursRes, chartRes, totalsRes] = await Promise.all([
           supabase.from("bead_colours").select("*").order("display_order"),
-          supabase.from("bead_categories").select("*").order("display_order"),
           supabase
             .from("bead_charts")
             .select("*")
@@ -61,7 +56,7 @@ export default function MyBeadsPage() {
             .eq("member_id", member.id)
             .order("period_start", { ascending: true }),
         ]);
-        for (const r of [coloursRes, catsRes, chartRes, totalsRes]) {
+        for (const r of [coloursRes, chartRes, totalsRes]) {
           if (r.error) throw r.error;
         }
 
@@ -83,7 +78,6 @@ export default function MyBeadsPage() {
           chart: (chartRes.data as BeadChart) ?? null,
           items,
           colours: (coloursRes.data ?? []) as BeadColour[],
-          categories: (catsRes.data ?? []) as BeadCategory[],
           totals: ((totalsRes.data ?? []) as BeadPeriodTotal[]).map((t) => ({
             ...t,
             total_sgd: Number(t.total_sgd),
@@ -140,43 +134,38 @@ export default function MyBeadsPage() {
         <div className="bg-white border border-line rounded-lg p-6 text-[14px] text-muted">
           No chart yet. Ask Mum or Dad.
         </div>
+      ) : state.items.length === 0 ? (
+        <div className="bg-white border border-line rounded-lg p-6 text-[14px] text-muted">
+          Your chart is empty for now.
+        </div>
       ) : (
-        <div className="space-y-5">
-          {state.categories.map((cat) => {
-            const catItems = state.items
-              .filter((i) => i.category_id === cat.id)
-              .sort((a, b) => a.display_order - b.display_order);
-            if (catItems.length === 0) return null;
-            return (
-              <div key={cat.id} className="bg-white border border-line rounded-lg overflow-hidden">
-                <header className="flex items-center gap-2 px-5 py-3 bg-soft border-b border-line">
-                  <CategoryIcon name={cat.icon} size={16} className="text-muted" />
-                  <span className="text-[14px] font-semibold text-ink">{cat.name}</span>
-                </header>
-                <ul className="divide-y divide-line">
-                  {catItems.map((item) => {
-                    const c = state.colours.find((x) => x.id === item.bead_colour_id);
-                    return (
-                      <li
-                        key={item.id}
-                        className="flex items-center gap-3 px-5 py-3 text-[14.5px] text-ink"
-                      >
-                        <BeadDot
-                          hex={c?.hex ?? "#cccccc"}
-                          sparkly={c?.id === "sparkly_pink"}
-                          size={18}
-                        />
-                        <span className="flex-1">{item.description}</span>
-                        <span className="text-muted text-[13px] tnum">
-                          {c ? formatSGD(Number(c.sgd_value)) : ""}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            );
-          })}
+        <div className="bg-white border border-line rounded-lg overflow-hidden">
+          <header className="px-5 py-3 bg-soft border-b border-line">
+            <span className="text-[14px] font-semibold text-ink">
+              Your tasks ({state.items.length})
+            </span>
+          </header>
+          <ul className="divide-y divide-line">
+            {state.items.map((item) => {
+              const c = state.colours.find((x) => x.id === item.bead_colour_id);
+              return (
+                <li
+                  key={item.id}
+                  className="flex items-center gap-3 px-5 py-3 text-[14.5px] text-ink"
+                >
+                  <BeadDot
+                    hex={c?.hex ?? "#cccccc"}
+                    sparkly={c?.id === "sparkly_pink"}
+                    size={18}
+                  />
+                  <span className="flex-1">{item.description}</span>
+                  <span className="text-muted text-[13px] tnum">
+                    {c ? formatSGD(Number(c.sgd_value)) : ""}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 
