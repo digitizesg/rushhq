@@ -5,7 +5,7 @@ import { useAuth } from "@/auth/auth-context";
 import { colourFor } from "@/lib/colours";
 
 const navBase =
-  "px-3 py-2 rounded-md text-[15px] font-medium text-muted hover:text-ink transition-colors";
+  "px-3.5 py-2.5 rounded-md text-[16px] font-medium text-muted hover:text-ink transition-colors";
 const navActive = "bg-primary-soft text-primary";
 
 export function AppShell() {
@@ -23,19 +23,19 @@ export function AppShell() {
   return (
     <div className="min-h-dvh flex flex-col">
       <header className="bg-white border-b border-line sticky top-0 z-30">
-        <div className="mx-auto max-w-[1100px] px-4 sm:px-6 h-14 flex items-center gap-4 sm:gap-6">
+        <div className="mx-auto max-w-[1100px] px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-4 sm:gap-6">
           <Link
             to="/"
             className="flex items-center gap-2.5"
             onClick={() => setMenuOpen(false)}
           >
             <span
-              className="grid place-items-center size-7 rounded-md bg-primary text-white text-[14px] font-semibold"
+              className="grid place-items-center size-8 rounded-md bg-primary text-white text-[15px] font-semibold"
               aria-hidden
             >
               R
             </span>
-            <span className="text-[18px] font-semibold text-ink tracking-[-0.01em]">
+            <span className="text-[19px] font-semibold text-ink tracking-[-0.01em]">
               Rush HQ
             </span>
           </Link>
