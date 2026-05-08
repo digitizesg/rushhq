@@ -21,9 +21,9 @@ export function EventChip({ occurrence, detailed = false, onClick }: EventChipPr
       onClick={onClick}
       title={`${event.title}${event.location ? " · " + event.location : ""}`}
       className={[
-        "w-full text-left rounded-md transition-all hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary",
+        "w-full text-left rounded transition-all hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary",
         "border-l-[3px]",
-        detailed ? "px-3 py-2.5" : "pl-2 pr-2 py-1",
+        detailed ? "px-3 py-2.5" : "pl-1.5 pr-1 sm:pr-2 py-0.5 sm:py-1",
       ].join(" ")}
       style={{
         background: colour.soft,
@@ -48,17 +48,17 @@ export function EventChip({ occurrence, detailed = false, onClick }: EventChipPr
           </div>
         </div>
       ) : (
-        <div className="flex items-baseline gap-1.5">
+        <div className="flex items-baseline gap-1 sm:gap-1.5">
           {!event.all_day && (
             <span
-              className="text-[13px] font-semibold tnum shrink-0"
+              className="hidden sm:inline text-[13px] font-semibold tnum shrink-0"
               style={{ color: colour.accent }}
             >
               {formatTime24(start)}
             </span>
           )}
           <span
-            className="text-[14.5px] truncate font-medium"
+            className="text-[12.5px] sm:text-[14.5px] truncate font-medium"
             style={{ color: colour.text }}
           >
             {event.title}

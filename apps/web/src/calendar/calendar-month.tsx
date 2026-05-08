@@ -31,7 +31,7 @@ export function CalendarMonth({
           <div
             key={l}
             className={[
-              "px-3 py-2.5 text-[14px] font-semibold uppercase tracking-wider text-center",
+              "px-1 sm:px-3 py-2 sm:py-2.5 text-[12px] sm:text-[14px] font-semibold uppercase tracking-wider text-center",
               i >= 5 ? "text-muted" : "text-ink",
             ].join(" ")}
           >
@@ -53,7 +53,7 @@ export function CalendarMonth({
               type="button"
               onClick={() => onSelectDay(day)}
               className={[
-                "group relative text-left border-b border-r border-line/70 min-h-[140px] p-2 flex flex-col gap-1.5 transition-colors",
+                "group relative text-left border-b border-r border-line/70 min-h-[78px] sm:min-h-[140px] p-1 sm:p-2 flex flex-col gap-1 sm:gap-1.5 transition-colors",
                 idx % 7 === 6 ? "border-r-0" : "",
                 idx >= totalCells - 7 ? "border-b-0" : "",
                 inMonth ? "bg-white hover:bg-soft/60" : "bg-page/60 hover:bg-page",
@@ -64,7 +64,7 @@ export function CalendarMonth({
               <div className="flex items-center justify-between gap-1">
                 <span
                   className={[
-                    "inline-flex items-center justify-center min-w-7 h-7 px-1.5 rounded-full text-[16px] font-medium tnum",
+                    "inline-flex items-center justify-center min-w-6 sm:min-w-7 h-6 sm:h-7 px-1 sm:px-1.5 rounded-full text-[13px] sm:text-[16px] font-medium tnum",
                     today
                       ? "bg-primary text-white"
                       : inMonth

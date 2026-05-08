@@ -341,14 +341,14 @@ function ChildCard({ memberId, name, avatarUrl, holding, snaps, voo, fx, pending
       >
         <div className="flex items-center gap-3">
           <Avatar
-            size={36}
+            size={52}
             name={name}
             url={avatarUrl}
             accent={colour.accent}
             text="#ffffff"
             alt=""
           />
-          <h2 className="text-[18px] font-semibold" style={{ color: colour.text }}>
+          <h2 className="text-[20px] font-semibold" style={{ color: colour.text }}>
             {name}
           </h2>
         </div>
@@ -580,7 +580,7 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
                 x={left - 8}
                 y={y + 4}
                 textAnchor="end"
-                fontSize="11"
+                fontSize="14"
                 fill="#94a3b8"
                 style={{ fontVariantNumeric: "tabular-nums" }}
               >
@@ -630,55 +630,59 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
         ))}
 
         {/* Avatar pattern defs — referenced from <circle fill> below */}
-        {rows.length === 1 && (
-          <defs>
-            {childList.map((c) =>
-              c.avatar_url ? (
-                <pattern
-                  key={`pat-${c.id}`}
-                  id={`avatar-pat-${c.id}`}
-                  patternUnits="objectBoundingBox"
-                  patternContentUnits="objectBoundingBox"
+        <defs>
+          {childList.map((c) =>
+            c.avatar_url ? (
+              <pattern
+                key={`pat-${c.id}`}
+                id={`avatar-pat-${c.id}`}
+                patternUnits="objectBoundingBox"
+                patternContentUnits="objectBoundingBox"
+                width="1"
+                height="1"
+              >
+                <image
+                  href={c.avatar_url}
+                  x="0"
+                  y="0"
                   width="1"
                   height="1"
-                >
-                  <image
-                    href={c.avatar_url}
-                    x="0"
-                    y="0"
-                    width="1"
-                    height="1"
-                    preserveAspectRatio="xMidYMid slice"
-                  />
-                </pattern>
-              ) : null,
-            )}
-          </defs>
-        )}
-
-        {/* If only one data point, draw a per-kid avatar (or coloured dot
-            when no photo) so the chart isn't visually blank. */}
-        {rows.length === 1 &&
-          childList.map((c) => {
-            const colour = colourFor(c.id, c.short_name);
-            const v = rows[0].perKid[c.id] ?? 0;
-            if (v <= 0) return null;
-            const cx = xFor(0);
-            const cy = yFor(v);
-            const r = 18;
-            return (
-              <g key={`only-${c.id}`}>
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={r}
-                  fill={c.avatar_url ? `url(#avatar-pat-${c.id})` : colour.accent}
-                  stroke={colour.accent}
-                  strokeWidth={2.5}
+                  preserveAspectRatio="xMidYMid slice"
                 />
-              </g>
-            );
-          })}
+              </pattern>
+            ) : null,
+          )}
+        </defs>
+
+        {/* Per-kid avatars at the LAST data point only — sits in the
+            middle of each kid's stacked band so they read as "this is
+            where Riley/Robin are right now". Historical points stay
+            line/area only. */}
+        {rows.length > 0 &&
+          (() => {
+            const lastIdx = rows.length - 1;
+            const layers = stackFor(lastIdx);
+            return childList.map((c) => {
+              const layer = layers.find((l) => l.id === c.id);
+              if (!layer || layer.to <= layer.from) return null;
+              const colour = colourFor(c.id, c.short_name);
+              const cx = xFor(lastIdx);
+              const cy = yFor((layer.from + layer.to) / 2);
+              const r = 12;
+              return (
+                <g key={`face-${c.id}`}>
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={r}
+                    fill={c.avatar_url ? `url(#avatar-pat-${c.id})` : colour.accent}
+                    stroke={colour.accent}
+                    strokeWidth={2}
+                  />
+                </g>
+              );
+            });
+          })()}
 
         {/* X-axis labels */}
         {xLabelIndices.map((i) => {
@@ -690,7 +694,7 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
               x={xFor(i)}
               y={H - 10}
               textAnchor="middle"
-              fontSize="11"
+              fontSize="14"
               fill="#94a3b8"
             >
               {formatDateLabel(r.date)}

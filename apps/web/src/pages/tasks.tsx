@@ -256,14 +256,14 @@ function KidColumn({
         >
           <div className="flex items-center gap-3">
             <Avatar
-              size={32}
+              size={44}
               name={memberName}
               url={avatarUrl}
               accent={colour.accent}
               text="#ffffff"
               alt=""
             />
-            <h2 className="text-[18px] font-semibold" style={{ color: colour.text }}>
+            <h2 className="text-[19px] font-semibold" style={{ color: colour.text }}>
               {memberName}
             </h2>
             <span className="text-[14px] opacity-70" style={{ color: colour.text }}>

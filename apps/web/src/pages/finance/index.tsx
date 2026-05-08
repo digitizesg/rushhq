@@ -575,7 +575,7 @@ function NetWorthChart({ points }: { points: NetWorthPoint[] }) {
                 x={left - 8}
                 y={y + 4}
                 textAnchor="end"
-                fontSize="11"
+                fontSize="14"
                 fill="#94a3b8"
                 style={{ fontVariantNumeric: "tabular-nums" }}
               >
@@ -640,7 +640,7 @@ function NetWorthChart({ points }: { points: NetWorthPoint[] }) {
               x={xFor(i)}
               y={H - 10}
               textAnchor="middle"
-              fontSize="11"
+              fontSize="14"
               fill="#94a3b8"
             >
               {formatMonthLabel(p.month)}
