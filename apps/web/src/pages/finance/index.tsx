@@ -29,18 +29,9 @@ export default function FinanceOverviewPage() {
     : 0;
   const yearChange = latest && yearAgoRow ? total - yearAgoRow.total_sgd : 0;
 
-  // CTA label
-  const currentMonthSnapshots = data.snapshots.filter((s) => s.snapshot_month === thisMonth);
-  const allActive = data.accounts.filter((a) => a.active);
-  const allFilled =
-    currentMonthSnapshots.length === allActive.length &&
-    currentMonthSnapshots.every((s) => s.balance_sgd > 0);
-  const ctaLabel =
-    currentMonthSnapshots.length === 0
-      ? `Start ${formatMonthLabel(thisMonth)} update`
-      : allFilled
-        ? `Edit ${formatMonthLabel(thisMonth)}`
-        : `Continue ${formatMonthLabel(thisMonth)} update`;
+  // Single short label regardless of whether the month exists yet —
+  // the form itself handles the create-vs-edit distinction.
+  const ctaLabel = "Add update";
 
   // Latest-month breakdown with per-account delta vs the previous
   // snapshot month. We compare to the immediately-previous month for

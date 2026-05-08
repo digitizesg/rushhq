@@ -14,7 +14,7 @@ import { Button } from "@/components/button";
 import { TextField } from "@/components/text-field";
 import { Select } from "@/components/select";
 
-type Mode = "bead" | "gift";
+type Mode = "bead" | "gift" | "direct";
 
 export default function BuyPage() {
   const data = useStocksData();
@@ -23,6 +23,9 @@ export default function BuyPage() {
   const [mode, setMode] = useState<Mode>("bead");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Direct allocation state — shares per child id.
+  const [directShares, setDirectShares] = useState<Record<string, string>>({});
 
   // Bead flow state
   const counted = useMemo(
@@ -123,6 +126,65 @@ export default function BuyPage() {
     }
   }
 
+  async function handleDirectSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (sharesNum <= 0 || priceNum <= 0 || fxNum <= 0) {
+      setError("Shares, price, and FX rate must all be positive numbers.");
+      return;
+    }
+    const allocs = data.children
+      .map((c) => ({
+        member_id: c.id,
+        shares: parseFloat(directShares[c.id] || "0") || 0,
+      }))
+      .filter((a) => a.shares > 0);
+    if (allocs.length === 0) {
+      setError("Allocate at least one child's shares.");
+      return;
+    }
+    const allocSum = allocs.reduce((s, a) => s + a.shares, 0);
+    if (Math.abs(allocSum - sharesNum) > 0.000001) {
+      setError(
+        `Allocations sum to ${allocSum.toFixed(6)} but total shares is ${sharesNum.toFixed(6)}. Make them match.`,
+      );
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.rpc("record_direct_purchase", {
+        p_total_shares: sharesNum,
+        p_price_per_share_usd: priceNum,
+        p_usd_to_sgd_rate: fxNum,
+        p_transaction_date: txDate,
+        p_allocations: allocs,
+        p_notes: notes.trim() || null,
+      });
+      if (error) throw error;
+      navigate("/stocks");
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function setDirectShare(memberId: string, raw: string) {
+    let cleaned = raw.replace(/[^0-9.]/g, "");
+    const dot = cleaned.indexOf(".");
+    if (dot !== -1) {
+      cleaned = cleaned.slice(0, dot + 1) + cleaned.slice(dot + 1).replace(/\./g, "");
+    }
+    setDirectShares((s) => ({ ...s, [memberId]: cleaned }));
+  }
+  function splitEvenly() {
+    if (sharesNum <= 0 || data.children.length === 0) return;
+    const each = sharesNum / data.children.length;
+    const next: Record<string, string> = {};
+    for (const c of data.children) next[c.id] = each.toFixed(6);
+    setDirectShares(next);
+  }
+
   async function handleGiftSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -169,8 +231,8 @@ export default function BuyPage() {
         </p>
       </div>
 
-      <div className="inline-flex bg-white border border-line rounded-full p-0.5">
-        {(["bead", "gift"] as Mode[]).map((m) => (
+      <div className="inline-flex bg-white border border-line rounded-full p-0.5 flex-wrap">
+        {(["bead", "gift", "direct"] as Mode[]).map((m) => (
           <button
             key={m}
             type="button"
@@ -180,7 +242,7 @@ export default function BuyPage() {
               mode === m ? "bg-primary text-white" : "text-muted hover:text-ink",
             ].join(" ")}
           >
-            {m === "bead" ? "Monthly (bead-funded)" : "Quick gift"}
+            {m === "bead" ? "Monthly (bead-funded)" : m === "gift" ? "Quick gift" : "Direct allocation"}
           </button>
         ))}
       </div>
@@ -290,7 +352,7 @@ export default function BuyPage() {
             </Button>
           </div>
         </form>
-      ) : (
+      ) : mode === "gift" ? (
         <form onSubmit={handleGiftSubmit} className="space-y-5">
           <section className="bg-white border border-line rounded-lg p-5 space-y-3">
             <Select label="Child" required value={giftMember} onChange={(e) => setGiftMember(e.target.value)}>
@@ -334,7 +396,130 @@ export default function BuyPage() {
             </Button>
           </div>
         </form>
+      ) : (
+        <form onSubmit={handleDirectSubmit} className="space-y-5">
+          <p className="text-[13.5px] text-muted">
+            For purchases that aren't tied to bead periods or earmarked deposits.
+            Useful for backfilling history or when you've decided the split yourself.
+            Enter the trade details from moomoo, then split the shares per child below.
+          </p>
+
+          <TransactionFields
+            shares={shares} setShares={setShares}
+            pricePerShare={pricePerShare} setPricePerShare={setPricePerShare}
+            fxRate={fxRate} setFxRate={setFxRate}
+            txDate={txDate} setTxDate={setTxDate}
+            notes={notes} setNotes={setNotes}
+          />
+
+          <DirectAllocation
+            children={data.children}
+            sharesNum={sharesNum}
+            priceNum={priceNum}
+            fxNum={fxNum}
+            allocations={directShares}
+            onChange={setDirectShare}
+            onSplitEvenly={splitEvenly}
+          />
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-line">
+            <Link to="/stocks" className="inline-flex h-10 items-center px-4 rounded-md border border-line text-[14px]">
+              Cancel
+            </Link>
+            <Button type="submit" loading={submitting} disabled={submitting}>
+              Record purchase
+            </Button>
+          </div>
+        </form>
       )}
+    </section>
+  );
+}
+
+interface DirectAllocationProps {
+  children: Array<{ id: string; short_name: string }>;
+  sharesNum: number;
+  priceNum: number;
+  fxNum: number;
+  allocations: Record<string, string>;
+  onChange: (memberId: string, raw: string) => void;
+  onSplitEvenly: () => void;
+}
+
+function DirectAllocation({
+  children,
+  sharesNum,
+  priceNum,
+  fxNum,
+  allocations,
+  onChange,
+  onSplitEvenly,
+}: DirectAllocationProps) {
+  const allocSum = children.reduce(
+    (s, c) => s + (parseFloat(allocations[c.id] || "0") || 0),
+    0,
+  );
+  const remaining = sharesNum - allocSum;
+  const matches = Math.abs(remaining) <= 0.000001 && sharesNum > 0;
+
+  return (
+    <section className="bg-white border border-line rounded-lg overflow-hidden">
+      <header className="flex items-center justify-between px-5 py-3 bg-soft border-b border-line">
+        <p className="text-[14px] font-semibold text-ink">Allocate shares per child</p>
+        {sharesNum > 0 && children.length > 0 && (
+          <button
+            type="button"
+            onClick={onSplitEvenly}
+            className="text-[12.5px] font-medium text-primary hover:underline"
+          >
+            Split evenly
+          </button>
+        )}
+      </header>
+      <ul className="divide-y divide-line">
+        {children.map((c) => {
+          const raw = allocations[c.id] ?? "";
+          const n = parseFloat(raw || "0") || 0;
+          const sgd = n * priceNum * fxNum;
+          return (
+            <li key={c.id} className="px-5 py-3 grid grid-cols-[1fr_auto_auto] gap-3 items-center">
+              <p className="text-[14px] text-ink">{c.short_name}</p>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={raw}
+                onChange={(e) => onChange(c.id, e.target.value)}
+                placeholder="0.000000"
+                aria-label={`${c.short_name} share allocation`}
+                className="w-32 h-10 rounded-md border border-line bg-white px-3 text-right text-[15px] tnum focus:outline-2 focus:outline-offset-0 focus:outline-primary"
+              />
+              <p className="text-[12.5px] text-muted tnum w-24 text-right">
+                {n > 0 && fxNum > 0 && priceNum > 0 ? `≈ ${formatSGD(sgd)}` : "—"}
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="flex items-center justify-between bg-soft border-t border-line px-5 py-3 text-[13px]">
+        <span className="text-muted">
+          Allocated {formatShares(allocSum)} of {formatShares(sharesNum || 0)} shares
+        </span>
+        <span
+          className={
+            sharesNum <= 0
+              ? "text-muted"
+              : matches
+                ? "text-emerald font-medium"
+                : "text-amber font-medium"
+          }
+        >
+          {sharesNum <= 0
+            ? "Enter total shares above"
+            : matches
+              ? "✓ matches"
+              : `${remaining > 0 ? "+" : "−"}${formatShares(Math.abs(remaining))} remaining`}
+        </span>
+      </div>
     </section>
   );
 }
