@@ -1,6 +1,13 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowDownRight, ArrowUpRight, History, Settings as SettingsIcon } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Building2,
+  Calendar as CalendarIcon,
+  History,
+  Settings as SettingsIcon,
+} from "lucide-react";
 import { useFinanceData } from "@/finance/use-finance-data";
 import {
   firstOfMonth,
@@ -8,6 +15,11 @@ import {
   formatSGD,
   shiftMonth,
 } from "@/lib/finance";
+import {
+  daysUntilRateEnd,
+  isRefiSoon,
+  ltvFor,
+} from "@/lib/properties";
 import { LoadingScreen } from "@/components/loading-screen";
 
 export default function FinanceOverviewPage() {
@@ -64,6 +76,26 @@ export default function FinanceOverviewPage() {
   // Chart series
   const series = totals.slice(-24);
 
+  // Property snapshot for the same month as the latest accounts row.
+  const latestPropertySnaps = data.propertySnapshots.filter(
+    (s) => s.snapshot_month === latestMonth,
+  );
+  const previousPropertySnaps = previousMonth
+    ? data.propertySnapshots.filter((s) => s.snapshot_month === previousMonth)
+    : [];
+  const activeProps = data.properties.filter((p) => p.active);
+  const propertyEquityNow = latestPropertySnaps.reduce(
+    (s, snap) => s + ((snap.market_value_sgd ?? 0) - snap.amount_outstanding_sgd),
+    0,
+  );
+  const propertyEquityPrev = previousPropertySnaps.reduce(
+    (s, snap) => s + ((snap.market_value_sgd ?? 0) - snap.amount_outstanding_sgd),
+    0,
+  );
+  const propertyEquityDelta =
+    previousPropertySnaps.length > 0 ? propertyEquityNow - propertyEquityPrev : null;
+  const refiAlerts = activeProps.filter((p) => isRefiSoon(p.rate_end_date));
+
   return (
     <section className="mx-auto max-w-[1100px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -74,6 +106,9 @@ export default function FinanceOverviewPage() {
         <div className="flex items-center gap-2">
           <Link to="/finance/history" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[14.5px] hover:bg-soft">
             <History size={14} /> History
+          </Link>
+          <Link to="/finance/properties" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[14.5px] hover:bg-soft">
+            <Building2 size={14} /> Properties
           </Link>
           <Link to="/finance/accounts" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[14.5px] hover:bg-soft">
             <SettingsIcon size={14} /> Accounts
@@ -146,6 +181,99 @@ export default function FinanceOverviewPage() {
       {/* Chart */}
       {series.length > 0 && <Chart points={series} />}
 
+      {/* Refi banner */}
+      {refiAlerts.length > 0 && (
+        <div className="rounded-lg border border-amber/30 bg-amber-soft/40 px-5 py-4 flex items-start gap-3">
+          <CalendarIcon size={18} className="text-amber mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="text-[15px] font-semibold text-ink">Refinance window opening</p>
+            <ul className="text-[13.5px] text-muted">
+              {refiAlerts.map((p) => {
+                const days = daysUntilRateEnd(p.rate_end_date);
+                return (
+                  <li key={p.id} className="tnum">
+                    {p.name}: rate ends {p.rate_end_date}
+                    {days != null && (
+                      <span className="text-muted">
+                        {" "}({days < 0 ? `${-days}d ago` : days === 0 ? "today" : `in ${days}d`})
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Properties */}
+      {activeProps.length > 0 && (
+        <div className="bg-white border border-line rounded-lg p-5 sm:p-6 space-y-4">
+          <div className="flex items-baseline justify-between gap-3 flex-wrap">
+            <p className="text-[15px] font-semibold text-ink inline-flex items-center gap-2">
+              <Building2 size={16} className="text-muted" /> Properties
+            </p>
+            {latestPropertySnaps.length > 0 && (
+              <p className="text-[13px] text-muted">
+                Total equity{" "}
+                <span className="text-ink tnum font-medium">{formatSGD(propertyEquityNow)}</span>
+                {propertyEquityDelta != null && propertyEquityDelta !== 0 && (
+                  <span className={[
+                    "ml-2 tnum",
+                    propertyEquityDelta > 0 ? "text-emerald" : "text-danger",
+                  ].join(" ")}>
+                    {propertyEquityDelta > 0 ? "↑ +" : "↓ −"}{formatSGD(Math.abs(propertyEquityDelta))}
+                  </span>
+                )}
+              </p>
+            )}
+          </div>
+          <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {activeProps.map((p) => {
+              const snap = latestPropertySnaps.find((s) => s.property_id === p.id);
+              const ltv = ltvFor(snap);
+              const equity =
+                snap && snap.market_value_sgd
+                  ? snap.market_value_sgd - snap.amount_outstanding_sgd
+                  : 0;
+              return (
+                <li key={p.id} className="border border-line rounded-md p-4 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[15px] font-semibold text-ink">{p.name}</p>
+                    <span
+                      className={[
+                        "inline-flex items-center px-2 h-6 rounded-full text-[12px] capitalize",
+                        p.category === "personal"
+                          ? "bg-primary-soft text-primary"
+                          : "bg-soft text-muted",
+                      ].join(" ")}
+                    >
+                      {p.category}
+                    </span>
+                  </div>
+                  <dl className="space-y-1 text-[13.5px] tnum">
+                    <Row label="Outstanding">
+                      {snap ? formatSGD(snap.amount_outstanding_sgd) : "—"}
+                    </Row>
+                    <Row label="Market value">
+                      {snap?.market_value_sgd != null ? formatSGD(snap.market_value_sgd) : "—"}
+                    </Row>
+                    <Row label="Equity">
+                      <span className="text-ink font-semibold">
+                        {snap?.market_value_sgd != null ? formatSGD(equity) : "—"}
+                      </span>
+                    </Row>
+                    {ltv != null && (
+                      <Row label="LTV">{ltv.toFixed(1)}%</Row>
+                    )}
+                  </dl>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
       {/* Breakdown */}
       {breakdown.length > 0 && (
         <div className="bg-white border border-line rounded-lg p-5 sm:p-6">
@@ -172,6 +300,15 @@ export default function FinanceOverviewPage() {
         </div>
       )}
     </section>
+  );
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="text-muted text-[12.5px] uppercase tracking-wider">{label}</dt>
+      <dd className="text-ink">{children}</dd>
+    </div>
   );
 }
 

@@ -26,6 +26,7 @@ import FinanceOverviewPage from "@/pages/finance";
 import FinanceUpdatePage from "@/pages/finance/update";
 import FinanceHistoryPage from "@/pages/finance/history";
 import FinanceAccountsPage from "@/pages/finance/accounts";
+import PropertiesPage from "@/pages/finance/properties";
 
 export function App() {
   return (
@@ -59,6 +60,7 @@ export function App() {
             <Route path="/finance/update/:month" element={<FinanceUpdatePage />} />
             <Route path="/finance/history" element={<FinanceHistoryPage />} />
             <Route path="/finance/accounts" element={<FinanceAccountsPage />} />
+            <Route path="/finance/properties" element={<PropertiesPage />} />
           </Route>
         </Route>
       </Route>
