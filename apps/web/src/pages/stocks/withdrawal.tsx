@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { useStocksData, priceOf } from "@/stocks/use-stocks-data";
+import { useStocksData } from "@/stocks/use-stocks-data";
 import { formatSGD, formatShares, formatUSD, todayIso } from "@/lib/stocks";
 import { LoadingScreen } from "@/components/loading-screen";
 import { Button } from "@/components/button";
@@ -16,7 +16,7 @@ export default function WithdrawalPage() {
   const [memberId, setMemberId] = useState("");
   const [shares, setShares] = useState("");
   const [pricePerShare, setPricePerShare] = useState("");
-  const [fxRate, setFxRate] = useState(() => priceOf(data.priceCache, "USDSGD").toFixed(4));
+  const [proceedsSgdInput, setProceedsSgdInput] = useState("");
   const [txDate, setTxDate] = useState(todayIso());
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -28,10 +28,12 @@ export default function WithdrawalPage() {
   const holding = data.holdings.find((h) => h.member_id === memberId);
   const sNum = parseFloat(shares) || 0;
   const pNum = parseFloat(pricePerShare) || 0;
-  const fNum = parseFloat(fxRate) || 0;
+  const proceedsSgd = parseFloat(proceedsSgdInput) || 0;
+  const totalUsd = sNum * pNum;
+  const fNum = totalUsd > 0 && proceedsSgd > 0 ? proceedsSgd / totalUsd : 0;
+  const sgdPerShare = sNum > 0 ? proceedsSgd / sNum : 0;
   const remaining = (holding?.shares_held ?? 0) - sNum;
-  const remainingValueSgd = remaining * pNum * fNum;
-  const proceedsSgd = sNum * pNum * fNum;
+  const remainingValueSgd = remaining * sgdPerShare;
   const tooMuch = sNum > (holding?.shares_held ?? 0);
 
   async function actuallyRecord() {
@@ -60,8 +62,8 @@ export default function WithdrawalPage() {
     e.preventDefault();
     setError(null);
     if (!memberId) { setError("Pick a child"); return; }
-    if (!(sNum > 0) || !(pNum > 0) || !(fNum > 0)) {
-      setError("Shares, price, and FX rate must all be positive numbers."); return;
+    if (!(sNum > 0) || !(pNum > 0) || !(proceedsSgd > 0)) {
+      setError("Shares, price, and the SGD received must all be positive numbers."); return;
     }
     if (tooMuch) {
       setError(`Withdrawal exceeds ${memberSelected()?.short_name}'s holdings (${formatShares(holding?.shares_held ?? 0)} available).`);
@@ -129,13 +131,14 @@ export default function WithdrawalPage() {
               onChange={(e) => setPricePerShare(e.target.value)}
             />
             <TextField
-              label="USD/SGD rate"
+              label="Total SGD received"
               required
               type="number"
               inputMode="decimal"
-              step="0.000001"
-              value={fxRate}
-              onChange={(e) => setFxRate(e.target.value)}
+              step="0.01"
+              value={proceedsSgdInput}
+              onChange={(e) => setProceedsSgdInput(e.target.value)}
+              hint="What landed back in your bank after converting USD to SGD."
             />
             <TextField
               label="Date"
@@ -145,6 +148,11 @@ export default function WithdrawalPage() {
               onChange={(e) => setTxDate(e.target.value)}
             />
           </div>
+          {fNum > 0 && (
+            <p className="text-[12.5px] text-muted">
+              Implied USD/SGD rate: <span className="text-ink tnum">{fNum.toFixed(4)}</span>
+            </p>
+          )}
           <label className="block">
             <span className="block text-[13px] font-medium text-ink mb-1.5">Notes (optional)</span>
             <textarea

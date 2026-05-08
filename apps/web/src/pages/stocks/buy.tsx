@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { useStocksData, priceOf } from "@/stocks/use-stocks-data";
+import { useStocksData } from "@/stocks/use-stocks-data";
 import {
   formatSGD,
   formatShares,
@@ -39,10 +39,12 @@ export default function BuyPage() {
   const [periodIds, setPeriodIds] = useState<Set<string>>(new Set(counted.map((p) => p.id)));
   const [depositIds, setDepositIds] = useState<Set<string>>(new Set());
 
-  // Shared transaction state
+  // Shared transaction state. The FX rate is *derived* from the
+  // SGD amount the user enters (or that the bead/gift sources
+  // determine), divided by shares × USD price. The user never types
+  // an FX rate — they just say what they actually spent in SGD.
   const [shares, setShares] = useState("");
   const [pricePerShare, setPricePerShare] = useState("");
-  const [fxRate, setFxRate] = useState(() => priceOf(data.priceCache, "USDSGD").toFixed(4));
   const [txDate, setTxDate] = useState(todayIso());
   const [notes, setNotes] = useState("");
 
@@ -50,6 +52,9 @@ export default function BuyPage() {
   const [giftMember, setGiftMember] = useState<string>("");
   const [giftAmount, setGiftAmount] = useState("");
   const [giftSource, setGiftSource] = useState("");
+
+  // Direct flow extra: total SGD spent on this purchase.
+  const [directTotalSgd, setDirectTotalSgd] = useState("");
 
   if (data.loading) return <LoadingScreen />;
 
@@ -75,8 +80,17 @@ export default function BuyPage() {
 
   const sharesNum = parseFloat(shares) || 0;
   const priceNum = parseFloat(pricePerShare) || 0;
-  const fxNum = parseFloat(fxRate) || 0;
-  const expectedSgd = sharesNum * priceNum * fxNum;
+  // Total SGD comes from one of three sources depending on mode.
+  const directTotalSgdNum = parseFloat(directTotalSgd) || 0;
+  const giftAmountNum = parseFloat(giftAmount) || 0;
+  const totalSgdForMode =
+    mode === "bead" ? beadGrandTotalSgd
+      : mode === "gift" ? giftAmountNum
+      : directTotalSgdNum;
+  // Derive the FX rate from the SGD spent. Zero when inputs aren't
+  // ready yet.
+  const totalUsd = sharesNum * priceNum;
+  const fxNum = totalUsd > 0 && totalSgdForMode > 0 ? totalSgdForMode / totalUsd : 0;
 
   function togglePeriod(id: string, checked: boolean) {
     setPeriodIds((s) => {
@@ -99,7 +113,7 @@ export default function BuyPage() {
     e.preventDefault();
     setError(null);
     if (sharesNum <= 0 || priceNum <= 0 || fxNum <= 0) {
-      setError("Shares, price, and FX rate must all be positive numbers.");
+      setError("Shares, price, and the SGD spent must all be positive numbers.");
       return;
     }
     if (periodIds.size === 0 && depositIds.size === 0) {
@@ -130,7 +144,7 @@ export default function BuyPage() {
     e.preventDefault();
     setError(null);
     if (sharesNum <= 0 || priceNum <= 0 || fxNum <= 0) {
-      setError("Shares, price, and FX rate must all be positive numbers.");
+      setError("Shares, price, and the SGD spent must all be positive numbers.");
       return;
     }
     const allocs = data.children
@@ -190,7 +204,7 @@ export default function BuyPage() {
     setError(null);
     if (!giftMember) { setError("Pick a child"); return; }
     if (sharesNum <= 0 || priceNum <= 0 || fxNum <= 0) {
-      setError("Shares, price, and FX rate must all be positive numbers.");
+      setError("Shares, price, and the SGD spent must all be positive numbers.");
       return;
     }
     const amount = parseFloat(giftAmount);
@@ -322,14 +336,13 @@ export default function BuyPage() {
           <TransactionFields
             shares={shares} setShares={setShares}
             pricePerShare={pricePerShare} setPricePerShare={setPricePerShare}
-            fxRate={fxRate} setFxRate={setFxRate}
+            derivedFx={fxNum} totalSgd={totalSgdForMode}
             txDate={txDate} setTxDate={setTxDate}
             notes={notes} setNotes={setNotes}
           />
 
           <Preview
             beadGrandTotalSgd={beadGrandTotalSgd}
-            expectedSgd={expectedSgd}
             sharesNum={sharesNum}
             allocations={[
               ...selectedPeriodTotals.map((p) => ({
@@ -382,7 +395,7 @@ export default function BuyPage() {
           <TransactionFields
             shares={shares} setShares={setShares}
             pricePerShare={pricePerShare} setPricePerShare={setPricePerShare}
-            fxRate={fxRate} setFxRate={setFxRate}
+            derivedFx={fxNum} totalSgd={totalSgdForMode}
             txDate={txDate} setTxDate={setTxDate}
             notes={notes} setNotes={setNotes}
           />
@@ -407,16 +420,28 @@ export default function BuyPage() {
           <TransactionFields
             shares={shares} setShares={setShares}
             pricePerShare={pricePerShare} setPricePerShare={setPricePerShare}
-            fxRate={fxRate} setFxRate={setFxRate}
+            derivedFx={fxNum} totalSgd={totalSgdForMode}
             txDate={txDate} setTxDate={setTxDate}
             notes={notes} setNotes={setNotes}
           />
 
+          <section className="bg-white border border-line rounded-lg p-5 space-y-2">
+            <TextField
+              label="Total SGD spent on this purchase"
+              required
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              value={directTotalSgd}
+              onChange={(e) => setDirectTotalSgd(e.target.value)}
+              hint="The SGD amount you converted into your moomoo USD wallet to fund this trade. Used to back out the FX rate."
+            />
+          </section>
+
           <DirectAllocation
-            children={data.children}
+            childList={data.children}
             sharesNum={sharesNum}
-            priceNum={priceNum}
-            fxNum={fxNum}
+            totalSgd={totalSgdForMode}
             allocations={directShares}
             onChange={setDirectShare}
             onSplitEvenly={splitEvenly}
@@ -437,36 +462,36 @@ export default function BuyPage() {
 }
 
 interface DirectAllocationProps {
-  children: Array<{ id: string; short_name: string }>;
+  childList: Array<{ id: string; short_name: string }>;
   sharesNum: number;
-  priceNum: number;
-  fxNum: number;
+  totalSgd: number;
   allocations: Record<string, string>;
   onChange: (memberId: string, raw: string) => void;
   onSplitEvenly: () => void;
 }
 
 function DirectAllocation({
-  children,
+  childList,
   sharesNum,
-  priceNum,
-  fxNum,
+  totalSgd,
   allocations,
   onChange,
   onSplitEvenly,
 }: DirectAllocationProps) {
-  const allocSum = children.reduce(
+  const allocSum = childList.reduce(
     (s, c) => s + (parseFloat(allocations[c.id] || "0") || 0),
     0,
   );
   const remaining = sharesNum - allocSum;
   const matches = Math.abs(remaining) <= 0.000001 && sharesNum > 0;
+  // Per-share SGD comes from total spend / total shares.
+  const sgdPerShare = sharesNum > 0 && totalSgd > 0 ? totalSgd / sharesNum : 0;
 
   return (
     <section className="bg-white border border-line rounded-lg overflow-hidden">
       <header className="flex items-center justify-between px-5 py-3 bg-soft border-b border-line">
         <p className="text-[14px] font-semibold text-ink">Allocate shares per child</p>
-        {sharesNum > 0 && children.length > 0 && (
+        {sharesNum > 0 && childList.length > 0 && (
           <button
             type="button"
             onClick={onSplitEvenly}
@@ -477,10 +502,10 @@ function DirectAllocation({
         )}
       </header>
       <ul className="divide-y divide-line">
-        {children.map((c) => {
+        {childList.map((c) => {
           const raw = allocations[c.id] ?? "";
           const n = parseFloat(raw || "0") || 0;
-          const sgd = n * priceNum * fxNum;
+          const sgd = n * sgdPerShare;
           return (
             <li key={c.id} className="px-5 py-3 grid grid-cols-[1fr_auto_auto] gap-3 items-center">
               <p className="text-[14px] text-ink">{c.short_name}</p>
@@ -494,7 +519,7 @@ function DirectAllocation({
                 className="w-32 h-10 rounded-md border border-line bg-white px-3 text-right text-[15px] tnum focus:outline-2 focus:outline-offset-0 focus:outline-primary"
               />
               <p className="text-[12.5px] text-muted tnum w-24 text-right">
-                {n > 0 && fxNum > 0 && priceNum > 0 ? `≈ ${formatSGD(sgd)}` : "—"}
+                {n > 0 && sgdPerShare > 0 ? `≈ ${formatSGD(sgd)}` : "—"}
               </p>
             </li>
           );
@@ -527,9 +552,12 @@ function DirectAllocation({
 interface TransactionFieldsProps {
   shares: string; setShares: (v: string) => void;
   pricePerShare: string; setPricePerShare: (v: string) => void;
-  fxRate: string; setFxRate: (v: string) => void;
   txDate: string; setTxDate: (v: string) => void;
   notes: string; setNotes: (v: string) => void;
+  /** Read-only — shown as a small info line so the user can sanity-check. */
+  derivedFx: number;
+  /** SGD source for the trade — bead total, gift amount, or direct field. */
+  totalSgd: number;
 }
 
 function TransactionFields(p: TransactionFieldsProps) {
@@ -556,16 +584,6 @@ function TransactionFields(p: TransactionFieldsProps) {
           onChange={(e) => p.setPricePerShare(e.target.value)}
         />
         <TextField
-          label="USD/SGD rate at purchase"
-          required
-          type="number"
-          inputMode="decimal"
-          step="0.000001"
-          value={p.fxRate}
-          onChange={(e) => p.setFxRate(e.target.value)}
-          hint="Defaults to the latest cached rate. Adjust to match what moomoo showed."
-        />
-        <TextField
           label="Transaction date"
           required
           type="date"
@@ -573,6 +591,12 @@ function TransactionFields(p: TransactionFieldsProps) {
           onChange={(e) => p.setTxDate(e.target.value)}
         />
       </div>
+      {p.totalSgd > 0 && p.derivedFx > 0 && (
+        <p className="text-[12.5px] text-muted">
+          Implied USD/SGD rate: <span className="text-ink tnum">{p.derivedFx.toFixed(4)}</span>{" "}
+          (derived from SGD ÷ shares × USD price)
+        </p>
+      )}
       <label className="block">
         <span className="block text-[13px] font-medium text-ink mb-1.5">Notes (optional)</span>
         <textarea
@@ -588,15 +612,13 @@ function TransactionFields(p: TransactionFieldsProps) {
 
 interface PreviewProps {
   beadGrandTotalSgd: number;
-  expectedSgd: number;
   sharesNum: number;
   allocations: Array<{ label: string; amount_sgd: number }>;
 }
 
-function Preview({ beadGrandTotalSgd, expectedSgd, sharesNum, allocations }: PreviewProps) {
+function Preview({ beadGrandTotalSgd, sharesNum, allocations }: PreviewProps) {
   if (sharesNum <= 0 || beadGrandTotalSgd <= 0) return null;
   const factor = sharesNum / beadGrandTotalSgd;
-  const mismatch = Math.abs(expectedSgd - beadGrandTotalSgd);
   return (
     <section className="bg-soft border border-line rounded-lg p-5 space-y-3">
       <p className="text-[14px] font-semibold text-ink">Allocation preview</p>
@@ -614,10 +636,7 @@ function Preview({ beadGrandTotalSgd, expectedSgd, sharesNum, allocations }: Pre
         })}
       </ul>
       <div className="text-[12.5px] text-muted pt-2 border-t border-line">
-        Pool total: {formatSGD(beadGrandTotalSgd)} · Expected SGD spend: {formatSGD(expectedSgd)}
-        {mismatch > 0.5 && (
-          <span className="text-amber"> · ⚠ off by {formatSGD(mismatch)} — double-check shares or FX</span>
-        )}
+        Pool total: {formatSGD(beadGrandTotalSgd)}
       </div>
     </section>
   );
