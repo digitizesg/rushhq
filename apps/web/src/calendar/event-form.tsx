@@ -283,6 +283,7 @@ export function EventForm({
           <TextField
             label="Date"
             type="date"
+            containerClassName="max-w-xs"
             value={allDayDate}
             onChange={(e) => setAllDayDate(e.target.value)}
           />
@@ -305,6 +306,7 @@ export function EventForm({
 
         <Select
           label="Repeats"
+          containerClassName="max-w-sm"
           value={preset}
           onChange={(e) => setPreset(e.target.value as RecurrencePreset)}
         >
@@ -369,6 +371,7 @@ export function EventForm({
 
         <Select
           label="Visibility"
+          containerClassName="max-w-xs"
           value={visibility}
           onChange={(e) => setVisibility(e.target.value as EventVisibility)}
           hint={

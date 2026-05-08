@@ -9,16 +9,18 @@ interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   hint?: ReactNode;
   error?: string;
+  /** Tailwind classes for the outer label wrapper — use to constrain width. */
+  containerClassName?: string;
 }
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
-  { label, hint, error, id, className, ...rest },
+  { label, hint, error, id, className, containerClassName, ...rest },
   ref,
 ) {
   const auto = useId();
   const inputId = id ?? auto;
   return (
-    <label className="block">
+    <label className={["block", containerClassName ?? ""].join(" ")}>
       <span className="block text-[13px] font-medium text-ink mb-1.5">{label}</span>
       <input
         ref={ref}
