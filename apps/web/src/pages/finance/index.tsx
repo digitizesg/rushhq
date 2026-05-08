@@ -365,15 +365,15 @@ export default function FinanceOverviewPage() {
       {/* Breakdown */}
       {breakdown.length > 0 && (
         <div className="bg-white border border-line rounded-lg p-5 sm:p-6">
-          <p className="text-[16px] font-semibold text-ink mb-4">
+          <p className="text-[18px] font-semibold text-ink mb-4">
             Breakdown · {formatMonthLabel(latest!.snapshot_month)}
           </p>
-          <ul className="space-y-3">
+          <ul className="space-y-3.5">
             {breakdown.map((b) => (
               <li key={b.name} className="grid grid-cols-[1fr_auto] gap-3 items-baseline">
-                <p className="text-[16px] text-ink">{b.name}</p>
+                <p className="text-[18px] font-medium text-ink">{b.name}</p>
                 <div className="text-right">
-                  <p className="text-[16px] text-ink tnum">{formatSGD(b.balance)}</p>
+                  <p className="text-[18px] font-semibold text-ink tnum">{formatSGD(b.balance)}</p>
                   <DeltaBadge delta={b.delta} />
                 </div>
                 <div className="col-span-2 h-2 rounded-full bg-soft overflow-hidden">
