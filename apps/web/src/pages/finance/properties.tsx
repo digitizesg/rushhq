@@ -43,13 +43,22 @@ export default function PropertiesPage() {
           <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Finance</p>
           <h1 className="text-[30px] font-medium text-ink">Properties</h1>
           <p className="mt-2 text-[14.5px] text-muted">
-            Loan + valuation facts for each property. Monthly outstanding and
-            market value are entered on the finance update page.
+            Setup info per property — purchase price, loan, tenure, interest
+            rate. Monthly outstanding loan and market value are entered on
+            the finance update page.
           </p>
         </div>
-        <Button onClick={() => setAddOpen(true)}>
-          <Plus size={14} /> Add property
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            to={`/finance/update/${targetMonth.slice(0, 7)}`}
+            className="inline-flex items-center justify-center h-10 px-4 rounded-md bg-primary text-white text-[14.5px] font-medium hover:bg-primary-strong"
+          >
+            Update this month
+          </Link>
+          <Button variant="secondary" onClick={() => setAddOpen(true)}>
+            <Plus size={14} /> Add property
+          </Button>
+        </div>
       </div>
 
       <ul className="space-y-3">
