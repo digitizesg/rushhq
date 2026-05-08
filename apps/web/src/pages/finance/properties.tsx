@@ -79,7 +79,7 @@ export default function PropertiesPage() {
                       "inline-flex items-center px-2 h-6 rounded-full text-[13.5px] capitalize",
                       p.category === "personal"
                         ? "bg-primary-soft text-primary"
-                        : "bg-soft text-muted",
+                        : "bg-emerald-soft text-emerald",
                     ].join(" ")}
                   >
                     {p.category}
