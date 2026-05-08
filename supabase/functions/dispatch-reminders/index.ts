@@ -153,12 +153,19 @@ function leadLabel(min: number): string {
   return `in ${d} day${d === 1 ? "" : "s"}`;
 }
 
-function renderTelegramText(c: Candidate, scheduledFor: Date, occurrenceStart: Date): string {
+function mapsLink(location: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+}
+
+function renderTelegramText(c: Candidate, _scheduledFor: Date, occurrenceStart: Date): string {
   const lines: string[] = [
     `<b>${escapeHtml(c.title)}</b>`,
     `${leadLabel(c.lead_time_minutes)} · ${formatDateTime(occurrenceStart, c.all_day)}`,
   ];
-  if (c.location) lines.push(`📍 ${escapeHtml(c.location)}`);
+  if (c.location) {
+    // Telegram supports inline links; tap the pin to open Maps.
+    lines.push(`📍 <a href="${mapsLink(c.location)}">${escapeHtml(c.location)}</a>`);
+  }
   if (c.description) lines.push("", escapeHtml(c.description));
   return lines.join("\n");
 }
@@ -174,16 +181,71 @@ function renderEmail(c: Candidate, occurrenceStart: Date): { subject: string; ht
   if (c.description) lines.push("", c.description);
   lines.push("", `View on Rush HQ: ${APP_URL}/calendar`);
   const text = lines.join("\n");
-  const html = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #2a2118; line-height: 1.5;">
-      <h2 style="font-family: 'Fraunces', Georgia, serif; font-weight: 500; color: #2a2118; margin: 0 0 8px;">${escapeHtml(c.title)}</h2>
-      <p style="margin: 0 0 4px; color: #6b5d4c;">${escapeHtml(when)}</p>
-      ${c.location ? `<p style="margin: 0 0 4px; color: #6b5d4c;">📍 ${escapeHtml(c.location)}</p>` : ""}
-      ${c.description ? `<p style="margin: 16px 0 0;">${escapeHtml(c.description).replace(/\n/g, "<br>")}</p>` : ""}
-      <p style="margin: 24px 0 0; font-size: 13px;"><a href="${APP_URL}/calendar" style="color: #5d8a4e;">View on Rush HQ</a></p>
-    </div>
-  `;
+  const html = richEmail({
+    kicker: "Rush HQ · Reminder",
+    title: c.title,
+    when,
+    location: c.location ?? null,
+    notes: c.description ?? null,
+    buttonUrl: `${APP_URL}/calendar`,
+    buttonText: "Open in Rush HQ",
+  });
   return { subject, html, text };
+}
+
+interface RichEmailOpts {
+  kicker: string;
+  title: string;
+  when: string | null;
+  location?: string | null;
+  notes?: string | null;
+  buttonUrl: string;
+  buttonText: string;
+}
+
+/**
+ * Single rich-email card used by calendar reminders, task reminders,
+ * and the outbox event types. Table-based HTML for the broadest email
+ * client support (Gmail, Apple Mail, Outlook).
+ */
+function richEmail(opts: RichEmailOpts): string {
+  const titleSafe = escapeHtml(opts.title);
+  const kickerSafe = escapeHtml(opts.kicker);
+  const whenRow = opts.when
+    ? `<tr><td style="padding:0 28px 6px;font-size:15px;color:#0f172a;">⏱ ${escapeHtml(opts.when)}</td></tr>`
+    : "";
+  const locRow = opts.location
+    ? `<tr><td style="padding:0 28px 6px;font-size:15px;">📍 <a href="${mapsLink(
+        opts.location,
+      )}" style="color:#2563eb;text-decoration:none;">${escapeHtml(opts.location)}</a></td></tr>`
+    : "";
+  const notesBlock = opts.notes
+    ? `<tr><td style="padding:14px 28px 0;">
+         <div style="background:#f1f3f7;border-radius:8px;padding:12px 14px;font-size:14.5px;color:#0f172a;line-height:1.5;white-space:pre-wrap;">${escapeHtml(
+           opts.notes,
+         )}</div>
+       </td></tr>`
+    : "";
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f6f8;padding:24px 0;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif;">
+      <tr><td align="center">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;border:1px solid #e6e8ee;box-shadow:0 4px 16px -4px rgba(15,23,42,0.08);">
+          <tr><td style="padding:28px 28px 4px;">
+            <p style="margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;">${kickerSafe}</p>
+            <h2 style="margin:0 0 14px;font-size:22px;font-weight:600;color:#0f172a;line-height:1.25;">${titleSafe}</h2>
+          </td></tr>
+          ${whenRow}
+          ${locRow}
+          ${notesBlock}
+          <tr><td style="padding:24px 28px 28px;">
+            <a href="${opts.buttonUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-weight:500;font-size:14.5px;padding:10px 20px;border-radius:8px;">${escapeHtml(
+              opts.buttonText,
+            )}</a>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+  `;
 }
 
 function escapeHtml(s: string): string {
@@ -678,7 +740,7 @@ function renderTaskTelegram(
   dueAt: Date,
 ): string {
   const lines: string[] = [
-    `<b>📝 ${escapeHtml(t.title)}</b>`,
+    `📝 <b>${escapeHtml(t.title)}</b>`,
     `Hey ${escapeHtml(t.assignee_short)} — due ${escapeHtml(leadLabel(t.lead_time_minutes))} (${formatDateTime(dueAt, false)})`,
   ];
   if (t.description) lines.push("", escapeHtml(t.description));
@@ -699,14 +761,14 @@ function renderTaskEmail(
   if (t.description) lines.push("", t.description);
   lines.push("", `View on Rush HQ: ${APP_URL}/tasks`);
   const text = lines.join("\n");
-  const html = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; line-height: 1.5;">
-      <h2 style="font-weight: 600; margin: 0 0 8px;">📝 ${escapeHtml(t.title)}</h2>
-      <p style="margin: 0; color: #475569;">Hey ${escapeHtml(t.assignee_short)} — due ${escapeHtml(leadLabel(t.lead_time_minutes))} (${escapeHtml(when)}).</p>
-      ${t.description ? `<p style="margin: 16px 0 0;">${escapeHtml(t.description).replace(/\n/g, "<br>")}</p>` : ""}
-      <p style="margin: 24px 0 0; font-size: 13px;"><a href="${APP_URL}/tasks" style="color: #2563eb;">Open Rush HQ</a></p>
-    </div>
-  `;
+  const html = richEmail({
+    kicker: `Rush HQ · Task for ${t.assignee_short}`,
+    title: t.title,
+    when: `Due ${leadLabel(t.lead_time_minutes)} · ${when}`,
+    notes: t.description ?? null,
+    buttonUrl: `${APP_URL}/tasks`,
+    buttonText: "Open tasks",
+  });
   return { subject, html, text };
 }
 
