@@ -30,16 +30,16 @@ export default function ForgotPasswordPage() {
     <main className="min-h-dvh grid place-items-center px-6 py-12">
       <div className="w-full max-w-sm">
         <p className="text-3xl text-ink mb-1">Rush HQ</p>
-        <p className="text-muted text-[15px] mb-8">Reset your password</p>
+        <p className="text-muted text-[16px] mb-8">Reset your password</p>
         {sent ? (
           <div className="space-y-4">
-            <p className="text-[15px] text-ink">
+            <p className="text-[16px] text-ink">
               If that email is on file, we've sent a reset link. It's good for an
               hour. Check your inbox (and your spam folder, just in case).
             </p>
             <Link
               to="/login"
-              className="text-[14px] text-primary underline-offset-2 hover:underline"
+              className="text-[15px] text-primary underline-offset-2 hover:underline"
             >
               Back to sign in
             </Link>
@@ -55,12 +55,12 @@ export default function ForgotPasswordPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
             {error && (
-              <p className="text-danger text-[14px]" role="alert">{error}</p>
+              <p className="text-danger text-[15px]" role="alert">{error}</p>
             )}
             <Button type="submit" className="w-full" loading={submitting}>
               Send reset link
             </Button>
-            <p className="text-[14px] text-muted text-center">
+            <p className="text-[15px] text-muted text-center">
               <Link to="/login" className="underline-offset-2 hover:underline">
                 Back to sign in
               </Link>

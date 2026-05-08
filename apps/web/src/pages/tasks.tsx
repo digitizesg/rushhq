@@ -115,11 +115,11 @@ export default function TasksPage() {
     <section className="mx-auto max-w-[1100px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Tasks</p>
+          <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Tasks</p>
           <h1 className="text-[30px] font-medium text-ink">
             {canEdit ? "What's on the kids' lists" : "Your tasks"}
           </h1>
-          <p className="mt-2 text-[14.5px] text-muted">
+          <p className="mt-2 text-[15.5px] text-muted">
             Tap a task to mark it done. Recurring tasks roll forward to the next
             occurrence automatically.
           </p>
@@ -132,7 +132,7 @@ export default function TasksPage() {
       </div>
 
       {data.error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[15px] px-4 py-3">
           {data.error}
         </div>
       )}
@@ -140,7 +140,7 @@ export default function TasksPage() {
       {pending.length === 0 ? (
         <div className="bg-white border border-line rounded-lg p-10 text-center space-y-3">
           <ListTodo size={32} className="mx-auto text-muted" />
-          <p className="text-[16px] text-ink">Nothing on the list. Nice.</p>
+          <p className="text-[17px] text-ink">Nothing on the list. Nice.</p>
           {canEdit && (
             <Button variant="secondary" onClick={() => openCreate()}>
               <Plus size={14} /> Add a task
@@ -169,17 +169,17 @@ export default function TasksPage() {
 
       {done.length > 0 && (
         <details className="bg-white border border-line rounded-lg">
-          <summary className="cursor-pointer list-none px-5 py-3 text-[14.5px] text-muted hover:text-ink flex items-center gap-2">
+          <summary className="cursor-pointer list-none px-5 py-3 text-[15.5px] text-muted hover:text-ink flex items-center gap-2">
             <Check size={14} /> Recently completed ({done.length})
           </summary>
           <ul className="divide-y divide-line">
             {done.map((t) => {
               const m = data.members.find((x) => x.id === t.assignee_id);
               return (
-                <li key={t.id} className="px-5 py-2.5 flex items-center gap-3 text-[14.5px]">
+                <li key={t.id} className="px-5 py-2.5 flex items-center gap-3 text-[15.5px]">
                   <Check size={14} className="text-emerald shrink-0" />
                   <span className="text-ink line-through">{t.title}</span>
-                  <span className="text-muted text-[13px] ml-auto">
+                  <span className="text-muted text-[14px] ml-auto">
                     {m?.short_name ?? "?"} · {t.completed_at ? formatRelativeDate(t.completed_at) : ""}
                   </span>
                 </li>
@@ -255,7 +255,7 @@ function KidColumn({
             <h2 className="text-[18px] font-semibold" style={{ color: colour.text }}>
               {memberName}
             </h2>
-            <span className="text-[13px] opacity-70" style={{ color: colour.text }}>
+            <span className="text-[14px] opacity-70" style={{ color: colour.text }}>
               {tasks.length} pending
             </span>
           </div>
@@ -263,7 +263,7 @@ function KidColumn({
             <button
               type="button"
               onClick={onAdd}
-              className="text-[13.5px] font-medium hover:underline"
+              className="text-[14.5px] font-medium hover:underline"
               style={{ color: colour.text }}
             >
               + Add
@@ -272,7 +272,7 @@ function KidColumn({
         </header>
       )}
       {tasks.length === 0 ? (
-        <div className="px-5 py-6 text-center text-[14.5px] text-muted">
+        <div className="px-5 py-6 text-center text-[15.5px] text-muted">
           No tasks. Nice and clear.
         </div>
       ) : (
@@ -333,11 +333,11 @@ function TaskListItem({
       </button>
 
       <div className="flex-1 min-w-0">
-        <p className="text-[15.5px] font-medium text-ink break-words">{task.title}</p>
+        <p className="text-[16.5px] font-medium text-ink break-words">{task.title}</p>
         {task.description && (
-          <p className="text-[13.5px] text-muted truncate">{task.description}</p>
+          <p className="text-[14.5px] text-muted truncate">{task.description}</p>
         )}
-        <p className="text-[13px] mt-1 flex items-center gap-x-2 gap-y-0.5 flex-wrap">
+        <p className="text-[14px] mt-1 flex items-center gap-x-2 gap-y-0.5 flex-wrap">
           <span
             className={[
               "inline-flex items-center gap-1",

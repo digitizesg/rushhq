@@ -33,16 +33,16 @@ export default function PropertiesPage() {
     <section className="mx-auto max-w-[820px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
       <Link
         to="/finance"
-        className="inline-flex items-center gap-1 text-[14px] text-muted hover:text-ink"
+        className="inline-flex items-center gap-1 text-[15px] text-muted hover:text-ink"
       >
         <ChevronLeft size={14} /> Finance overview
       </Link>
 
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Finance</p>
+          <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Finance</p>
           <h1 className="text-[30px] font-medium text-ink">Properties</h1>
-          <p className="mt-2 text-[14.5px] text-muted">
+          <p className="mt-2 text-[15.5px] text-muted">
             Setup info per property — purchase price, loan, tenure, interest
             rate. Monthly outstanding loan and market value are entered on
             the finance update page.
@@ -51,7 +51,7 @@ export default function PropertiesPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <Link
             to={`/finance/update/${targetMonth.slice(0, 7)}`}
-            className="inline-flex items-center justify-center h-10 px-4 rounded-md bg-primary text-white text-[14.5px] font-medium hover:bg-primary-strong"
+            className="inline-flex items-center justify-center h-10 px-4 rounded-md bg-primary text-white text-[15.5px] font-medium hover:bg-primary-strong"
           >
             Update this month
           </Link>
@@ -76,7 +76,7 @@ export default function PropertiesPage() {
                   <h2 className="text-[18px] font-semibold text-ink">{p.name}</h2>
                   <span
                     className={[
-                      "inline-flex items-center px-2 h-6 rounded-full text-[12.5px] capitalize",
+                      "inline-flex items-center px-2 h-6 rounded-full text-[13.5px] capitalize",
                       p.category === "personal"
                         ? "bg-primary-soft text-primary"
                         : "bg-soft text-muted",
@@ -85,17 +85,17 @@ export default function PropertiesPage() {
                     {p.category}
                   </span>
                   {!p.active && (
-                    <span className="inline-flex items-center px-2 h-6 rounded-full text-[12.5px] bg-soft text-muted">
+                    <span className="inline-flex items-center px-2 h-6 rounded-full text-[13.5px] bg-soft text-muted">
                       inactive
                     </span>
                   )}
                   {refiSoon && (
-                    <span className="inline-flex items-center px-2 h-6 rounded-full text-[12.5px] bg-amber-soft text-amber">
+                    <span className="inline-flex items-center px-2 h-6 rounded-full text-[13.5px] bg-amber-soft text-amber">
                       refi due
                     </span>
                   )}
                 </div>
-                <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5 text-[13.5px]">
+                <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5 text-[14.5px]">
                   <Field label="Purchase">
                     {p.purchase_price != null ? formatSGD(p.purchase_price) : "—"}
                   </Field>
@@ -164,7 +164,7 @@ export default function PropertiesPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-[12px] uppercase tracking-wider text-muted">{label}</dt>
+      <dt className="text-[13px] uppercase tracking-wider text-muted">{label}</dt>
       <dd className="text-ink tnum">{children}</dd>
     </div>
   );
@@ -271,7 +271,7 @@ function PropertyForm({ property, onSaved, onCancelled }: FormProps) {
         </Select>
       </div>
 
-      <h3 className="text-[13px] font-semibold uppercase tracking-wider text-muted">
+      <h3 className="text-[14px] font-semibold uppercase tracking-wider text-muted">
         Purchase + loan
       </h3>
       <div className="grid sm:grid-cols-2 gap-3">
@@ -318,7 +318,7 @@ function PropertyForm({ property, onSaved, onCancelled }: FormProps) {
         />
       </div>
 
-      <label className="inline-flex items-center gap-2 text-[14.5px] text-ink cursor-pointer">
+      <label className="inline-flex items-center gap-2 text-[15.5px] text-ink cursor-pointer">
         <input
           type="checkbox"
           className="size-4 accent-primary"
@@ -328,7 +328,7 @@ function PropertyForm({ property, onSaved, onCancelled }: FormProps) {
         Active
       </label>
 
-      {error && <p role="alert" className="text-danger text-[14px]">{error}</p>}
+      {error && <p role="alert" className="text-danger text-[15px]">{error}</p>}
 
       <div className="flex justify-end gap-2 pt-3 border-t border-line">
         <Button type="button" variant="secondary" onClick={onCancelled}>

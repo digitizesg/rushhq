@@ -36,7 +36,7 @@ export default function ResetPasswordPage() {
     <main className="min-h-dvh grid place-items-center px-6 py-12">
       <div className="w-full max-w-sm">
         <p className="text-3xl text-ink mb-1">Rush HQ</p>
-        <p className="text-muted text-[15px] mb-8">Choose a new password</p>
+        <p className="text-muted text-[16px] mb-8">Choose a new password</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <TextField
             label="New password"
@@ -56,7 +56,7 @@ export default function ResetPasswordPage() {
             onChange={(e) => setConfirm(e.target.value)}
           />
           {error && (
-            <p className="text-danger text-[14px]" role="alert">{error}</p>
+            <p className="text-danger text-[15px]" role="alert">{error}</p>
           )}
           <Button type="submit" className="w-full" loading={submitting}>
             Set new password

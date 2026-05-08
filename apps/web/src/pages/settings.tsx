@@ -86,13 +86,13 @@ export default function SettingsPage() {
   return (
     <section className="mx-auto max-w-[760px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
       <div>
-        <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Settings</p>
+        <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Settings</p>
         <h1 className="text-[30px] font-medium text-ink">Your account</h1>
       </div>
 
       <section className="bg-white border border-line rounded-lg p-6">
         <p className="text-[20px] font-medium text-ink mb-3">Profile</p>
-        <dl className="grid grid-cols-3 gap-y-2 text-[15px]">
+        <dl className="grid grid-cols-3 gap-y-2 text-[16px]">
           <dt className="text-muted">Short name</dt>
           <dd className="col-span-2 text-ink">{member?.short_name}</dd>
           <dt className="text-muted">Full name</dt>
@@ -108,13 +108,13 @@ export default function SettingsPage() {
         <p className="text-[20px] font-medium text-ink mb-1">
           Notifications
         </p>
-        <p className="text-muted text-[14.5px] mb-4">
+        <p className="text-muted text-[15.5px] mb-4">
           Pick how you'd like each kind of message to reach you.
         </p>
         <div className="overflow-hidden rounded-md border border-line">
-          <table className="w-full text-[15px]">
+          <table className="w-full text-[16px]">
             <thead className="bg-soft">
-              <tr className="text-left text-muted text-[13.5px]">
+              <tr className="text-left text-muted text-[14.5px]">
                 <th className="font-medium px-4 py-2.5">Event</th>
                 <th className="font-medium px-4 py-2.5 w-28">Telegram</th>
                 <th className="font-medium px-4 py-2.5 w-28">Email</th>
@@ -157,17 +157,17 @@ export default function SettingsPage() {
 
       <section className="bg-white border border-line rounded-lg p-6">
         <p className="text-[20px] font-medium text-ink mb-1">Password</p>
-        <p className="text-muted text-[14.5px] mb-4">
+        <p className="text-muted text-[15.5px] mb-4">
           We'll email you a link to set a new one.
         </p>
         <Button variant="secondary" onClick={sendReset}>
           Send reset email
         </Button>
         {resetSent && (
-          <p className="mt-3 text-primary text-[14px]">Reset link sent. Check your inbox.</p>
+          <p className="mt-3 text-primary text-[15px]">Reset link sent. Check your inbox.</p>
         )}
         {resetError && (
-          <p className="mt-3 text-danger text-[14px]">{resetError}</p>
+          <p className="mt-3 text-danger text-[15px]">{resetError}</p>
         )}
       </section>
     </section>

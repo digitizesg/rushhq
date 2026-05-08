@@ -32,7 +32,7 @@ export function CalendarWeek({
             >
               <p
                 className={[
-                  "text-[12px] font-medium uppercase tracking-wider mb-1",
+                  "text-[13px] font-medium uppercase tracking-wider mb-1",
                   today ? "text-primary" : "text-muted",
                 ].join(" ")}
               >
@@ -52,7 +52,7 @@ export function CalendarWeek({
                 <button
                   type="button"
                   onClick={() => onSelectDay(day)}
-                  className="text-[14px] text-muted hover:text-ink text-left py-2"
+                  className="text-[15px] text-muted hover:text-ink text-left py-2"
                 >
                   Nothing scheduled. Click to add.
                 </button>

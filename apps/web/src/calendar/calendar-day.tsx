@@ -16,7 +16,7 @@ export function CalendarDay({ day, occurrences, onAdd, onSelectEvent }: DayViewP
     <div className="bg-white border border-line rounded-lg p-5">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="text-[13px] uppercase tracking-wider text-muted">
+          <p className="text-[14px] uppercase tracking-wider text-muted">
             {format(day, "EEEE")}
           </p>
           <p className="text-[26px] font-medium text-ink tnum">
@@ -28,7 +28,7 @@ export function CalendarDay({ day, occurrences, onAdd, onSelectEvent }: DayViewP
         </Button>
       </div>
       {onDay.length === 0 ? (
-        <p className="text-muted text-[15px]">Nothing scheduled.</p>
+        <p className="text-muted text-[16px]">Nothing scheduled.</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
           {onDay.map((occ, i) => (

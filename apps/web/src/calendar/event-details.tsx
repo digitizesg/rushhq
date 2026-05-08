@@ -41,7 +41,7 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
             {event.title}
           </h2>
           {event.location && (
-            <p className="mt-1.5 text-[15px] text-muted inline-flex items-center gap-1.5">
+            <p className="mt-1.5 text-[16px] text-muted inline-flex items-center gap-1.5">
               <MapPin size={14} aria-hidden /> {event.location}
             </p>
           )}
@@ -49,7 +49,7 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
       </header>
 
       <Section title="When" icon={<Clock size={14} />}>
-        <p className="text-[16px] text-ink tnum">
+        <p className="text-[17px] text-ink tnum">
           {event.all_day
             ? `${format(occurrence.start, "EEEE d LLLL yyyy")} · all day`
             : `${format(occurrence.start, "EEEE d LLLL yyyy")} · ${formatTime24(
@@ -57,7 +57,7 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
               )} – ${formatTime24(occurrence.end)}`}
         </p>
         {!isOneShot && (
-          <p className="mt-1 text-[14px] text-muted inline-flex items-center gap-1.5">
+          <p className="mt-1 text-[15px] text-muted inline-flex items-center gap-1.5">
             <Repeat size={13} aria-hidden /> {presetLabel}
           </p>
         )}
@@ -65,7 +65,7 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
 
       {event.description && (
         <Section title="Notes" icon={<StickyNote size={14} />}>
-          <p className="text-[15px] text-ink whitespace-pre-wrap leading-relaxed">
+          <p className="text-[16px] text-ink whitespace-pre-wrap leading-relaxed">
             {event.description}
           </p>
         </Section>
@@ -79,7 +79,7 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
               return (
                 <span
                   key={m.id}
-                  className="inline-flex items-center gap-2 px-3 h-9 rounded-full text-[14px] font-medium border"
+                  className="inline-flex items-center gap-2 px-3 h-9 rounded-full text-[15px] font-medium border"
                   style={{
                     background: c.soft,
                     color: c.text,
@@ -92,7 +92,7 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
                     aria-hidden
                   />
                   {m.short_name}
-                  <span className="text-[12px] capitalize opacity-70">{m.role}</span>
+                  <span className="text-[13px] capitalize opacity-70">{m.role}</span>
                 </span>
               );
             })}
@@ -101,12 +101,12 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
       )}
 
       {event.visibility === "parents" && (
-        <p className="inline-flex items-center gap-1.5 text-[13px] text-muted">
+        <p className="inline-flex items-center gap-1.5 text-[14px] text-muted">
           <Lock size={12} /> Parents only
         </p>
       )}
 
-      <p className="text-[13px] text-muted pt-3 border-t border-line">
+      <p className="text-[14px] text-muted pt-3 border-t border-line">
         You're viewing as a helper. Ask Ben or Alice if you need this changed.
       </p>
     </div>
@@ -124,7 +124,7 @@ function Section({
 }) {
   return (
     <section className="space-y-2">
-      <p className="text-[13px] font-semibold uppercase tracking-wider text-muted inline-flex items-center gap-1.5">
+      <p className="text-[14px] font-semibold uppercase tracking-wider text-muted inline-flex items-center gap-1.5">
         {icon}
         {title}
       </p>

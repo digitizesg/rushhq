@@ -83,7 +83,7 @@ export default function MfaEnrolPage() {
     <main className="min-h-dvh grid place-items-center px-6 py-12">
       <div className="w-full max-w-md bg-white border border-line rounded-lg p-7">
         <p className="text-2xl text-ink mb-1">Set up two-factor</p>
-        <p className="text-muted text-[15px] mb-6">
+        <p className="text-muted text-[16px] mb-6">
           Two-factor sign-in is required for parent accounts. Scan this QR code
           with an authenticator app (1Password, Authy, Google Authenticator),
           then enter the six-digit code it shows.
@@ -97,11 +97,11 @@ export default function MfaEnrolPage() {
                 className="size-44"
               />
             </div>
-            <details className="text-[14px] text-muted">
+            <details className="text-[15px] text-muted">
               <summary className="cursor-pointer hover:text-ink">
                 Can't scan? Show the secret key
               </summary>
-              <p className="mt-2 font-mono text-[13.5px] text-ink break-all bg-soft border border-line rounded-md p-3">
+              <p className="mt-2 font-mono text-[14.5px] text-ink break-all bg-soft border border-line rounded-md p-3">
                 {pending.secret}
               </p>
             </details>
@@ -117,7 +117,7 @@ export default function MfaEnrolPage() {
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
               />
               {error && (
-                <p className="text-danger text-[14px]" role="alert">{error}</p>
+                <p className="text-danger text-[15px]" role="alert">{error}</p>
               )}
               <Button type="submit" className="w-full" loading={submitting}>
                 Verify and continue
@@ -125,14 +125,14 @@ export default function MfaEnrolPage() {
             </form>
           </div>
         ) : (
-          <p className="text-muted text-[15px]">{error ?? "Loading enrolment…"}</p>
+          <p className="text-muted text-[16px]">{error ?? "Loading enrolment…"}</p>
         )}
         <button
           type="button"
           onClick={() => {
             void signOut();
           }}
-          className="block mx-auto mt-6 text-[14px] text-muted hover:text-ink underline-offset-2 hover:underline"
+          className="block mx-auto mt-6 text-[15px] text-muted hover:text-ink underline-offset-2 hover:underline"
         >
           Sign out
         </button>

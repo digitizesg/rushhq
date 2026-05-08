@@ -31,7 +31,7 @@ export function CalendarMonth({
           <div
             key={l}
             className={[
-              "px-3 py-2.5 text-[13px] font-semibold uppercase tracking-wider text-center",
+              "px-3 py-2.5 text-[14px] font-semibold uppercase tracking-wider text-center",
               i >= 5 ? "text-muted" : "text-ink",
             ].join(" ")}
           >
@@ -64,7 +64,7 @@ export function CalendarMonth({
               <div className="flex items-center justify-between gap-1">
                 <span
                   className={[
-                    "inline-flex items-center justify-center min-w-7 h-7 px-1.5 rounded-full text-[15px] font-medium tnum",
+                    "inline-flex items-center justify-center min-w-7 h-7 px-1.5 rounded-full text-[16px] font-medium tnum",
                     today
                       ? "bg-primary text-white"
                       : inMonth
@@ -77,7 +77,7 @@ export function CalendarMonth({
                   {format(day, "d")}
                 </span>
                 {onDay.length > 0 && (
-                  <span className="text-[11.5px] text-muted tnum opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[12.5px] text-muted tnum opacity-0 group-hover:opacity-100 transition-opacity">
                     {onDay.length} {onDay.length === 1 ? "event" : "events"}
                   </span>
                 )}
@@ -94,7 +94,7 @@ export function CalendarMonth({
                   />
                 ))}
                 {overflow > 0 && (
-                  <span className="text-[12.5px] font-medium text-muted px-1.5">
+                  <span className="text-[13.5px] font-medium text-muted px-1.5">
                     + {overflow} more
                   </span>
                 )}

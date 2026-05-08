@@ -24,8 +24,8 @@ export function CalendarAgenda({ start, occurrences, onSelectEvent }: AgendaProp
   if (grouped.length === 0) {
     return (
       <div className="bg-white border border-line rounded-lg p-8 text-center">
-        <p className="text-[16px] text-ink font-medium mb-1">All clear.</p>
-        <p className="text-[14.5px] text-muted">
+        <p className="text-[17px] text-ink font-medium mb-1">All clear.</p>
+        <p className="text-[15.5px] text-muted">
           Nothing scheduled in the next {AGENDA_DAYS} days.
         </p>
       </div>
@@ -68,17 +68,17 @@ function DayHeader({ day, count }: { day: Date; count: number }) {
       <p className="flex items-baseline gap-2">
         <span
           className={[
-            "text-[14.5px] font-semibold",
+            "text-[15.5px] font-semibold",
             today ? "text-primary" : "text-ink",
           ].join(" ")}
         >
           {dayLabel(day)}
         </span>
-        <span className="text-[13.5px] text-muted tnum">
+        <span className="text-[14.5px] text-muted tnum">
           {format(day, "d LLL")}
         </span>
       </p>
-      <span className="text-[13px] text-muted tnum">
+      <span className="text-[14px] text-muted tnum">
         {count} {count === 1 ? "event" : "events"}
       </span>
     </div>
@@ -109,10 +109,10 @@ function AgendaRow({
           aria-hidden
         />
         <div className="min-w-0 flex-1">
-          <p className="text-[15.5px] font-medium text-ink truncate">
+          <p className="text-[16.5px] font-medium text-ink truncate">
             {event.title}
           </p>
-          <p className="text-[13.5px] text-muted tnum mt-0.5">
+          <p className="text-[14.5px] text-muted tnum mt-0.5">
             {event.all_day ? "All day" : formatTime24(start)}
             {event.location ? ` · ${event.location}` : ""}
             {recurring ? " · repeats" : ""}

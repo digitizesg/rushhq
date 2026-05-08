@@ -105,24 +105,24 @@ export default function MyStocksPage() {
   return (
     <section className="mx-auto max-w-[820px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
       <div>
-        <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Your investment</p>
+        <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Your investment</p>
         <h1 className="text-[30px] font-medium text-ink">Hi {member.short_name}</h1>
       </div>
 
       {s.error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[15px] px-4 py-3">
           {s.error}
         </div>
       )}
 
       <div className="bg-white border border-line rounded-lg p-6 sm:p-8 text-center space-y-2">
-        <p className="text-[13.5px] uppercase tracking-wider text-muted">You have</p>
+        <p className="text-[14.5px] uppercase tracking-wider text-muted">You have</p>
         <p className="text-[clamp(36px,7vw,52px)] font-semibold text-ink tnum leading-none">
           {formatSGD(valueSgd)}
         </p>
         <p
           className={[
-            "text-[15px] tnum",
+            "text-[16px] tnum",
             gainSgd >= 0 ? "text-emerald" : "text-danger",
           ].join(" ")}
         >
@@ -135,22 +135,22 @@ export default function MyStocksPage() {
       <button
         type="button"
         onClick={() => setMore((v) => !v)}
-        className="text-[14.5px] text-primary hover:underline"
+        className="text-[15.5px] text-primary hover:underline"
       >
         {more ? "Hide details" : "Want to know more?"}
       </button>
 
       {more && (
         <div className="bg-white border border-line rounded-lg p-5 space-y-3">
-          <p className="text-[15.5px] text-ink">
+          <p className="text-[16.5px] text-ink">
             You hold <span className="font-semibold tnum">{s.shares.toFixed(4)}</span> shares.
           </p>
           {s.contributions.length > 0 && (
             <>
-              <p className="text-[13.5px] uppercase tracking-wider text-muted mt-3">Your contributions</p>
+              <p className="text-[14.5px] uppercase tracking-wider text-muted mt-3">Your contributions</p>
               <ul className="space-y-1">
                 {s.contributions.map((c) => (
-                  <li key={c.id} className="text-[14.5px] text-ink flex items-baseline justify-between gap-3">
+                  <li key={c.id} className="text-[15.5px] text-ink flex items-baseline justify-between gap-3">
                     <span className="text-muted tnum">{c.created_at.slice(0, 10)}</span>
                     <span className="text-muted">{c.source_type.replace("_", " ")}</span>
                     <span className="tnum">{formatSGD(c.cost_sgd)}</span>
@@ -159,14 +159,14 @@ export default function MyStocksPage() {
               </ul>
             </>
           )}
-          <p className="text-[14px] text-muted leading-relaxed pt-3 border-t border-line">
+          <p className="text-[15px] text-muted leading-relaxed pt-3 border-t border-line">
             The longer you keep it in, the bigger it gets. Small amounts grow into something
             really big over time.
           </p>
         </div>
       )}
 
-      <p className="text-[13.5px] text-muted text-center pt-2">
+      <p className="text-[14.5px] text-muted text-center pt-2">
         If you ever want to take some out, ask Mum or Dad.
       </p>
     </section>
@@ -193,12 +193,12 @@ function BigChart({ points }: { points: PortfolioSnapshot[] }) {
 
   return (
     <div className="bg-white border border-line rounded-lg p-5">
-      <p className="text-[13.5px] uppercase tracking-wider text-muted mb-2">Last {points.length} months</p>
+      <p className="text-[14.5px] uppercase tracking-wider text-muted mb-2">Last {points.length} months</p>
       <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-32 sm:h-40 text-emerald" preserveAspectRatio="none">
         <path d={areaPath} fill="currentColor" opacity="0.15" />
         <path d={linePath} fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-      <div className="flex justify-between mt-2 text-[12px] text-muted tnum">
+      <div className="flex justify-between mt-2 text-[13px] text-muted tnum">
         <span>{points[0]?.snapshot_date.slice(0, 7)}</span>
         <span>{points[points.length - 1]?.snapshot_date.slice(0, 7)}</span>
       </div>

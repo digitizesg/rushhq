@@ -21,12 +21,12 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
   const inputId = id ?? auto;
   return (
     <label className={["block", containerClassName ?? ""].join(" ")}>
-      <span className="block text-[14px] font-medium text-ink mb-1.5">{label}</span>
+      <span className="block text-[15px] font-medium text-ink mb-1.5">{label}</span>
       <input
         ref={ref}
         id={inputId}
         className={[
-          "w-full h-11 rounded-md border bg-white px-3 text-[15px] text-ink placeholder:text-muted/70",
+          "w-full h-11 rounded-md border bg-white px-3 text-[16px] text-ink placeholder:text-muted/70",
           "focus:outline-2 focus:outline-offset-0 focus:outline-primary",
           error ? "border-danger" : "border-line hover:border-ink/20",
           className ?? "",
@@ -38,7 +38,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
       {(error || hint) && (
         <span
           id={`${inputId}-hint`}
-          className={["block mt-1.5 text-[13.5px]", error ? "text-danger" : "text-muted"].join(" ")}
+          className={["block mt-1.5 text-[14.5px]", error ? "text-danger" : "text-muted"].join(" ")}
         >
           {error || hint}
         </span>

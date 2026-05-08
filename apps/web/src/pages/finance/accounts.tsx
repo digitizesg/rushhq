@@ -53,13 +53,13 @@ export default function AccountsPage() {
 
   return (
     <section className="mx-auto max-w-[820px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
-      <Link to="/finance" className="inline-flex items-center gap-1 text-[14px] text-muted hover:text-ink">
+      <Link to="/finance" className="inline-flex items-center gap-1 text-[15px] text-muted hover:text-ink">
         <ChevronLeft size={14} /> Finance overview
       </Link>
 
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Finance</p>
+          <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Finance</p>
           <h1 className="text-[28px] font-medium text-ink">Accounts</h1>
         </div>
         <Button onClick={() => setAddOpen(true)}>
@@ -68,7 +68,7 @@ export default function AccountsPage() {
       </div>
 
       {error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[15px] px-4 py-3">
           {error}
         </div>
       )}
@@ -106,7 +106,7 @@ export default function AccountsPage() {
                 />
               </div>
               <div className="flex items-center justify-between gap-3 flex-wrap">
-                <label className="inline-flex items-center gap-2 text-[14.5px] text-ink cursor-pointer">
+                <label className="inline-flex items-center gap-2 text-[15.5px] text-ink cursor-pointer">
                   <input
                     type="checkbox"
                     className="size-4 accent-primary"
@@ -185,7 +185,7 @@ function AddAccountForm({ onAdded, onCancelled }: AddProps) {
         <option value="business">Business</option>
         <option value="investment">Investment</option>
       </Select>
-      {error && <p role="alert" className="text-danger text-[14px]">{error}</p>}
+      {error && <p role="alert" className="text-danger text-[15px]">{error}</p>}
       <div className="flex justify-end gap-2 pt-2 border-t border-line">
         <Button type="button" variant="secondary" onClick={onCancelled}>Cancel</Button>
         <Button type="submit" loading={submitting}>Add</Button>

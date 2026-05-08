@@ -92,7 +92,7 @@ export default function CalendarPage() {
     <section className="mx-auto max-w-[1100px] px-4 sm:px-6 py-6 sm:py-10">
       <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
         <div>
-          <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Calendar</p>
+          <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Calendar</p>
           <h1 className="text-[30px] font-medium text-ink tnum">
             {viewLabel(view, anchor)}
           </h1>
@@ -105,7 +105,7 @@ export default function CalendarPage() {
                 type="button"
                 onClick={() => setView(o.value)}
                 className={[
-                  "px-3 h-8 rounded-full text-[14px] font-medium transition-colors",
+                  "px-3 h-8 rounded-full text-[15px] font-medium transition-colors",
                   view === o.value ? "bg-primary text-white" : "text-muted hover:text-ink",
                 ].join(" ")}
               >
@@ -127,7 +127,7 @@ export default function CalendarPage() {
             <button
               type="button"
               onClick={() => setAnchor(new Date())}
-              className="h-9 px-3 rounded-md bg-white border border-line text-[14px] text-muted hover:text-ink"
+              className="h-9 px-3 rounded-md bg-white border border-line text-[15px] text-muted hover:text-ink"
             >
               Today
             </button>
@@ -149,13 +149,13 @@ export default function CalendarPage() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
+        <div className="mb-4 rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[15px] px-4 py-3">
           {error}
         </div>
       )}
 
       {loading && events.length === 0 ? (
-        <div className="bg-white border border-line rounded-lg p-10 text-center text-muted text-[15px]">
+        <div className="bg-white border border-line rounded-lg p-10 text-center text-muted text-[16px]">
           Loading…
         </div>
       ) : view === "agenda" ? (

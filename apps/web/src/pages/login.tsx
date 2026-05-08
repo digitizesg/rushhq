@@ -98,7 +98,7 @@ export default function LoginPage() {
     <main className="min-h-dvh grid place-items-center px-6 py-12">
       <div className="w-full max-w-sm">
         <p className="text-3xl text-ink mb-1">Rush HQ</p>
-        <p className="text-muted text-[15px] mb-8">
+        <p className="text-muted text-[16px] mb-8">
           {mfa ? "Two-factor verification" : "Sign in to your account"}
         </p>
 
@@ -121,12 +121,12 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
             {error && (
-              <p className="text-danger text-[14px]" role="alert">{error}</p>
+              <p className="text-danger text-[15px]" role="alert">{error}</p>
             )}
             <Button type="submit" className="w-full" loading={submitting}>
               Sign in
             </Button>
-            <p className="text-[14px] text-muted text-center">
+            <p className="text-[15px] text-muted text-center">
               <Link to="/forgot-password" className="underline-offset-2 hover:underline">
                 Forgot your password?
               </Link>
@@ -148,14 +148,14 @@ export default function LoginPage() {
               hint="Open your authenticator app and enter the current code."
             />
             {error && (
-              <p className="text-danger text-[14px]" role="alert">{error}</p>
+              <p className="text-danger text-[15px]" role="alert">{error}</p>
             )}
             <Button type="submit" className="w-full" loading={submitting}>
               Verify
             </Button>
             <button
               type="button"
-              className="block mx-auto text-[14px] text-muted hover:text-ink underline-offset-2 hover:underline"
+              className="block mx-auto text-[15px] text-muted hover:text-ink underline-offset-2 hover:underline"
               onClick={() => {
                 setMfa(null);
                 setCode("");

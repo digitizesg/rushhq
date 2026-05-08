@@ -100,22 +100,22 @@ export default function FinanceOverviewPage() {
     <section className="mx-auto max-w-[1100px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Finance</p>
+          <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Finance</p>
           <h1 className="text-[30px] font-medium text-ink">Total assets</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Link to="/finance/history" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[14.5px] hover:bg-soft">
+          <Link to="/finance/history" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[15.5px] hover:bg-soft">
             <History size={14} /> History
           </Link>
-          <Link to="/finance/properties" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[14.5px] hover:bg-soft">
+          <Link to="/finance/properties" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[15.5px] hover:bg-soft">
             <Building2 size={14} /> Properties
           </Link>
-          <Link to="/finance/accounts" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[14.5px] hover:bg-soft">
+          <Link to="/finance/accounts" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[15.5px] hover:bg-soft">
             <SettingsIcon size={14} /> Accounts
           </Link>
           <Link
             to={`/finance/update/${thisMonth.slice(0, 7)}`}
-            className="inline-flex items-center justify-center h-9 px-4 rounded-md bg-primary text-white text-[14.5px] font-medium hover:bg-primary-strong"
+            className="inline-flex items-center justify-center h-9 px-4 rounded-md bg-primary text-white text-[15.5px] font-medium hover:bg-primary-strong"
           >
             {ctaLabel}
           </Link>
@@ -123,7 +123,7 @@ export default function FinanceOverviewPage() {
       </div>
 
       {data.error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[15px] px-4 py-3">
           {data.error}
         </div>
       )}
@@ -132,15 +132,15 @@ export default function FinanceOverviewPage() {
       <div className="bg-white border border-line rounded-lg p-6 sm:p-8">
         {totals.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-[16px] text-ink mb-1">No data yet.</p>
-            <p className="text-[14.5px] text-muted">
+            <p className="text-[17px] text-ink mb-1">No data yet.</p>
+            <p className="text-[15.5px] text-muted">
               Use the button above to enter this month's balances.
             </p>
           </div>
         ) : (
           <div className="grid sm:grid-cols-3 gap-6 items-center">
             <div className="sm:col-span-2">
-              <p className="text-[13.5px] uppercase tracking-wider text-muted">
+              <p className="text-[14.5px] uppercase tracking-wider text-muted">
                 {formatMonthLabel(latest!.snapshot_month)}
               </p>
               <p className="text-[clamp(34px,5vw,52px)] font-semibold text-ink tnum leading-tight mt-1">
@@ -149,21 +149,21 @@ export default function FinanceOverviewPage() {
             </div>
             <dl className="grid grid-cols-2 sm:grid-cols-1 gap-4">
               <div>
-                <dt className="text-[12.5px] uppercase tracking-wider text-muted mb-1">vs last month</dt>
+                <dt className="text-[13.5px] uppercase tracking-wider text-muted mb-1">vs last month</dt>
                 <dd className={[
                   "text-[18px] font-semibold tnum inline-flex items-center gap-1",
                   monthChange >= 0 ? "text-emerald" : "text-danger",
                 ].join(" ")}>
                   {monthChange >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
                   {monthChange >= 0 ? "+" : "−"}{formatSGD(Math.abs(monthChange))}
-                  <span className="text-[13.5px] text-muted ml-1 font-normal">
+                  <span className="text-[14.5px] text-muted ml-1 font-normal">
                     ({monthPct >= 0 ? "+" : ""}{monthPct.toFixed(1)}%)
                   </span>
                 </dd>
               </div>
               {yearAgoRow && (
                 <div>
-                  <dt className="text-[12.5px] uppercase tracking-wider text-muted mb-1">vs 12 months ago</dt>
+                  <dt className="text-[13.5px] uppercase tracking-wider text-muted mb-1">vs 12 months ago</dt>
                   <dd className={[
                     "text-[18px] font-semibold tnum inline-flex items-center gap-1",
                     yearChange >= 0 ? "text-emerald" : "text-danger",
@@ -186,8 +186,8 @@ export default function FinanceOverviewPage() {
         <div className="rounded-lg border border-amber/30 bg-amber-soft/40 px-5 py-4 flex items-start gap-3">
           <CalendarIcon size={18} className="text-amber mt-0.5 shrink-0" />
           <div className="space-y-1">
-            <p className="text-[15px] font-semibold text-ink">Refinance window opening</p>
-            <ul className="text-[13.5px] text-muted">
+            <p className="text-[16px] font-semibold text-ink">Refinance window opening</p>
+            <ul className="text-[14.5px] text-muted">
               {refiAlerts.map((p) => {
                 const days = daysUntilRateEnd(p.rate_end_date);
                 return (
@@ -210,11 +210,11 @@ export default function FinanceOverviewPage() {
       {activeProps.length > 0 && (
         <div className="bg-white border border-line rounded-lg p-5 sm:p-6 space-y-4">
           <div className="flex items-baseline justify-between gap-3 flex-wrap">
-            <p className="text-[15px] font-semibold text-ink inline-flex items-center gap-2">
+            <p className="text-[16px] font-semibold text-ink inline-flex items-center gap-2">
               <Building2 size={16} className="text-muted" /> Properties
             </p>
             {latestPropertySnaps.length > 0 && (
-              <p className="text-[13px] text-muted">
+              <p className="text-[14px] text-muted">
                 Total equity{" "}
                 <span className="text-ink tnum font-medium">{formatSGD(propertyEquityNow)}</span>
                 {propertyEquityDelta != null && propertyEquityDelta !== 0 && (
@@ -239,10 +239,10 @@ export default function FinanceOverviewPage() {
               return (
                 <li key={p.id} className="border border-line rounded-md p-4 space-y-2">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-[15px] font-semibold text-ink">{p.name}</p>
+                    <p className="text-[16px] font-semibold text-ink">{p.name}</p>
                     <span
                       className={[
-                        "inline-flex items-center px-2 h-6 rounded-full text-[12px] capitalize",
+                        "inline-flex items-center px-2 h-6 rounded-full text-[13px] capitalize",
                         p.category === "personal"
                           ? "bg-primary-soft text-primary"
                           : "bg-soft text-muted",
@@ -251,7 +251,7 @@ export default function FinanceOverviewPage() {
                       {p.category}
                     </span>
                   </div>
-                  <dl className="space-y-1 text-[13.5px] tnum">
+                  <dl className="space-y-1 text-[14.5px] tnum">
                     <Row label="Outstanding">
                       {snap ? formatSGD(snap.amount_outstanding_sgd) : "—"}
                     </Row>
@@ -277,15 +277,15 @@ export default function FinanceOverviewPage() {
       {/* Breakdown */}
       {breakdown.length > 0 && (
         <div className="bg-white border border-line rounded-lg p-5 sm:p-6">
-          <p className="text-[15px] font-semibold text-ink mb-4">
+          <p className="text-[16px] font-semibold text-ink mb-4">
             Breakdown · {formatMonthLabel(latest!.snapshot_month)}
           </p>
           <ul className="space-y-3">
             {breakdown.map((b) => (
               <li key={b.name} className="grid grid-cols-[1fr_auto] gap-3 items-baseline">
-                <p className="text-[15px] text-ink">{b.name}</p>
+                <p className="text-[16px] text-ink">{b.name}</p>
                 <div className="text-right">
-                  <p className="text-[15px] text-ink tnum">{formatSGD(b.balance)}</p>
+                  <p className="text-[16px] text-ink tnum">{formatSGD(b.balance)}</p>
                   <DeltaBadge delta={b.delta} />
                 </div>
                 <div className="col-span-2 h-2 rounded-full bg-soft overflow-hidden">
@@ -306,7 +306,7 @@ export default function FinanceOverviewPage() {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <dt className="text-muted text-[12.5px] uppercase tracking-wider">{label}</dt>
+      <dt className="text-muted text-[13.5px] uppercase tracking-wider">{label}</dt>
       <dd className="text-ink">{children}</dd>
     </div>
   );
@@ -315,19 +315,19 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 function DeltaBadge({ delta }: { delta: number | null }) {
   if (delta == null) {
     return (
-      <p className="text-[12.5px] text-muted tnum mt-0.5">new this month</p>
+      <p className="text-[13.5px] text-muted tnum mt-0.5">new this month</p>
     );
   }
   if (delta === 0) {
     return (
-      <p className="text-[12.5px] text-muted tnum mt-0.5">no change</p>
+      <p className="text-[13.5px] text-muted tnum mt-0.5">no change</p>
     );
   }
   const positive = delta > 0;
   return (
     <p
       className={[
-        "text-[12.5px] tnum mt-0.5",
+        "text-[13.5px] tnum mt-0.5",
         positive ? "text-emerald" : "text-danger",
       ].join(" ")}
     >
@@ -388,7 +388,7 @@ function Chart({ points }: { points: Array<{ snapshot_month: string; total_sgd: 
 
   return (
     <div className="bg-white border border-line rounded-lg p-5">
-      <p className="text-[13.5px] uppercase tracking-wider text-muted mb-3">Total assets over time</p>
+      <p className="text-[14.5px] uppercase tracking-wider text-muted mb-3">Total assets over time</p>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto block text-emerald" style={{ aspectRatio: `${W} / ${H}` }}>
         {/* Grid lines + y labels */}
         {gridValues.map((v, i) => {
@@ -468,7 +468,7 @@ function Chart({ points }: { points: Array<{ snapshot_month: string; total_sgd: 
         })}
       </svg>
       {points.length === 1 && (
-        <p className="text-[13px] text-muted text-center mt-1">
+        <p className="text-[14px] text-muted text-center mt-1">
           One month so far. The chart fills out as you save subsequent months.
         </p>
       )}

@@ -69,7 +69,7 @@ export default function AdminPage() {
     <section className="mx-auto max-w-[1100px] px-4 sm:px-6 py-6 sm:py-10 space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Admin</p>
+          <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Admin</p>
           <h1 className="text-[30px] font-medium text-ink">
             Family and dispatch
           </h1>
@@ -78,7 +78,7 @@ export default function AdminPage() {
       </div>
 
       {error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[15px] px-4 py-3">
           {error}
         </div>
       )}
@@ -86,8 +86,8 @@ export default function AdminPage() {
       <section>
         <p className="text-[20px] font-medium text-ink mb-3">Members</p>
         <div className="bg-white border border-line rounded-lg overflow-x-auto">
-          <table className="w-full text-[15px] min-w-[640px]">
-            <thead className="bg-soft text-muted text-left text-[13.5px]">
+          <table className="w-full text-[16px] min-w-[640px]">
+            <thead className="bg-soft text-muted text-left text-[14.5px]">
               <tr>
                 <th className="font-medium px-4 py-2.5">Short name</th>
                 <th className="font-medium px-4 py-2.5">Full name</th>
@@ -148,8 +148,8 @@ export default function AdminPage() {
           Recent notifications
         </p>
         <div className="bg-white border border-line rounded-lg overflow-x-auto">
-          <table className="w-full text-[14.5px] min-w-[720px]">
-            <thead className="bg-soft text-muted text-left text-[13.5px]">
+          <table className="w-full text-[15.5px] min-w-[720px]">
+            <thead className="bg-soft text-muted text-left text-[14.5px]">
               <tr>
                 <th className="font-medium px-4 py-2.5">When</th>
                 <th className="font-medium px-4 py-2.5">Channel</th>
@@ -246,7 +246,7 @@ function TelegramBadge({ state }: { state: RowState["contactState"] }) {
   };
   const s = styles[state];
   return (
-    <span className={`inline-flex items-center px-2 h-6 rounded-full text-[13px] ${s.bg} ${s.text}`}>
+    <span className={`inline-flex items-center px-2 h-6 rounded-full text-[14px] ${s.bg} ${s.text}`}>
       {s.label}
     </span>
   );
@@ -261,7 +261,7 @@ function StatusPill({ status }: { status: DispatchLogEntry["status"] }) {
   };
   const s = map[status];
   return (
-    <span className={`inline-flex items-center px-2 h-6 rounded-full text-[13px] capitalize ${s.bg} ${s.text}`}>
+    <span className={`inline-flex items-center px-2 h-6 rounded-full text-[14px] capitalize ${s.bg} ${s.text}`}>
       {status}
     </span>
   );
@@ -408,9 +408,9 @@ function AddMemberForm({ onAdded, onCancelled }: AddMemberFormProps) {
             checked={sendInvite}
             onChange={(e) => setSendInvite(e.target.checked)}
           />
-          <span className="text-[14.5px] text-ink">
+          <span className="text-[15.5px] text-ink">
             Send them an invite email
-            <span className="block text-[13.5px] text-muted mt-0.5">
+            <span className="block text-[14.5px] text-muted mt-0.5">
               They'll get a link from {`<notify@rushhq.co>`} to set their own password.
               Without this, the account is created but you'll need to share credentials another way.
             </span>
@@ -434,7 +434,7 @@ function AddMemberForm({ onAdded, onCancelled }: AddMemberFormProps) {
         </Select>
       </div>
       {error && (
-        <p role="alert" className="text-danger text-[14px]">
+        <p role="alert" className="text-danger text-[15px]">
           {error}
         </p>
       )}

@@ -23,18 +23,18 @@ export default function BeadsIndexPage() {
     <section className="mx-auto max-w-[1100px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Beads</p>
+          <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Beads</p>
           <h1 className="text-[30px] font-medium text-ink">
             Riley & Robin
           </h1>
         </div>
-        <p className="text-[14px] text-muted tnum">
+        <p className="text-[15px] text-muted tnum">
           {formatPeriodLabel(thisMonthStart)}
         </p>
       </div>
 
       {data.error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[15px] px-4 py-3">
           {data.error}
         </div>
       )}
@@ -110,14 +110,14 @@ function ChildCard({ child, data, thisMonthStart }: ChildCardProps) {
           {activeChart && (
             <Link
               to={`/beads/charts/${child.id}`}
-              className="inline-flex items-center justify-center h-9 rounded-md border border-line text-[14.5px] text-ink hover:bg-soft transition-colors"
+              className="inline-flex items-center justify-center h-9 rounded-md border border-line text-[15.5px] text-ink hover:bg-soft transition-colors"
             >
               View chart
             </Link>
           )}
           <Link
             to={`/beads/count/${child.id}`}
-            className="inline-flex items-center justify-center h-9 rounded-md bg-primary text-white text-[14.5px] font-medium hover:bg-primary-strong transition-colors"
+            className="inline-flex items-center justify-center h-9 rounded-md bg-primary text-white text-[15.5px] font-medium hover:bg-primary-strong transition-colors"
           >
             {thisMonth?.status === "open" || !thisMonth ? "Count beads" : "View count"}
           </Link>
@@ -142,8 +142,8 @@ function Stat({
         {icon}
       </span>
       <div>
-        <p className="text-[13px] text-muted">{label}</p>
-        <p className="text-[16px] text-ink font-medium tnum">{value}</p>
+        <p className="text-[14px] text-muted">{label}</p>
+        <p className="text-[17px] text-ink font-medium tnum">{value}</p>
       </div>
     </div>
   );
@@ -157,7 +157,7 @@ function StatusPill({ status }: { status: BeadPeriodStatus }) {
   };
   const s = styles[status];
   return (
-    <span className={`inline-flex items-center px-2.5 h-6 rounded-full text-[13px] ${s.bg} ${s.text}`}>
+    <span className={`inline-flex items-center px-2.5 h-6 rounded-full text-[14px] ${s.bg} ${s.text}`}>
       {s.label}
     </span>
   );
@@ -177,10 +177,10 @@ function Sparkline({ points }: { points: BeadPeriodTotal[] }) {
                 style={{ height: `${h}px` }}
               />
             </div>
-            <p className="text-[11.5px] uppercase tracking-wider text-muted tnum">
+            <p className="text-[12.5px] uppercase tracking-wider text-muted tnum">
               {formatPeriodLabel(p.period_start).slice(0, 3)}
             </p>
-            <p className="text-[13px] text-ink tnum">
+            <p className="text-[14px] text-ink tnum">
               {formatSGD(p.total_sgd)}
             </p>
           </div>

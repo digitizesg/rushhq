@@ -29,21 +29,21 @@ export default function TransactionsPage() {
 
   return (
     <section className="mx-auto max-w-[1100px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
-      <Link to="/stocks" className="inline-flex items-center gap-1 text-[14px] text-muted hover:text-ink">
+      <Link to="/stocks" className="inline-flex items-center gap-1 text-[15px] text-muted hover:text-ink">
         <ChevronLeft size={14} /> Stocks overview
       </Link>
 
       <div>
-        <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Stocks</p>
+        <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Stocks</p>
         <h1 className="text-[28px] font-medium text-ink">All transactions</h1>
-        <p className="mt-2 text-[14.5px] text-muted">
+        <p className="mt-2 text-[15.5px] text-muted">
           Tap a row to edit notes or delete the transaction. Numbers are
           locked once recorded; correct mistakes by deleting and re-entering.
         </p>
       </div>
 
       {data.transactions.length === 0 ? (
-        <div className="bg-white border border-line rounded-lg p-6 text-[15px] text-muted">
+        <div className="bg-white border border-line rounded-lg p-6 text-[16px] text-muted">
           No transactions yet.
         </div>
       ) : (
@@ -58,19 +58,19 @@ export default function TransactionsPage() {
                     onClick={() => setOpenTxId(tx.id)}
                     className="w-full text-left px-5 py-4 grid sm:grid-cols-[120px_1fr_auto] gap-3 sm:gap-5 items-start hover:bg-soft focus:bg-soft focus:outline-none"
                   >
-                    <p className="text-[14px] text-muted tnum">{format(new Date(tx.transaction_date), "EEE d LLL yyyy")}</p>
+                    <p className="text-[15px] text-muted tnum">{format(new Date(tx.transaction_date), "EEE d LLL yyyy")}</p>
                     <div className="min-w-0">
-                      <p className="text-[15.5px] font-medium text-ink">
+                      <p className="text-[16.5px] font-medium text-ink">
                         {TRANSACTION_TYPE_LABEL[tx.transaction_type as StockTransactionType] ?? tx.transaction_type}
                       </p>
-                      <p className="text-[13.5px] text-muted tnum mt-0.5">
+                      <p className="text-[14.5px] text-muted tnum mt-0.5">
                         {formatShares(tx.total_shares)} shares · {formatUSD(tx.price_per_share_usd)}/share · FX {tx.usd_to_sgd_rate.toFixed(4)}
                       </p>
                       <ul className="mt-2 space-y-0.5">
                         {allocs.map((a) => {
                           const member = data.children.find((c) => c.id === a.member_id);
                           return (
-                            <li key={a.id} className="text-[13.5px] text-ink tnum flex items-baseline justify-between gap-3">
+                            <li key={a.id} className="text-[14.5px] text-ink tnum flex items-baseline justify-between gap-3">
                               <span>{member?.short_name ?? "?"}</span>
                               <span className="text-muted">
                                 {a.shares >= 0 ? "+" : ""}{formatShares(a.shares)} · {formatSGD(a.cost_sgd)}
@@ -79,11 +79,11 @@ export default function TransactionsPage() {
                           );
                         })}
                       </ul>
-                      {tx.notes && <p className="mt-2 text-[13.5px] text-muted whitespace-pre-wrap">{tx.notes}</p>}
+                      {tx.notes && <p className="mt-2 text-[14.5px] text-muted whitespace-pre-wrap">{tx.notes}</p>}
                     </div>
-                    <p className="text-[15px] text-ink tnum sm:text-right">
+                    <p className="text-[16px] text-ink tnum sm:text-right">
                       {formatSGD(tx.total_sgd)}
-                      <span className="block text-[13px] text-muted">{formatUSD(tx.total_usd)}</span>
+                      <span className="block text-[14px] text-muted">{formatUSD(tx.total_usd)}</span>
                     </p>
                   </button>
                 </li>
@@ -164,7 +164,7 @@ function TransactionModal({ tx, allocations, childList, onClose, onSaved }: Moda
     >
       <div className="w-full max-w-lg bg-white rounded-lg border border-line p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         <div>
-          <p className="text-[13px] uppercase tracking-wider text-muted mb-1">
+          <p className="text-[14px] uppercase tracking-wider text-muted mb-1">
             {format(new Date(tx.transaction_date), "EEE d LLL yyyy")}
           </p>
           <p className="text-[20px] font-semibold text-ink">
@@ -172,7 +172,7 @@ function TransactionModal({ tx, allocations, childList, onClose, onSaved }: Moda
           </p>
         </div>
 
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-[14px]">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-[15px]">
           <dt className="text-muted">Shares</dt>
           <dd className="text-ink tnum text-right">{formatShares(tx.total_shares)}</dd>
           <dt className="text-muted">USD per share</dt>
@@ -186,14 +186,14 @@ function TransactionModal({ tx, allocations, childList, onClose, onSaved }: Moda
         </dl>
 
         <div className="border border-line rounded-md overflow-hidden">
-          <p className="text-[13px] uppercase tracking-wider text-muted bg-soft px-3 py-2 border-b border-line">
+          <p className="text-[14px] uppercase tracking-wider text-muted bg-soft px-3 py-2 border-b border-line">
             Allocations
           </p>
           <ul className="divide-y divide-line">
             {allocations.map((a) => {
               const m = childList.find((c) => c.id === a.member_id);
               return (
-                <li key={a.id} className="flex items-baseline justify-between px-3 py-2 text-[14px]">
+                <li key={a.id} className="flex items-baseline justify-between px-3 py-2 text-[15px]">
                   <span className="text-ink">{m?.short_name ?? "?"}</span>
                   <span className="text-muted tnum">
                     {a.shares >= 0 ? "+" : ""}{formatShares(a.shares)} · {formatSGD(a.cost_sgd)}
@@ -205,21 +205,21 @@ function TransactionModal({ tx, allocations, childList, onClose, onSaved }: Moda
         </div>
 
         <label className="block">
-          <span className="block text-[14px] font-medium text-ink mb-1.5">Notes</span>
+          <span className="block text-[15px] font-medium text-ink mb-1.5">Notes</span>
           <textarea
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             disabled={busy}
-            className="w-full rounded-md border border-line bg-white px-3 py-2 text-[15px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
+            className="w-full rounded-md border border-line bg-white px-3 py-2 text-[16px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
           />
-          <span className="block text-[13px] text-muted mt-1">
+          <span className="block text-[14px] text-muted mt-1">
             Numbers are locked. To correct a mistake, delete this row and re-enter.
           </span>
         </label>
 
         {error && (
-          <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-3 py-2">
+          <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[15px] px-3 py-2">
             {error}
           </div>
         )}
@@ -253,7 +253,7 @@ function TransactionModal({ tx, allocations, childList, onClose, onSaved }: Moda
           <div className="absolute inset-0 z-10 grid place-items-center bg-white/85 rounded-lg p-5">
             <div className="w-full max-w-sm bg-white rounded-lg border border-line p-5 shadow-lg">
               <p className="text-[20px] font-semibold text-ink mb-2">Delete this transaction?</p>
-              <p className="text-[14.5px] text-muted leading-relaxed mb-4">
+              <p className="text-[15.5px] text-muted leading-relaxed mb-4">
                 Allocations get removed too. Any bead periods or pending
                 deposits linked to this purchase return to their previous
                 state, so they can be re-used.

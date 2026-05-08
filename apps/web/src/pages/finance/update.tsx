@@ -230,30 +230,30 @@ export default function FinanceUpdatePage() {
 
   return (
     <section className="mx-auto max-w-[760px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
-      <Link to="/finance" className="inline-flex items-center gap-1 text-[14px] text-muted hover:text-ink">
+      <Link to="/finance" className="inline-flex items-center gap-1 text-[15px] text-muted hover:text-ink">
         <ChevronLeft size={14} /> Finance overview
       </Link>
 
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Finance update</p>
+          <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Finance update</p>
           <h1 className="text-[28px] font-medium text-ink">{formatMonthLabel(targetMonth)}</h1>
         </div>
         <div className="text-right">
-          <p className="text-[12.5px] uppercase tracking-wider text-muted mb-1">Running total</p>
+          <p className="text-[13.5px] uppercase tracking-wider text-muted mb-1">Running total</p>
           <p className="text-[24px] font-semibold text-ink tnum">{formatSGD(total)}</p>
         </div>
       </div>
 
       {error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[15px] px-4 py-3">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSaveDraft} className="space-y-6">
         <section className="space-y-2">
-          <h2 className="text-[13px] font-semibold uppercase tracking-wider text-muted">
+          <h2 className="text-[14px] font-semibold uppercase tracking-wider text-muted">
             Accounts
           </h2>
           <div className="bg-white border border-line rounded-lg overflow-hidden">
@@ -269,7 +269,7 @@ export default function FinanceUpdatePage() {
               ))}
             </ul>
             <div className="flex items-center justify-between bg-soft border-t border-line px-5 py-3">
-              <p className="text-[14px] uppercase tracking-wider text-muted">Liquid total</p>
+              <p className="text-[15px] uppercase tracking-wider text-muted">Liquid total</p>
               <p className="text-[22px] font-semibold text-ink tnum">{formatSGD(total)}</p>
             </div>
           </div>
@@ -277,7 +277,7 @@ export default function FinanceUpdatePage() {
 
         {activeProperties.length > 0 && (
           <section className="space-y-2">
-            <h2 className="text-[13px] font-semibold uppercase tracking-wider text-muted">
+            <h2 className="text-[14px] font-semibold uppercase tracking-wider text-muted">
               Properties
             </h2>
             <div className="bg-white border border-line rounded-lg overflow-hidden">
@@ -297,7 +297,7 @@ export default function FinanceUpdatePage() {
                 ))}
               </ul>
               <div className="flex items-center justify-between bg-soft border-t border-line px-5 py-3">
-                <p className="text-[14px] uppercase tracking-wider text-muted">Total equity</p>
+                <p className="text-[15px] uppercase tracking-wider text-muted">Total equity</p>
                 <p className="text-[22px] font-semibold text-ink tnum">{formatSGD(totalEquity)}</p>
               </div>
             </div>
@@ -336,7 +336,7 @@ export default function FinanceUpdatePage() {
             <p className="text-[20px] font-semibold text-ink mb-2">
               Delete {formatMonthLabel(targetMonth!)}?
             </p>
-            <p className="text-[14.5px] text-muted leading-relaxed mb-4">
+            <p className="text-[15.5px] text-muted leading-relaxed mb-4">
               This removes all eight account balances for this month. The chart
               and totals re-compute without it. This can't be undone, but you
               can re-add the month later from the History page.
@@ -387,11 +387,11 @@ function AccountRow({ account, value, previous, onChange }: RowProps) {
   return (
     <li className="grid grid-cols-[1fr_auto] gap-3 sm:gap-5 items-center px-4 sm:px-5 py-3">
       <div>
-        <p className="text-[15.5px] font-medium text-ink">{account.name}</p>
-        <p className="text-[13px] text-muted">{account.entity}</p>
+        <p className="text-[16.5px] font-medium text-ink">{account.name}</p>
+        <p className="text-[14px] text-muted">{account.entity}</p>
         {previous != null && (
           <p className={[
-            "text-[12.5px] tnum mt-0.5",
+            "text-[13.5px] tnum mt-0.5",
             delta === 0 ? "text-muted" : delta > 0 ? "text-emerald" : "text-danger",
           ].join(" ")}>
             {delta === 0 ? "no change" : `${delta > 0 ? "+" : "−"}${formatSGD(Math.abs(delta))}`}{" "}
@@ -451,13 +451,13 @@ function PropertyRow({
     <li className="px-4 sm:px-5 py-4 space-y-3">
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-[15.5px] font-medium text-ink">{property.name}</p>
-          <p className="text-[12.5px] text-muted capitalize">{property.category}</p>
+          <p className="text-[16.5px] font-medium text-ink">{property.name}</p>
+          <p className="text-[13.5px] text-muted capitalize">{property.category}</p>
         </div>
         {equityPrev != null && (
           <p
             className={[
-              "text-[12.5px] tnum",
+              "text-[13.5px] tnum",
               delta === 0 ? "text-muted" : delta > 0 ? "text-emerald" : "text-danger",
             ].join(" ")}
           >
@@ -527,7 +527,7 @@ function FormattedInput({
         });
   return (
     <label className="block">
-      <span className="block text-[13px] font-medium text-ink mb-1.5">{label}</span>
+      <span className="block text-[14px] font-medium text-ink mb-1.5">{label}</span>
       <input
         type="text"
         inputMode="decimal"
@@ -539,7 +539,7 @@ function FormattedInput({
         aria-label={ariaLabel}
         className="w-full h-12 rounded-md border border-line bg-white px-3 text-right text-[18px] font-medium text-ink tnum focus:outline-2 focus:outline-offset-0 focus:outline-primary"
       />
-      {hint && <p className="text-[12px] text-muted mt-1">{hint}</p>}
+      {hint && <p className="text-[13px] text-muted mt-1">{hint}</p>}
     </label>
   );
 }

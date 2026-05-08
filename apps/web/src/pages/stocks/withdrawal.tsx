@@ -79,20 +79,20 @@ export default function WithdrawalPage() {
 
   return (
     <section className="mx-auto max-w-[640px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
-      <Link to="/stocks" className="inline-flex items-center gap-1 text-[14px] text-muted hover:text-ink">
+      <Link to="/stocks" className="inline-flex items-center gap-1 text-[15px] text-muted hover:text-ink">
         <ChevronLeft size={14} /> Stocks overview
       </Link>
 
       <div>
-        <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Stocks</p>
+        <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Stocks</p>
         <h1 className="text-[28px] font-medium text-ink">Record a withdrawal</h1>
-        <p className="mt-2 text-[14.5px] text-muted">
+        <p className="mt-2 text-[15.5px] text-muted">
           For when a kid actually takes some money out. The PDF the kids have describes withdrawal as discouraged but allowed.
         </p>
       </div>
 
       {error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[15px] px-4 py-3">
           {error}
         </div>
       )}
@@ -140,24 +140,24 @@ export default function WithdrawalPage() {
             />
           </div>
           {fNum > 0 && totalUsd > 0 && (
-            <p className="text-[13.5px] text-muted">
+            <p className="text-[14.5px] text-muted">
               Recorded at USD/SGD <span className="text-ink tnum">{fNum.toFixed(4)}</span>{" "}
               ≈ <span className="text-ink tnum">{formatSGD(proceedsSgd)}</span>
             </p>
           )}
           <label className="block">
-            <span className="block text-[14px] font-medium text-ink mb-1.5">Notes (optional)</span>
+            <span className="block text-[15px] font-medium text-ink mb-1.5">Notes (optional)</span>
             <textarea
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded-md border border-line bg-white px-3 py-2 text-[15px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
+              className="w-full rounded-md border border-line bg-white px-3 py-2 text-[16px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
             />
           </label>
         </section>
 
         <div className="flex justify-end gap-2 pt-3 border-t border-line">
-          <Link to="/stocks" className="inline-flex h-10 items-center px-4 rounded-md border border-line text-[15px]">
+          <Link to="/stocks" className="inline-flex h-10 items-center px-4 rounded-md border border-line text-[16px]">
             Cancel
           </Link>
           <Button type="submit" variant="danger">
@@ -173,7 +173,7 @@ export default function WithdrawalPage() {
         >
           <div className="w-full max-w-sm bg-white rounded-lg border border-line p-5">
             <p className="text-[20px] font-semibold text-ink mb-2">Confirm withdrawal</p>
-            <p className="text-[14.5px] text-muted leading-relaxed mb-4">
+            <p className="text-[15.5px] text-muted leading-relaxed mb-4">
               {memberSelected()?.short_name} will have <span className="text-ink font-medium tnum">{formatShares(remaining)}</span> shares left,
               worth approximately <span className="text-ink font-medium tnum">{formatSGD(remainingValueSgd)}</span>.
               Proceeds: <span className="text-ink font-medium tnum">{formatSGD(proceedsSgd)}</span> ({formatUSD(sNum * pNum)}).

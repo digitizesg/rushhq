@@ -71,32 +71,32 @@ export default function DividendPage() {
 
   return (
     <section className="mx-auto max-w-[640px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
-      <Link to="/stocks" className="inline-flex items-center gap-1 text-[14px] text-muted hover:text-ink">
+      <Link to="/stocks" className="inline-flex items-center gap-1 text-[15px] text-muted hover:text-ink">
         <ChevronLeft size={14} /> Stocks overview
       </Link>
 
       <div>
-        <p className="text-[13px] uppercase tracking-wider text-muted mb-1">Stocks</p>
+        <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Stocks</p>
         <h1 className="text-[28px] font-medium text-ink">Record dividend reinvest</h1>
-        <p className="mt-2 text-[14.5px] text-muted">
+        <p className="mt-2 text-[15.5px] text-muted">
           When VOO pays a quarterly dividend and you reinvest the cash on moomoo,
           enter what you bought. We split it pro-rata by current holdings.
         </p>
       </div>
 
       {error && (
-        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[14px] px-4 py-3">
+        <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[15px] px-4 py-3">
           {error}
         </div>
       )}
 
       <section className="bg-white border border-line rounded-lg overflow-hidden">
         <header className="px-5 py-3 bg-soft border-b border-line">
-          <p className="text-[15px] font-semibold text-ink">Current holdings</p>
+          <p className="text-[16px] font-semibold text-ink">Current holdings</p>
         </header>
         <ul className="divide-y divide-line">
           {data.holdings.map((h) => (
-            <li key={h.member_id} className="px-5 py-3 flex items-center justify-between text-[15px]">
+            <li key={h.member_id} className="px-5 py-3 flex items-center justify-between text-[16px]">
               <span className="text-ink">{h.short_name}</span>
               <span className="text-muted tnum">{formatShares(h.shares_held)} shares ({(totalShares > 0 ? (h.shares_held / totalShares) * 100 : 0).toFixed(1)}%)</span>
             </li>
@@ -106,7 +106,7 @@ export default function DividendPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <section className="bg-white border border-line rounded-lg p-5 space-y-4">
-          <p className="text-[15px] font-semibold text-ink">Reinvest details</p>
+          <p className="text-[16px] font-semibold text-ink">Reinvest details</p>
           <div className="grid sm:grid-cols-2 gap-3">
             <TextField
               label="Shares purchased with dividend"
@@ -144,20 +144,20 @@ export default function DividendPage() {
             />
           </div>
           <label className="block">
-            <span className="block text-[14px] font-medium text-ink mb-1.5">Notes (optional)</span>
+            <span className="block text-[15px] font-medium text-ink mb-1.5">Notes (optional)</span>
             <textarea
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded-md border border-line bg-white px-3 py-2 text-[15px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
+              className="w-full rounded-md border border-line bg-white px-3 py-2 text-[16px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
             />
           </label>
         </section>
 
         {sharesNum > 0 && totalShares > 0 && (
           <section className="bg-soft border border-line rounded-lg p-5 space-y-2">
-            <p className="text-[15px] font-semibold text-ink">Pro-rata allocation</p>
-            <ul className="space-y-1.5 text-[14.5px]">
+            <p className="text-[16px] font-semibold text-ink">Pro-rata allocation</p>
+            <ul className="space-y-1.5 text-[15.5px]">
               {allocPreview.map((a) => (
                 <li key={a.member_id} className="flex items-baseline justify-between gap-3">
                   <span className="text-ink">{a.short_name}</span>
@@ -167,14 +167,14 @@ export default function DividendPage() {
                 </li>
               ))}
             </ul>
-            <p className="text-[13.5px] text-muted pt-2 border-t border-line">
+            <p className="text-[14.5px] text-muted pt-2 border-t border-line">
               Approx total value: {formatUSD(sharesNum * (parseFloat(pricePerShare) || 0))}
             </p>
           </section>
         )}
 
         <div className="flex justify-end gap-2 pt-3 border-t border-line">
-          <Link to="/stocks" className="inline-flex h-10 items-center px-4 rounded-md border border-line text-[15px]">
+          <Link to="/stocks" className="inline-flex h-10 items-center px-4 rounded-md border border-line text-[16px]">
             Cancel
           </Link>
           <Button type="submit" loading={submitting} disabled={submitting}>

@@ -190,13 +190,13 @@ export function TaskForm({
           placeholder="Practice exam paper"
         />
         <label className="block">
-          <span className="block text-[14px] font-medium text-ink mb-1.5">Notes</span>
+          <span className="block text-[15px] font-medium text-ink mb-1.5">Notes</span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             placeholder="Anything to remember…"
-            className="w-full rounded-md border border-line bg-white px-3 py-2.5 text-[15px] text-ink placeholder:text-muted/70 hover:border-ink/20 focus:outline-2 focus:outline-offset-0 focus:outline-primary"
+            className="w-full rounded-md border border-line bg-white px-3 py-2.5 text-[16px] text-ink placeholder:text-muted/70 hover:border-ink/20 focus:outline-2 focus:outline-offset-0 focus:outline-primary"
           />
         </label>
       </Section>
@@ -224,7 +224,7 @@ export function TaskForm({
             onChange={(e) => setDueDate(e.target.value)}
           />
           <div>
-            <label className="inline-flex items-center gap-2 text-[15px] text-ink cursor-pointer select-none mb-1.5">
+            <label className="inline-flex items-center gap-2 text-[16px] text-ink cursor-pointer select-none mb-1.5">
               <input
                 type="checkbox"
                 className="size-4 rounded border-line accent-primary"
@@ -242,7 +242,7 @@ export function TaskForm({
               />
             )}
             {!hasTime && (
-              <p className="text-[13.5px] text-muted">
+              <p className="text-[14.5px] text-muted">
                 Reminders fire at 09:00 SGT on the due date by default.
               </p>
             )}
@@ -277,14 +277,14 @@ export function TaskForm({
           <button
             type="button"
             onClick={addReminder}
-            className="text-[14px] font-medium text-primary hover:underline underline-offset-2"
+            className="text-[15px] font-medium text-primary hover:underline underline-offset-2"
           >
             + Add reminder
           </button>
         }
       >
         {reminderRows.length === 0 ? (
-          <p className="text-[14px] text-muted">
+          <p className="text-[15px] text-muted">
             No reminders. Add one if you want a Telegram or email nudge.
           </p>
         ) : (
@@ -337,7 +337,7 @@ export function TaskForm({
       </Section>
 
       {error && (
-        <p role="alert" className="text-danger text-[14px]">
+        <p role="alert" className="text-danger text-[15px]">
           {error}
         </p>
       )}
@@ -346,7 +346,7 @@ export function TaskForm({
         {isEditing && (
           confirmingDelete ? (
             <div className="flex items-center gap-2">
-              <span className="text-[14px] text-danger">Sure?</span>
+              <span className="text-[15px] text-danger">Sure?</span>
               <Button
                 type="button"
                 size="sm"
@@ -409,7 +409,7 @@ function Section({
       {(title || action) && (
         <div className="flex items-baseline justify-between gap-3">
           {title && (
-            <h3 className="text-[13px] font-semibold uppercase tracking-wider text-muted">
+            <h3 className="text-[14px] font-semibold uppercase tracking-wider text-muted">
               {title}
             </h3>
           )}

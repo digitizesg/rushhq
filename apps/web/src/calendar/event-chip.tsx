@@ -39,8 +39,8 @@ export function EventChip({ occurrence, detailed = false, onClick }: EventChipPr
             aria-hidden
           />
           <div className="min-w-0 flex-1">
-            <p className="text-[14.5px] font-medium truncate">{event.title}</p>
-            <p className="text-[12.5px] tnum opacity-80">
+            <p className="text-[15.5px] font-medium truncate">{event.title}</p>
+            <p className="text-[13.5px] tnum opacity-80">
               {event.all_day ? "All day" : formatTime24(start)}
               {recurring ? " · repeats" : ""}
               {event.visibility === "parents" ? " · parents" : ""}
@@ -51,14 +51,14 @@ export function EventChip({ occurrence, detailed = false, onClick }: EventChipPr
         <div className="flex items-baseline gap-1.5">
           {!event.all_day && (
             <span
-              className="text-[12px] font-semibold tnum shrink-0"
+              className="text-[13px] font-semibold tnum shrink-0"
               style={{ color: colour.accent }}
             >
               {formatTime24(start)}
             </span>
           )}
           <span
-            className="text-[13.5px] truncate font-medium"
+            className="text-[14.5px] truncate font-medium"
             style={{ color: colour.text }}
           >
             {event.title}
