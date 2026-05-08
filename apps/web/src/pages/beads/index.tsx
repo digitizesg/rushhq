@@ -11,6 +11,8 @@ import {
 } from "@/lib/beads";
 import type { FamilyMember } from "@/lib/types";
 import { LoadingScreen } from "@/components/loading-screen";
+import { Avatar } from "@/components/avatar";
+import { colourFor } from "@/lib/colours";
 
 export default function BeadsIndexPage() {
   const data = useBeadData();
@@ -60,6 +62,7 @@ interface ChildCardProps {
 }
 
 function ChildCard({ child, data, thisMonthStart }: ChildCardProps) {
+  const colour = colourFor(child.id, child.short_name);
   const activeChart = data.charts.find(
     (c) => c.member_id === child.id && c.effective_until === null,
   );
@@ -76,8 +79,23 @@ function ChildCard({ child, data, thisMonthStart }: ChildCardProps) {
 
   return (
     <article className="bg-white border border-line rounded-lg overflow-hidden">
-      <header className="flex items-center justify-between px-5 py-4 border-b border-line">
-        <h2 className="text-[20px] font-semibold text-ink">{child.short_name}</h2>
+      <header
+        className="flex items-center justify-between px-5 py-4 border-b border-line"
+        style={{ backgroundColor: colour.soft }}
+      >
+        <div className="flex items-center gap-3">
+          <Avatar
+            size={44}
+            name={child.short_name}
+            url={child.avatar_url}
+            accent={colour.accent}
+            text="#ffffff"
+            alt=""
+          />
+          <h2 className="text-[20px] font-semibold" style={{ color: colour.text }}>
+            {child.short_name}
+          </h2>
+        </div>
         {thisMonth && <StatusPill status={thisMonth.status} />}
       </header>
 

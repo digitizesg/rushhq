@@ -474,11 +474,12 @@ const LAYER_COLORS = {
 function NetWorthChart({ points }: { points: NetWorthPoint[] }) {
   const totals = points.map((p) => p.total);
   const dataMax = Math.max(...totals, 0);
-  const yMax = Math.max(dataMax * 1.08, 1);
+  const { max: yMax, step } = niceCeil(dataMax * 1.08, 4);
   const yMin = 0;
-  const ySpan = yMax - yMin;
+  const ySpan = Math.max(yMax - yMin, 1);
 
-  const gridValues = [yMax, yMax * 0.66, yMax * 0.33, 0];
+  const gridValues: number[] = [];
+  for (let v = yMax; v >= -1e-9; v -= step) gridValues.push(v);
 
   const W = 600;
   const H = 240;
@@ -575,7 +576,7 @@ function NetWorthChart({ points }: { points: NetWorthPoint[] }) {
                 x={left - 8}
                 y={y + 4}
                 textAnchor="end"
-                fontSize="14"
+                fontSize="12"
                 fill="#94a3b8"
                 style={{ fontVariantNumeric: "tabular-nums" }}
               >
@@ -640,7 +641,7 @@ function NetWorthChart({ points }: { points: NetWorthPoint[] }) {
               x={xFor(i)}
               y={H - 10}
               textAnchor="middle"
-              fontSize="14"
+              fontSize="12"
               fill="#94a3b8"
             >
               {formatMonthLabel(p.month)}
@@ -655,6 +656,20 @@ function NetWorthChart({ points }: { points: NetWorthPoint[] }) {
       )}
     </div>
   );
+}
+
+function niceCeil(rawMax: number, targetTicks = 4): { max: number; step: number } {
+  if (rawMax <= 0) return { max: 1, step: 1 };
+  const rawStep = rawMax / Math.max(1, targetTicks - 1);
+  const exp = Math.floor(Math.log10(rawStep));
+  const fraction = rawStep / Math.pow(10, exp);
+  let niceF: number;
+  if (fraction <= 1) niceF = 1;
+  else if (fraction <= 2) niceF = 2;
+  else if (fraction <= 5) niceF = 5;
+  else niceF = 10;
+  const step = niceF * Math.pow(10, exp);
+  return { max: Math.ceil(rawMax / step) * step, step };
 }
 
 function Legend({ color, label }: { color: string; label: string }) {

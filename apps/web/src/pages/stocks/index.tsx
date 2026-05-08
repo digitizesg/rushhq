@@ -462,16 +462,21 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
   const hasAnyValue = rows.some((r) => r.total > 0 || r.cost > 0);
   if (!hasAnyValue) return null;
 
-  // Y-axis: 0 to max(top of stack, cost basis), padded.
-  const dataMax = Math.max(...rows.map((r) => Math.max(r.total, r.cost)), 1);
-  const yMax = dataMax * 1.1;
+  // Y-axis: top is the highest individual kid value (not the stack
+  // total), padded and snapped to a nice round number so the gridlines
+  // read 0 / 100 / 200 / 300 instead of 178 / 356 / 540.
+  const dataMax = Math.max(
+    ...rows.flatMap((r) => childList.map((c) => r.perKid[c.id] ?? 0)),
+    1,
+  );
+  const { max: yMax, step } = niceCeil(dataMax * 1.08, 4);
   const yMin = 0;
-  const ySpan = yMax - yMin;
+  const ySpan = Math.max(yMax - yMin, 1);
 
   const W = 600;
   const H = 240;
   const left = 60;
-  const right = 16;
+  const right = 32; // a bit more so the rightmost avatar isn't clipped
   const top = 16;
   const bottom = 32;
   const plotW = W - left - right;
@@ -487,47 +492,18 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
     return Math.round(n).toString();
   };
 
-  const gridValues = [yMax, yMax * 0.66, yMax * 0.33, 0];
+  // Enumerate gridlines top-down using the snapped step.
+  const gridValues: number[] = [];
+  for (let v = yMax; v >= -1e-9; v -= step) gridValues.push(v);
 
-  // Build cumulative stacks per kid, in stable child order.
-  function stackFor(rowIdx: number) {
-    let cum = 0;
-    const layers: Array<{ id: string; from: number; to: number }> = [];
-    for (const c of childList) {
-      const v = rows[rowIdx].perKid[c.id] ?? 0;
-      layers.push({ id: c.id, from: cum, to: cum + v });
-      cum += v;
-    }
-    return layers;
-  }
-
-  // For each kid, build an area path: top edge across all rows, then
-  // bottom edge back, closed.
-  function areaPathFor(memberId: string) {
-    if (rows.length < 2) return "";
-    const tops = rows.map((_, i) => {
-      const layers = stackFor(i);
-      const layer = layers.find((l) => l.id === memberId);
-      return { x: xFor(i), y: yFor(layer?.to ?? 0) };
-    });
-    const bottoms = rows.map((_, i) => {
-      const layers = stackFor(i);
-      const layer = layers.find((l) => l.id === memberId);
-      return { x: xFor(i), y: yFor(layer?.from ?? 0) };
-    });
-    const topEdge = tops.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ");
-    const bottomEdge = bottoms
-      .slice()
-      .reverse()
-      .map((p) => `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
+  // Per-kid line (one path per child, connecting their own values
+  // through every snapshot). Replaces the older stacked-area
+  // visualisation — easier to read individual trajectories.
+  function lineFor(memberId: string): string {
+    return rows
+      .map((r, i) => `${i === 0 ? "M" : "L"} ${xFor(i).toFixed(2)} ${yFor(r.perKid[memberId] ?? 0).toFixed(2)}`)
       .join(" ");
-    return `${topEdge} ${bottomEdge} Z`;
   }
-
-  // Cost basis line.
-  const costPath = rows
-    .map((r, i) => `${i === 0 ? "M" : "L"} ${xFor(i).toFixed(2)} ${yFor(r.cost).toFixed(2)}`)
-    .join(" ");
 
   // X-axis labels — just first, last (and middle if many).
   const xLabelIndices: number[] =
@@ -580,7 +556,7 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
                 x={left - 8}
                 y={y + 4}
                 textAnchor="end"
-                fontSize="14"
+                fontSize="12"
                 fill="#94a3b8"
                 style={{ fontVariantNumeric: "tabular-nums" }}
               >
@@ -590,44 +566,25 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
           );
         })}
 
-        {/* Stacked area per kid */}
+        {/* Per-kid line — one trajectory per child through their own
+            individual values over time. Avoids the stacking that made
+            it hard to read who was where. */}
         {rows.length > 1 &&
           childList.map((c) => {
             const colour = colourFor(c.id, c.short_name);
             return (
               <path
                 key={c.id}
-                d={areaPathFor(c.id)}
-                fill={colour.accent}
-                opacity="0.65"
+                d={lineFor(c.id)}
+                fill="none"
+                stroke={colour.accent}
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity="0.9"
               />
             );
           })}
-
-        {/* Cost basis dashed line */}
-        {rows.length > 1 && (
-          <path
-            d={costPath}
-            fill="none"
-            stroke="#0f172a"
-            strokeWidth={1.5}
-            strokeDasharray="4 4"
-            strokeLinecap="round"
-          />
-        )}
-
-        {/* Dots on the cost basis line */}
-        {rows.map((r, i) => (
-          <circle
-            key={`cost-${i}`}
-            cx={xFor(i)}
-            cy={yFor(r.cost)}
-            r={2.5}
-            fill="white"
-            stroke="#0f172a"
-            strokeWidth={1.2}
-          />
-        ))}
 
         {/* Avatar pattern defs — referenced from <circle fill> below */}
         <defs>
@@ -654,35 +611,30 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
           )}
         </defs>
 
-        {/* Per-kid avatars at the LAST data point only — sits in the
-            middle of each kid's stacked band so they read as "this is
-            where Riley/Robin are right now". Historical points stay
-            line/area only. */}
+        {/* Per-kid avatars at the LAST data point only, sitting at
+            each kid's actual SGD value on the y-axis. Historical
+            points stay line-only. */}
         {rows.length > 0 &&
-          (() => {
-            const lastIdx = rows.length - 1;
-            const layers = stackFor(lastIdx);
-            return childList.map((c) => {
-              const layer = layers.find((l) => l.id === c.id);
-              if (!layer || layer.to <= layer.from) return null;
-              const colour = colourFor(c.id, c.short_name);
-              const cx = xFor(lastIdx);
-              const cy = yFor((layer.from + layer.to) / 2);
-              const r = 12;
-              return (
-                <g key={`face-${c.id}`}>
-                  <circle
-                    cx={cx}
-                    cy={cy}
-                    r={r}
-                    fill={c.avatar_url ? `url(#avatar-pat-${c.id})` : colour.accent}
-                    stroke={colour.accent}
-                    strokeWidth={2}
-                  />
-                </g>
-              );
-            });
-          })()}
+          childList.map((c) => {
+            const v = rows[rows.length - 1].perKid[c.id] ?? 0;
+            if (v <= 0) return null;
+            const colour = colourFor(c.id, c.short_name);
+            const cx = xFor(rows.length - 1);
+            const cy = yFor(v);
+            const r = 12;
+            return (
+              <g key={`face-${c.id}`}>
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={r}
+                  fill={c.avatar_url ? `url(#avatar-pat-${c.id})` : colour.accent}
+                  stroke={colour.accent}
+                  strokeWidth={2}
+                />
+              </g>
+            );
+          })}
 
         {/* X-axis labels */}
         {xLabelIndices.map((i) => {
@@ -694,7 +646,7 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
               x={xFor(i)}
               y={H - 10}
               textAnchor="middle"
-              fontSize="14"
+              fontSize="12"
               fill="#94a3b8"
             >
               {formatDateLabel(r.date)}
@@ -739,6 +691,22 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
       )}
     </div>
   );
+}
+
+/** Picks a "nice" round number ≥ rawMax + a step that divides cleanly,
+ *  so y-axis labels read as 0/100/200/300 instead of 0/178/356/540. */
+function niceCeil(rawMax: number, targetTicks = 4): { max: number; step: number } {
+  if (rawMax <= 0) return { max: 1, step: 1 };
+  const rawStep = rawMax / Math.max(1, targetTicks - 1);
+  const exp = Math.floor(Math.log10(rawStep));
+  const fraction = rawStep / Math.pow(10, exp);
+  let niceF: number;
+  if (fraction <= 1) niceF = 1;
+  else if (fraction <= 2) niceF = 2;
+  else if (fraction <= 5) niceF = 5;
+  else niceF = 10;
+  const step = niceF * Math.pow(10, exp);
+  return { max: Math.ceil(rawMax / step) * step, step };
 }
 
 function timeSince(iso: string): string {

@@ -16,6 +16,8 @@ import type { FamilyMember } from "@/lib/types";
 import { LoadingScreen } from "@/components/loading-screen";
 import { BeadDot } from "@/components/bead-dot";
 import { Button } from "@/components/button";
+import { Avatar } from "@/components/avatar";
+import { colourFor } from "@/lib/colours";
 
 interface PageState {
   loading: boolean;
@@ -214,13 +216,23 @@ export default function CountPage() {
         <ChevronLeft size={14} /> All children
       </Link>
 
-      <div>
-        <p className="text-[14px] uppercase tracking-wider text-muted mb-1">
-          Counting beads
-        </p>
-        <h1 className="text-[28px] font-medium text-ink">
-          {state.child.short_name} · {formatPeriodLabel(periodStart)}
-        </h1>
+      <div className="flex items-center gap-4">
+        <Avatar
+          size={56}
+          name={state.child.short_name}
+          url={state.child.avatar_url}
+          accent={colourFor(state.child.id, state.child.short_name).accent}
+          text="#ffffff"
+          alt=""
+        />
+        <div>
+          <p className="text-[14px] uppercase tracking-wider text-muted mb-1">
+            Counting beads
+          </p>
+          <h1 className="text-[28px] font-medium text-ink">
+            {state.child.short_name} · {formatPeriodLabel(periodStart)}
+          </h1>
+        </div>
       </div>
 
       {state.error && (
