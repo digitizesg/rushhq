@@ -417,7 +417,7 @@ function Sparkline({
 }
 
 interface PortfolioChartProps {
-  childList: Array<{ id: string; short_name: string }>;
+  childList: Array<{ id: string; short_name: string; avatar_url?: string | null }>;
   snapshots: PortfolioSnapshot[];
   holdings: ChildHolding[];
   voo: number;
@@ -629,20 +629,54 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
           />
         ))}
 
-        {/* If only one data point, draw per-kid dots so it isn't blank */}
+        {/* Avatar pattern defs — referenced from <circle fill> below */}
+        {rows.length === 1 && (
+          <defs>
+            {childList.map((c) =>
+              c.avatar_url ? (
+                <pattern
+                  key={`pat-${c.id}`}
+                  id={`avatar-pat-${c.id}`}
+                  patternUnits="objectBoundingBox"
+                  patternContentUnits="objectBoundingBox"
+                  width="1"
+                  height="1"
+                >
+                  <image
+                    href={c.avatar_url}
+                    x="0"
+                    y="0"
+                    width="1"
+                    height="1"
+                    preserveAspectRatio="xMidYMid slice"
+                  />
+                </pattern>
+              ) : null,
+            )}
+          </defs>
+        )}
+
+        {/* If only one data point, draw a per-kid avatar (or coloured dot
+            when no photo) so the chart isn't visually blank. */}
         {rows.length === 1 &&
           childList.map((c) => {
             const colour = colourFor(c.id, c.short_name);
             const v = rows[0].perKid[c.id] ?? 0;
             if (v <= 0) return null;
+            const cx = xFor(0);
+            const cy = yFor(v);
+            const r = 18;
             return (
-              <circle
-                key={`only-${c.id}`}
-                cx={xFor(0)}
-                cy={yFor(v)}
-                r={5}
-                fill={colour.accent}
-              />
+              <g key={`only-${c.id}`}>
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={r}
+                  fill={c.avatar_url ? `url(#avatar-pat-${c.id})` : colour.accent}
+                  stroke={colour.accent}
+                  strokeWidth={2.5}
+                />
+              </g>
             );
           })}
 
@@ -668,11 +702,18 @@ function PortfolioChart({ childList, snapshots, holdings, voo, fx }: PortfolioCh
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[14.5px]">
         {childList.map((c) => {
-          const colour = colourFor(c.id);
+          const colour = colourFor(c.id, c.short_name);
           const v = last.perKid[c.id] ?? 0;
           return (
-            <span key={c.id} className="inline-flex items-center gap-1.5">
-              <span className="size-3 rounded-sm" style={{ backgroundColor: colour.accent, opacity: 0.8 }} />
+            <span key={c.id} className="inline-flex items-center gap-2">
+              <Avatar
+                size={22}
+                name={c.short_name}
+                url={c.avatar_url}
+                accent={colour.accent}
+                text="#ffffff"
+                alt=""
+              />
               <span className="text-ink">{c.short_name}</span>
               <span className="text-muted tnum">{formatSGD(v)}</span>
             </span>
