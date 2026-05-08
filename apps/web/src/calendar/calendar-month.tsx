@@ -1,4 +1,4 @@
-import { format, isSameMonth, isToday } from "date-fns";
+import { format, isSameMonth, isToday, isWeekend } from "date-fns";
 import {
   monthGrid,
   occurrencesOnDay,
@@ -22,14 +22,18 @@ export function CalendarMonth({
 }: MonthGridProps) {
   const weeks = monthGrid(anchor);
   const labels = weekDayLabels();
+  const totalCells = weeks.flat().length;
 
   return (
-    <div className="bg-white border border-line rounded-lg overflow-hidden">
+    <div className="bg-white border border-line rounded-lg overflow-hidden shadow-sm">
       <div className="grid grid-cols-7 bg-soft border-b border-line">
-        {labels.map((l) => (
+        {labels.map((l, i) => (
           <div
             key={l}
-            className="px-2 py-2 text-[11.5px] font-medium uppercase tracking-wider text-muted text-center"
+            className={[
+              "px-3 py-2.5 text-[12px] font-semibold uppercase tracking-wider text-center",
+              i >= 5 ? "text-muted" : "text-ink",
+            ].join(" ")}
           >
             {l}
           </div>
@@ -40,51 +44,62 @@ export function CalendarMonth({
           const onDay = occurrencesOnDay(occurrences, day);
           const inMonth = isSameMonth(day, anchor);
           const today = isToday(day);
+          const weekend = isWeekend(day);
           const visible = onDay.slice(0, 3);
           const overflow = onDay.length - visible.length;
           return (
-            <div
+            <button
               key={idx}
+              type="button"
+              onClick={() => onSelectDay(day)}
               className={[
-                "border-b border-r border-line/70 min-h-[110px] p-1.5 flex flex-col gap-1",
+                "group relative text-left border-b border-r border-line/70 min-h-[140px] p-2 flex flex-col gap-1.5 transition-colors",
                 idx % 7 === 6 ? "border-r-0" : "",
-                idx >= weeks.flat().length - 7 ? "border-b-0" : "",
-                inMonth ? "bg-white" : "bg-page/40",
+                idx >= totalCells - 7 ? "border-b-0" : "",
+                inMonth ? "bg-white hover:bg-soft/60" : "bg-page/60 hover:bg-page",
+                "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary",
               ].join(" ")}
+              title={format(day, "EEEE d LLLL")}
             >
-              <button
-                type="button"
-                onClick={() => onSelectDay(day)}
-                className={[
-                  "self-start text-[12.5px] tnum px-1.5 rounded-full transition-colors",
-                  inMonth ? "text-ink hover:bg-soft" : "text-muted hover:text-ink",
-                  today
-                    ? "bg-primary text-white hover:bg-primary hover:text-white"
-                    : "",
-                ].join(" ")}
-                title={format(day, "EEEE d LLLL")}
-              >
-                {format(day, "d")}
-              </button>
+              <div className="flex items-center justify-between gap-1">
+                <span
+                  className={[
+                    "inline-flex items-center justify-center min-w-7 h-7 px-1.5 rounded-full text-[14px] font-medium tnum",
+                    today
+                      ? "bg-primary text-white"
+                      : inMonth
+                        ? weekend
+                          ? "text-muted"
+                          : "text-ink"
+                        : "text-muted/60",
+                  ].join(" ")}
+                >
+                  {format(day, "d")}
+                </span>
+                {onDay.length > 0 && (
+                  <span className="text-[10.5px] text-muted tnum opacity-0 group-hover:opacity-100 transition-opacity">
+                    {onDay.length} {onDay.length === 1 ? "event" : "events"}
+                  </span>
+                )}
+              </div>
               <div className="flex flex-col gap-1 min-h-0">
                 {visible.map((occ, i) => (
                   <EventChip
                     key={`${occ.event.id}-${i}-${occ.start.toISOString()}`}
                     occurrence={occ}
-                    onClick={() => onSelectEvent(occ)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectEvent(occ);
+                    }}
                   />
                 ))}
                 {overflow > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => onSelectDay(day)}
-                    className="text-left text-[11.5px] text-muted hover:text-ink px-2"
-                  >
+                  <span className="text-[11.5px] font-medium text-muted px-1.5">
                     + {overflow} more
-                  </button>
+                  </span>
                 )}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

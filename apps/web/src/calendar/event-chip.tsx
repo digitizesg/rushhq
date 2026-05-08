@@ -1,3 +1,4 @@
+import type { MouseEvent } from "react";
 import { colourFor } from "@/lib/colours";
 import { formatTime24 } from "@/lib/calendar";
 import type { EventOccurrence } from "@/lib/calendar";
@@ -6,7 +7,7 @@ interface EventChipProps {
   occurrence: EventOccurrence;
   /** When false (default) the chip is dense for month-view cells. */
   detailed?: boolean;
-  onClick: () => void;
+  onClick: (e: MouseEvent<HTMLButtonElement>) => void;
 }
 
 export function EventChip({ occurrence, detailed = false, onClick }: EventChipProps) {
@@ -20,12 +21,14 @@ export function EventChip({ occurrence, detailed = false, onClick }: EventChipPr
       onClick={onClick}
       title={`${event.title}${event.location ? " · " + event.location : ""}`}
       className={[
-        "w-full text-left rounded-md transition-shadow hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary",
-        detailed ? "px-3 py-2.5" : "px-2 py-1",
+        "w-full text-left rounded-md transition-all hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary",
+        "border-l-[3px]",
+        detailed ? "px-3 py-2.5" : "pl-2 pr-2 py-1",
       ].join(" ")}
       style={{
         background: colour.soft,
         color: colour.text,
+        borderLeftColor: colour.accent,
       }}
     >
       {detailed ? (
@@ -48,14 +51,14 @@ export function EventChip({ occurrence, detailed = false, onClick }: EventChipPr
         <div className="flex items-baseline gap-1.5">
           {!event.all_day && (
             <span
-              className="text-[10.5px] tnum shrink-0 opacity-80"
-              style={{ color: colour.text }}
+              className="text-[11px] font-semibold tnum shrink-0"
+              style={{ color: colour.accent }}
             >
               {formatTime24(start)}
             </span>
           )}
           <span
-            className="text-[12px] truncate font-medium"
+            className="text-[12.5px] truncate font-medium"
             style={{ color: colour.text }}
           >
             {event.title}
