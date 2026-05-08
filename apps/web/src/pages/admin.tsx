@@ -13,6 +13,9 @@ import { Button } from "@/components/button";
 import { TextField } from "@/components/text-field";
 import { Select } from "@/components/select";
 import { TelegramCard } from "@/components/telegram-card";
+import { AvatarUploader } from "@/components/avatar-uploader";
+import { Avatar } from "@/components/avatar";
+import { colourFor } from "@/lib/colours";
 
 interface RowState {
   member: FamilyMember;
@@ -27,6 +30,7 @@ export default function AdminPage() {
 
   const [addOpen, setAddOpen] = useState(false);
   const [telegramFor, setTelegramFor] = useState<FamilyMember | null>(null);
+  const [editing, setEditing] = useState<FamilyMember | null>(null);
 
   async function load() {
     setLoading(true);
@@ -86,11 +90,10 @@ export default function AdminPage() {
       <section>
         <p className="text-[20px] font-medium text-ink mb-3">Members</p>
         <div className="bg-white border border-line rounded-lg overflow-x-auto">
-          <table className="w-full text-[16px] min-w-[640px]">
+          <table className="w-full text-[16px] min-w-[720px]">
             <thead className="bg-soft text-muted text-left text-[14.5px]">
               <tr>
-                <th className="font-medium px-4 py-2.5">Short name</th>
-                <th className="font-medium px-4 py-2.5">Full name</th>
+                <th className="font-medium px-4 py-2.5">Member</th>
                 <th className="font-medium px-4 py-2.5">Role</th>
                 <th className="font-medium px-4 py-2.5">Type</th>
                 <th className="font-medium px-4 py-2.5">Active</th>
@@ -101,43 +104,69 @@ export default function AdminPage() {
             <tbody>
               {loading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-muted text-center">Loading…</td>
+                  <td colSpan={6} className="px-4 py-6 text-muted text-center">Loading…</td>
                 </tr>
               )}
-              {rows.map((r) => (
-                <tr key={r.member.id} className="border-t border-line">
-                  <td className="px-4 py-3 text-ink">{r.member.short_name}</td>
-                  <td className="px-4 py-3 text-ink">{r.member.full_name}</td>
-                  <td className="px-4 py-3 capitalize text-muted">{r.member.role}</td>
-                  <td className="px-4 py-3 capitalize text-muted">{r.member.member_type}</td>
-                  <td className="px-4 py-3">
-                    <ActiveToggle
-                      member={r.member}
-                      onChange={(active) => {
-                        setRows((prev) =>
-                          prev.map((row) =>
-                            row.member.id === r.member.id
-                              ? { ...row, member: { ...row.member, active } }
-                              : row,
-                          ),
-                        );
-                      }}
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <TelegramBadge state={r.contactState} />
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setTelegramFor(r.member)}
-                    >
-                      Manage Telegram
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {rows.map((r) => {
+                const c = colourFor(r.member.id, r.member.short_name);
+                return (
+                  <tr key={r.member.id} className="border-t border-line">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar
+                          size={36}
+                          name={r.member.short_name}
+                          url={r.member.avatar_url}
+                          accent={c.accent}
+                          text="#ffffff"
+                          alt=""
+                        />
+                        <div>
+                          <p className="text-ink">{r.member.short_name}</p>
+                          <p className="text-[14px] text-muted">{r.member.full_name}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 capitalize text-muted">{r.member.role}</td>
+                    <td className="px-4 py-3 capitalize text-muted">{r.member.member_type}</td>
+                    <td className="px-4 py-3">
+                      <ActiveToggle
+                        member={r.member}
+                        onChange={(active) => {
+                          setRows((prev) =>
+                            prev.map((row) =>
+                              row.member.id === r.member.id
+                                ? { ...row, member: { ...row.member, active } }
+                                : row,
+                            ),
+                          );
+                        }}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <TelegramBadge state={r.contactState} />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="inline-flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setEditing(r.member)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setTelegramFor(r.member)}
+                        >
+                          Telegram
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -223,7 +252,165 @@ export default function AdminPage() {
           />
         )}
       </Modal>
+
+      <Modal
+        open={!!editing}
+        onClose={() => setEditing(null)}
+        title={editing ? `Edit ${editing.short_name}` : ""}
+        size="lg"
+      >
+        {editing && (
+          <EditMemberForm
+            key={editing.id}
+            member={editing}
+            onSaved={async () => {
+              setEditing(null);
+              await load();
+            }}
+            onCancelled={() => setEditing(null)}
+          />
+        )}
+      </Modal>
     </section>
+  );
+}
+
+interface EditMemberFormProps {
+  member: FamilyMember;
+  onSaved: () => Promise<void>;
+  onCancelled: () => void;
+}
+
+function EditMemberForm({ member, onSaved, onCancelled }: EditMemberFormProps) {
+  const [shortName, setShortName] = useState(member.short_name);
+  const [fullName, setFullName] = useState(member.full_name);
+  const [email, setEmail] = useState(member.email ?? "");
+  const [role, setRole] = useState<MemberRole>(member.role);
+  const [memberType, setMemberType] = useState<MemberType>(member.member_type);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [avatarVersion, setAvatarVersion] = useState(0);
+  const colour = colourFor(member.id, member.short_name);
+
+  // Re-fetch the member after avatar change so the preview updates.
+  const [currentAvatar, setCurrentAvatar] = useState<string | null>(member.avatar_url);
+
+  async function refreshAvatar() {
+    setAvatarVersion((v) => v + 1);
+    const { data } = await supabase
+      .from("family_members")
+      .select("avatar_url")
+      .eq("id", member.id)
+      .single();
+    setCurrentAvatar((data as { avatar_url: string | null } | null)?.avatar_url ?? null);
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!shortName.trim() || !fullName.trim()) {
+      setError("Short name and full name are required.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { error: updErr } = await supabase
+        .from("family_members")
+        .update({
+          short_name: shortName.trim(),
+          full_name: fullName.trim(),
+          email: email.trim() || null,
+          role,
+          member_type: memberType,
+        })
+        .eq("id", member.id);
+      if (updErr) throw updErr;
+      await onSaved();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <section className="space-y-3">
+        <h3 className="text-[13px] font-semibold uppercase tracking-wider text-muted">
+          Profile photo
+        </h3>
+        <AvatarUploader
+          key={avatarVersion}
+          memberId={member.id}
+          shortName={shortName}
+          currentUrl={currentAvatar}
+          accent={colour.accent}
+          onChange={refreshAvatar}
+        />
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="text-[13px] font-semibold uppercase tracking-wider text-muted">
+          Details
+        </h3>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <TextField
+            label="Short name"
+            required
+            value={shortName}
+            onChange={(e) => setShortName(e.target.value)}
+          />
+          <TextField
+            label="Full name"
+            required
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+          />
+        </div>
+        <TextField
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          hint={
+            member.auth_user_id
+              ? "This person already has a sign-in. Changing the email here only updates the family record, not their auth account."
+              : "Used for the invite email if they later get a sign-in."
+          }
+        />
+        <div className="grid sm:grid-cols-2 gap-3">
+          <Select
+            label="Role"
+            value={role}
+            onChange={(e) => setRole(e.target.value as MemberRole)}
+          >
+            <option value="parent">Parent</option>
+            <option value="helper">Helper</option>
+            <option value="child">Child</option>
+          </Select>
+          <Select
+            label="Member type"
+            value={memberType}
+            onChange={(e) => setMemberType(e.target.value as MemberType)}
+          >
+            <option value="parent">Parent</option>
+            <option value="helper">Helper</option>
+            <option value="child">Child</option>
+          </Select>
+        </div>
+      </section>
+
+      {error && <p role="alert" className="text-danger text-[15px]">{error}</p>}
+
+      <div className="flex justify-end gap-2 pt-3 border-t border-line">
+        <Button type="button" variant="secondary" onClick={onCancelled}>
+          Cancel
+        </Button>
+        <Button type="submit" loading={submitting}>
+          Save changes
+        </Button>
+      </div>
+    </form>
   );
 }
 
