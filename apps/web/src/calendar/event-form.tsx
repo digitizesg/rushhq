@@ -20,7 +20,7 @@ import type { FullEvent } from "@/calendar/use-calendar-data";
 import { Button } from "@/components/button";
 import { TextField } from "@/components/text-field";
 import { Select } from "@/components/select";
-import { colourFor } from "@/lib/colours";
+import { colourForRole } from "@/lib/colours";
 
 interface ReminderRow {
   id: string; // local-only — for stable keys while editing
@@ -332,7 +332,7 @@ export function EventForm({
           <div className="flex flex-wrap gap-2">
             {members.map((m) => {
               const selected = attendeeIds.includes(m.id);
-              const colour = colourFor(m.id, m.short_name);
+              const colour = colourForRole(m.id, m.short_name, m.role);
               return (
                 <button
                   key={m.id}

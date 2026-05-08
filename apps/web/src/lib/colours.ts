@@ -45,3 +45,14 @@ export function colourFor(
   if (!memberId) return { accent: "#64748b", soft: "#f1f5f9", text: "#475569" };
   return PALETTE[hash(memberId) % PALETTE.length];
 }
+
+/** Role-based colour. Parents + helpers all wear emerald so they read as
+ *  "grown-ups" at a glance; kids fall through to their pinned colour. */
+export function colourForRole(
+  memberId: string | null | undefined,
+  shortName: string | null | undefined,
+  role: "parent" | "helper" | "child" | null | undefined,
+): MemberColour {
+  if (role === "parent" || role === "helper") return EMERALD;
+  return colourFor(memberId, shortName);
+}
