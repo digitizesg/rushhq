@@ -52,6 +52,17 @@ export interface CalendarReminder {
   created_at: string;
 }
 
+export interface EventAttachment {
+  id: string;
+  event_id: string;
+  file_name: string;
+  mime_type: string | null;
+  size_bytes: number | null;
+  storage_path: string;
+  uploaded_by: string | null;
+  created_at: string;
+}
+
 export interface TelegramContact {
   member_id: string;
   pending_token: string | null;

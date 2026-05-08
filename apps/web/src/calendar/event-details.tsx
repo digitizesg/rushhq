@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { format } from "date-fns";
-import { Clock, Lock, MapPin, Repeat, StickyNote, Users } from "lucide-react";
+import { Clock, Download, Lock, MapPin, Paperclip, Repeat, StickyNote, Users } from "lucide-react";
 import { rruleToPreset, RECURRENCE_OPTIONS, formatTime24 } from "@/lib/calendar";
 import { colourFor, colourForRole } from "@/lib/colours";
 import { Avatar } from "@/components/avatar";
+import { supabase } from "@/lib/supabase";
 import type { FamilyMember } from "@/lib/types";
 import type { FullEvent } from "@/calendar/use-calendar-data";
 import type { EventOccurrence, RecurrencePreset } from "@/lib/calendar";
@@ -110,6 +112,16 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
         </Section>
       )}
 
+      {event.attachments && event.attachments.length > 0 && (
+        <Section title="Attachments" icon={<Paperclip size={14} />}>
+          <ul className="space-y-1.5">
+            {event.attachments.map((a) => (
+              <AttachmentRow key={a.id} fileName={a.file_name} storagePath={a.storage_path} />
+            ))}
+          </ul>
+        </Section>
+      )}
+
       {event.visibility === "parents" && (
         <p className="inline-flex items-center gap-1.5 text-[14px] text-muted">
           <Lock size={12} /> Parents only
@@ -120,6 +132,40 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
         You're viewing as a helper. Ask Ben or Alice if you need this changed.
       </p>
     </div>
+  );
+}
+
+function AttachmentRow({ fileName, storagePath }: { fileName: string; storagePath: string }) {
+  const [busy, setBusy] = useState(false);
+  async function open() {
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.storage
+        .from("event-attachments")
+        .createSignedUrl(storagePath, 60 * 5);
+      if (error) throw error;
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      alert((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={open}
+        disabled={busy}
+        className="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-md bg-soft border border-line text-[15px] text-ink hover:bg-white hover:border-ink/15 disabled:opacity-50"
+      >
+        <span className="flex items-center gap-2 truncate">
+          <Paperclip size={14} className="text-muted shrink-0" />
+          {fileName}
+        </span>
+        <Download size={14} className="text-muted" />
+      </button>
+    </li>
   );
 }
 

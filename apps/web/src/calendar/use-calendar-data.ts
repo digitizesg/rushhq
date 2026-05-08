@@ -3,12 +3,14 @@ import { supabase } from "@/lib/supabase";
 import type {
   CalendarEvent,
   CalendarReminder,
+  EventAttachment,
   FamilyMember,
 } from "@/lib/types";
 
 export interface FullEvent extends CalendarEvent {
   attendee_ids: string[];
   reminders: CalendarReminder[];
+  attachments: EventAttachment[];
 }
 
 interface CalendarData {
@@ -46,7 +48,8 @@ export function useCalendarData(): CalendarData {
             `
             *,
             attendees:calendar_event_attendees(member_id),
-            reminders:calendar_reminders(*)
+            reminders:calendar_reminders(*),
+            attachments:event_attachments(*)
           `,
           ),
       ]);
@@ -59,6 +62,7 @@ export function useCalendarData(): CalendarData {
         CalendarEvent & {
           attendees: Array<{ member_id: string }>;
           reminders: CalendarReminder[];
+          attachments: EventAttachment[];
         }
       >;
       setEvents(
@@ -66,6 +70,9 @@ export function useCalendarData(): CalendarData {
           ...r,
           attendee_ids: r.attendees.map((a) => a.member_id),
           reminders: r.reminders.sort((a, b) => a.lead_time_minutes - b.lead_time_minutes),
+          attachments: (r.attachments ?? []).sort((a, b) =>
+            a.file_name.localeCompare(b.file_name),
+          ),
         })),
       );
     } catch (e) {

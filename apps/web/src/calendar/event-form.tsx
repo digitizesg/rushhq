@@ -12,6 +12,7 @@ import {
   type RecurrencePreset,
 } from "@/lib/calendar";
 import type {
+  EventAttachment,
   EventVisibility,
   FamilyMember,
   ReminderChannel,
@@ -145,6 +146,17 @@ export function EventForm({
     return [{ id: uid(), lead_time_minutes: 60, channel: "both" }];
   });
 
+  // Attachments — kept in three buckets while the form is open:
+  //  • existing rows that came down with the event (rendered with × to remove)
+  //  • IDs the user has marked for removal (deleted on save)
+  //  • new File objects the user picked (uploaded on save once we know
+  //    the event id)
+  const [existingAttachments, setExistingAttachments] = useState<EventAttachment[]>(
+    event?.attachments ?? [],
+  );
+  const [removedAttachmentIds, setRemovedAttachmentIds] = useState<string[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -227,23 +239,66 @@ export function EventForm({
 
     setSubmitting(true);
     try {
+      let eventId: string;
       if (isEditing) {
         const { error: rpcErr } = await supabase.rpc("update_calendar_event", {
           p_event_id: event!.id,
           ...payload,
         });
         if (rpcErr) throw rpcErr;
-        onSaved(event!.id);
+        eventId = event!.id;
       } else {
         const { data, error: rpcErr } = await supabase.rpc("create_calendar_event", payload);
         if (rpcErr) throw rpcErr;
-        const id = (data as string | null) ?? "";
-        onSaved(id);
+        eventId = (data as string | null) ?? "";
       }
+
+      await syncAttachments(eventId);
+      onSaved(eventId);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  /** Uploads any new files + deletes any removed attachments. Best-effort:
+   *  if storage fails for a single file we surface the error but don't roll
+   *  back the event itself. */
+  async function syncAttachments(eventId: string) {
+    // Remove first so freshly-uploaded files aren't accidentally collected.
+    if (removedAttachmentIds.length > 0) {
+      const toDelete = existingAttachments.filter((a) =>
+        removedAttachmentIds.includes(a.id),
+      );
+      if (toDelete.length > 0) {
+        await supabase.storage
+          .from("event-attachments")
+          .remove(toDelete.map((a) => a.storage_path));
+        await supabase
+          .from("event_attachments")
+          .delete()
+          .in("id", removedAttachmentIds);
+      }
+    }
+    if (pendingFiles.length === 0) return;
+
+    for (const file of pendingFiles) {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${eventId}/${uid()}-${safeName}`;
+      const up = await supabase.storage
+        .from("event-attachments")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (up.error) throw up.error;
+      const ins = await supabase.from("event_attachments").insert({
+        event_id: eventId,
+        file_name: file.name,
+        mime_type: file.type || null,
+        size_bytes: file.size,
+        storage_path: path,
+        uploaded_by: currentMember?.id ?? null,
+      });
+      if (ins.error) throw ins.error;
     }
   }
 
@@ -291,6 +346,24 @@ export function EventForm({
             className="w-full rounded-md border border-line bg-white px-3 py-2.5 text-[16px] text-ink placeholder:text-muted/70 hover:border-ink/20 focus:outline-2 focus:outline-offset-0 focus:outline-primary"
           />
         </label>
+
+        <AttachmentsField
+          existing={existingAttachments}
+          removedIds={removedAttachmentIds}
+          onRemoveExisting={(id) => {
+            setRemovedAttachmentIds((prev) =>
+              prev.includes(id) ? prev : [...prev, id],
+            );
+            setExistingAttachments((prev) => prev.filter((a) => a.id !== id));
+          }}
+          pending={pendingFiles}
+          onAddPending={(files) =>
+            setPendingFiles((prev) => [...prev, ...files])
+          }
+          onRemovePending={(idx) =>
+            setPendingFiles((prev) => prev.filter((_, i) => i !== idx))
+          }
+        />
       </Section>
 
       <Section title="When">
@@ -599,6 +672,99 @@ export function EventForm({
       </div>
     </form>
   );
+}
+
+function AttachmentsField({
+  existing,
+  removedIds,
+  onRemoveExisting,
+  pending,
+  onAddPending,
+  onRemovePending,
+}: {
+  existing: EventAttachment[];
+  removedIds: string[];
+  onRemoveExisting: (id: string) => void;
+  pending: File[];
+  onAddPending: (files: File[]) => void;
+  onRemovePending: (index: number) => void;
+}) {
+  const visibleExisting = existing.filter((a) => !removedIds.includes(a.id));
+  return (
+    <div>
+      <span className="block text-[15px] font-medium text-ink mb-1.5">
+        Attachments
+      </span>
+      {(visibleExisting.length > 0 || pending.length > 0) && (
+        <ul className="space-y-1.5 mb-2.5">
+          {visibleExisting.map((a) => (
+            <li
+              key={a.id}
+              className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-soft border border-line text-[14.5px]"
+            >
+              <span className="truncate flex items-center gap-2">
+                <Trash2 size={14} className="opacity-0" aria-hidden />
+                {a.file_name}
+                <span className="text-[12.5px] text-muted">
+                  {a.size_bytes ? humanSize(a.size_bytes) : ""}
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={() => onRemoveExisting(a.id)}
+                aria-label={`Remove ${a.file_name}`}
+                className="size-7 grid place-items-center text-muted hover:text-danger rounded-md hover:bg-white"
+              >
+                <Trash2 size={14} />
+              </button>
+            </li>
+          ))}
+          {pending.map((f, i) => (
+            <li
+              key={`p-${i}`}
+              className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-primary-soft border border-primary/30 text-[14.5px]"
+            >
+              <span className="truncate flex items-center gap-2 text-primary">
+                <Trash2 size={14} className="opacity-0" aria-hidden />
+                {f.name}
+                <span className="text-[12.5px] opacity-80">
+                  {humanSize(f.size)} · ready to upload
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={() => onRemovePending(i)}
+                aria-label={`Remove ${f.name}`}
+                className="size-7 grid place-items-center text-primary/70 hover:text-danger rounded-md hover:bg-white"
+              >
+                <Trash2 size={14} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <input
+        type="file"
+        multiple
+        onChange={(e) => {
+          const list = e.target.files;
+          if (!list || list.length === 0) return;
+          onAddPending(Array.from(list));
+          e.target.value = "";
+        }}
+        className="block text-[14.5px] text-ink file:mr-3 file:rounded-md file:border-0 file:bg-white file:border file:border-line file:text-ink file:px-3 file:py-2 file:text-[14px] file:font-medium file:cursor-pointer hover:file:bg-soft"
+      />
+      <p className="text-[13px] text-muted mt-1.5">
+        PDFs, images, schedules — anything useful for the event.
+      </p>
+    </div>
+  );
+}
+
+function humanSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function addMinutes(localIso: string, minutes: number): string {
