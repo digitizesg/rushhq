@@ -39,7 +39,7 @@ export function CalendarMonth({
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-7 grid-rows-6">
+      <div className="grid grid-cols-7">
         {weeks.flat().map((day, idx) => {
           const onDay = occurrencesOnDay(occurrences, day);
           const inMonth = isSameMonth(day, anchor);
