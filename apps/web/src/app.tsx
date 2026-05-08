@@ -1,40 +1,77 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ComponentType } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { RequireAuth, RequireRole } from "@/auth/route-guards";
 import { AppShell } from "@/components/app-shell";
 import { LoadingScreen } from "@/components/loading-screen";
 
+/**
+ * Wraps React.lazy with a chunk-load-error catcher. The most common
+ * way this fires: a deploy ships, Vercel renames the JS chunks, and a
+ * tab that's still holding the old index.html tries to import() a
+ * filename that's now 404. Without this, the page goes blank and the
+ * user has to manually reload. With this, we reload for them once.
+ *
+ * A sessionStorage guard prevents an infinite reload loop if the
+ * import is genuinely broken (e.g. the developer deleted the file).
+ */
+function lazyWithReload<T extends ComponentType<unknown>>(
+  factory: () => Promise<{ default: T }>,
+) {
+  return lazy(() =>
+    factory().catch((err: unknown) => {
+      const msg = String((err as Error)?.message ?? err);
+      const looksLikeStaleChunk =
+        /Loading chunk/i.test(msg) ||
+        /Failed to fetch dynamically imported module/i.test(msg) ||
+        /error loading dynamically imported module/i.test(msg) ||
+        /Importing a module script failed/i.test(msg);
+      if (looksLikeStaleChunk) {
+        const key = "rushhq.lastChunkReload";
+        const last = Number(sessionStorage.getItem(key) ?? 0);
+        if (Date.now() - last > 10_000) {
+          sessionStorage.setItem(key, String(Date.now()));
+          window.location.reload();
+          // Return a promise that never resolves — the page is reloading,
+          // and we don't want React to render the error fallback first.
+          return new Promise<{ default: T }>(() => {});
+        }
+      }
+      throw err;
+    }),
+  );
+}
+
 // Auth pages — small, but lazy so the initial bundle is the
 // post-login app (since most users are already logged in).
-const LoginPage = lazy(() => import("@/pages/login"));
-const ForgotPasswordPage = lazy(() => import("@/pages/forgot-password"));
-const ResetPasswordPage = lazy(() => import("@/pages/reset-password"));
-const MfaEnrolPage = lazy(() => import("@/pages/mfa-enrol"));
-const NoProfilePage = lazy(() => import("@/pages/no-profile"));
+const LoginPage = lazyWithReload(() => import("@/pages/login"));
+const ForgotPasswordPage = lazyWithReload(() => import("@/pages/forgot-password"));
+const ResetPasswordPage = lazyWithReload(() => import("@/pages/reset-password"));
+const MfaEnrolPage = lazyWithReload(() => import("@/pages/mfa-enrol"));
+const NoProfilePage = lazyWithReload(() => import("@/pages/no-profile"));
 
 // Calendar lives at the index. Keeping it eager so the homepage
 // renders without a flash; the rest of the modules code-split.
 import CalendarPage from "@/pages/calendar";
 
-const TasksPage = lazy(() => import("@/pages/tasks"));
-const SettingsPage = lazy(() => import("@/pages/settings"));
-const AdminPage = lazy(() => import("@/pages/admin"));
-const BeadsIndexPage = lazy(() => import("@/pages/beads"));
-const ChartEditPage = lazy(() => import("@/pages/beads/chart-edit"));
-const CountPage = lazy(() => import("@/pages/beads/count"));
-const MyBeadsPage = lazy(() => import("@/pages/beads/me"));
-const StocksOverviewPage = lazy(() => import("@/pages/stocks"));
-const BuyPage = lazy(() => import("@/pages/stocks/buy"));
-const DividendPage = lazy(() => import("@/pages/stocks/dividend"));
-const WithdrawalPage = lazy(() => import("@/pages/stocks/withdrawal"));
-const TransactionsPage = lazy(() => import("@/pages/stocks/transactions"));
-const DepositsPage = lazy(() => import("@/pages/stocks/deposits"));
-const MyStocksPage = lazy(() => import("@/pages/stocks/me"));
-const FinanceOverviewPage = lazy(() => import("@/pages/finance"));
-const FinanceUpdatePage = lazy(() => import("@/pages/finance/update"));
-const FinanceHistoryPage = lazy(() => import("@/pages/finance/history"));
-const FinanceAccountsPage = lazy(() => import("@/pages/finance/accounts"));
-const PropertiesPage = lazy(() => import("@/pages/finance/properties"));
+const TasksPage = lazyWithReload(() => import("@/pages/tasks"));
+const SettingsPage = lazyWithReload(() => import("@/pages/settings"));
+const AdminPage = lazyWithReload(() => import("@/pages/admin"));
+const BeadsIndexPage = lazyWithReload(() => import("@/pages/beads"));
+const ChartEditPage = lazyWithReload(() => import("@/pages/beads/chart-edit"));
+const CountPage = lazyWithReload(() => import("@/pages/beads/count"));
+const MyBeadsPage = lazyWithReload(() => import("@/pages/beads/me"));
+const StocksOverviewPage = lazyWithReload(() => import("@/pages/stocks"));
+const BuyPage = lazyWithReload(() => import("@/pages/stocks/buy"));
+const DividendPage = lazyWithReload(() => import("@/pages/stocks/dividend"));
+const WithdrawalPage = lazyWithReload(() => import("@/pages/stocks/withdrawal"));
+const TransactionsPage = lazyWithReload(() => import("@/pages/stocks/transactions"));
+const DepositsPage = lazyWithReload(() => import("@/pages/stocks/deposits"));
+const MyStocksPage = lazyWithReload(() => import("@/pages/stocks/me"));
+const FinanceOverviewPage = lazyWithReload(() => import("@/pages/finance"));
+const FinanceUpdatePage = lazyWithReload(() => import("@/pages/finance/update"));
+const FinanceHistoryPage = lazyWithReload(() => import("@/pages/finance/history"));
+const FinanceAccountsPage = lazyWithReload(() => import("@/pages/finance/accounts"));
+const PropertiesPage = lazyWithReload(() => import("@/pages/finance/properties"));
 
 export function App() {
   return (
