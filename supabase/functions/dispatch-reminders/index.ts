@@ -798,42 +798,40 @@ function renderOutboxMessage(
 
   if (eventType === "bead_chart_published") {
     const link = `${APP_URL}/beads`;
+    const title = `${childName}'s new bead chart is live`;
     const tg =
-      `<b>📋 ${escapeHtml(childName)}'s new bead chart is live</b>\n` +
+      `📋 <b>${escapeHtml(title)}</b>\n` +
       `Hi ${escapeHtml(recipientShortName)}, the chart for the new month has just been published.\n\n` +
       `<a href="${link}">Open Rush HQ</a>`;
-    const subject = `${childName}'s new bead chart is live`;
-    const html = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; line-height: 1.5;">
-        <h2 style="font-weight: 600; margin: 0 0 8px;">📋 ${escapeHtml(childName)}'s new bead chart is live</h2>
-        <p style="margin: 0; color: #475569;">Open Rush HQ to take a look.</p>
-        <p style="margin: 24px 0 0; font-size: 13px;">
-          <a href="${link}" style="color: #2563eb;">View on Rush HQ</a>
-        </p>
-      </div>
-    `;
-    const text = `${childName}'s new bead chart is live. Open Rush HQ: ${link}`;
-    return { telegramText: tg, emailSubject: subject, emailHtml: html, emailText: text };
+    const html = richEmail({
+      kicker: "Rush HQ · Beads",
+      title,
+      when: null,
+      notes: `Hi ${recipientShortName}, the chart for the new month has just been published.`,
+      buttonUrl: link,
+      buttonText: "View bead chart",
+    });
+    const text = `${title}. Open Rush HQ: ${link}`;
+    return { telegramText: tg, emailSubject: title, emailHtml: html, emailText: text };
   }
 
   if (eventType === "bead_period_locked") {
     const link = `${APP_URL}/beads`;
+    const title = `${childName} counted ${formattedTotal}`;
     const tg =
-      `<b>🎉 ${escapeHtml(childName)} counted ${escapeHtml(formattedTotal)}!</b>\n` +
+      `🎉 <b>${escapeHtml(title)}!</b>\n` +
       `The period is now locked and ready for investment.\n\n` +
       `<a href="${link}">Open Rush HQ</a>`;
-    const subject = `${childName} counted ${formattedTotal}`;
-    const html = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; line-height: 1.5;">
-        <h2 style="font-weight: 600; margin: 0 0 8px;">🎉 ${escapeHtml(childName)} counted ${escapeHtml(formattedTotal)}</h2>
-        <p style="margin: 0; color: #475569;">The period is now locked and ready for investment.</p>
-        <p style="margin: 24px 0 0; font-size: 13px;">
-          <a href="${link}" style="color: #2563eb;">Open Rush HQ</a>
-        </p>
-      </div>
-    `;
-    const text = `${childName} counted ${formattedTotal}. Period locked, ready for investment. ${link}`;
-    return { telegramText: tg, emailSubject: subject, emailHtml: html, emailText: text };
+    const html = richEmail({
+      kicker: "Rush HQ · Beads",
+      title,
+      when: null,
+      notes: "The period is now locked and ready for investment.",
+      buttonUrl: link,
+      buttonText: "Open beads",
+    });
+    const text = `${title}. Period locked, ready for investment. ${link}`;
+    return { telegramText: tg, emailSubject: title, emailHtml: html, emailText: text };
   }
 
   if (eventType === "stock_purchase_recorded") {
@@ -842,30 +840,41 @@ function renderOutboxMessage(
     const link = `${APP_URL}/stocks`;
     const headline =
       txType === "withdrawal"
-        ? `📤 Withdrawal recorded: ${Math.abs(totalShares).toFixed(4)} shares`
+        ? `Withdrawal recorded: ${Math.abs(totalShares).toFixed(4)} shares`
         : txType === "dividend_reinvest"
-          ? `🌱 Dividend reinvested: +${totalShares.toFixed(4)} shares`
+          ? `Dividend reinvested: +${totalShares.toFixed(4)} shares`
           : txType === "gift_purchase"
-            ? `🎁 Gift purchase recorded: +${totalShares.toFixed(4)} shares (${formattedTotal})`
-            : `💰 Purchase recorded: +${totalShares.toFixed(4)} shares (${formattedTotal})`;
-    const tg = `<b>${escapeHtml(headline)}</b>\n<a href="${link}">Open Rush HQ</a>`;
-    const subject = headline;
-    const html = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; line-height: 1.5;">
-      <h2 style="font-weight: 600; margin: 0 0 8px;">${escapeHtml(headline)}</h2>
-      <p style="margin: 24px 0 0; font-size: 13px;"><a href="${link}" style="color: #2563eb;">Open Rush HQ</a></p>
-    </div>`;
-    return { telegramText: tg, emailSubject: subject, emailHtml: html, emailText: `${subject} ${link}` };
+            ? `Gift purchase recorded: +${totalShares.toFixed(4)} shares (${formattedTotal})`
+            : `Purchase recorded: +${totalShares.toFixed(4)} shares (${formattedTotal})`;
+    const emoji =
+      txType === "withdrawal" ? "📤"
+        : txType === "dividend_reinvest" ? "🌱"
+          : txType === "gift_purchase" ? "🎁"
+            : "💰";
+    const tg = `${emoji} <b>${escapeHtml(headline)}</b>\n<a href="${link}">Open Rush HQ</a>`;
+    const html = richEmail({
+      kicker: "Rush HQ · Stocks",
+      title: headline,
+      when: null,
+      buttonUrl: link,
+      buttonText: "Open stocks",
+    });
+    return { telegramText: tg, emailSubject: headline, emailHtml: html, emailText: `${headline} ${link}` };
   }
 
   if (eventType === "finance_monthly_reminder") {
     const link = `${APP_URL}/finance`;
     const month = String(payload.month ?? "");
-    const headline = `💰 Time for the ${month} finance update`;
-    const tg = `<b>${escapeHtml(headline)}</b>\n<a href="${link}">Open Rush HQ</a>`;
-    const html = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; line-height: 1.5;">
-      <h2 style="font-weight: 600; margin: 0 0 8px;">${escapeHtml(headline)}</h2>
-      <p style="margin: 24px 0 0; font-size: 13px;"><a href="${link}" style="color: #2563eb;">Open Rush HQ</a></p>
-    </div>`;
+    const headline = `Time for the ${month} finance update`;
+    const tg = `💰 <b>${escapeHtml(headline)}</b>\n<a href="${link}">Open Rush HQ</a>`;
+    const html = richEmail({
+      kicker: "Rush HQ · Finance",
+      title: headline,
+      when: null,
+      notes: "Run through the eight account balances and the property snapshots for the month.",
+      buttonUrl: link,
+      buttonText: "Start update",
+    });
     return {
       telegramText: tg,
       emailSubject: headline,
@@ -882,21 +891,22 @@ function renderOutboxMessage(
     const formattedChange = `${changeSgd >= 0 ? "+" : "−"}S$${Math.abs(changeSgd).toLocaleString("en-SG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const isSelf = !!payload.is_self;
     const headline = isSelf
-      ? `🌱 Your investment is now ${formattedValue}`
-      : `🌱 ${childName}'s investment is now ${formattedValue}`;
-    const sub = changeSgd === 0 ? "" : `${formattedChange} from last month.`;
-    const tg = `<b>${escapeHtml(headline)}</b>${sub ? `\n${escapeHtml(sub)}` : ""}\n\n<a href="${link}">Open Rush HQ</a>`;
-    const subject = headline;
-    const html = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; line-height: 1.5;">
-      <h2 style="font-weight: 600; margin: 0 0 8px;">${escapeHtml(headline)}</h2>
-      ${sub ? `<p style="margin: 0; color: #475569;">${escapeHtml(sub)}</p>` : ""}
-      <p style="margin: 24px 0 0; font-size: 13px;"><a href="${link}" style="color: #2563eb;">Open Rush HQ</a></p>
-    </div>`;
+      ? `Your investment is now ${formattedValue}`
+      : `${childName}'s investment is now ${formattedValue}`;
+    const sub = changeSgd === 0 ? null : `${formattedChange} from last month.`;
+    const tg = `🌱 <b>${escapeHtml(headline)}</b>${sub ? `\n${escapeHtml(sub)}` : ""}\n\n<a href="${link}">Open Rush HQ</a>`;
+    const html = richEmail({
+      kicker: "Rush HQ · Stocks",
+      title: headline,
+      when: sub,
+      buttonUrl: link,
+      buttonText: "View investment",
+    });
     return {
       telegramText: tg,
-      emailSubject: subject,
+      emailSubject: headline,
       emailHtml: html,
-      emailText: `${subject}. ${sub} ${link}`,
+      emailText: `${headline}.${sub ? ` ${sub}` : ""} ${link}`,
     };
   }
 

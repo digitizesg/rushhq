@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { ChevronLeft, GripVertical, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronLeft, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useBeadData } from "@/beads/use-bead-data";
 import {
@@ -319,14 +319,15 @@ interface ItemRowProps {
 function ItemRow({ item, colours, onPatch, onRemove, onMoveUp, onMoveDown }: ItemRowProps) {
   const colour = colours.find((c) => c.id === item.bead_colour_id) ?? colours[0];
   return (
-    <li className="px-3 sm:px-5 py-3 grid gap-2 grid-cols-[auto_1fr_auto_auto] sm:grid-cols-[auto_1fr_auto_auto_auto] sm:items-center">
-      <span className="hidden sm:flex flex-col text-muted -ml-1" aria-hidden>
+    <li className="group px-2 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 hover:bg-soft/50 transition-colors">
+      {/* Reorder column */}
+      <div className="flex flex-col text-muted shrink-0" aria-hidden>
         <button
           type="button"
           onClick={onMoveUp}
           disabled={!onMoveUp}
           aria-label="Move up"
-          className="size-5 grid place-items-center rounded hover:bg-soft disabled:opacity-30"
+          className="size-5 grid place-items-center rounded hover:bg-soft disabled:opacity-25"
         >
           <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 6l3-3 3 3" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" /></svg>
         </button>
@@ -335,45 +336,56 @@ function ItemRow({ item, colours, onPatch, onRemove, onMoveUp, onMoveDown }: Ite
           onClick={onMoveDown}
           disabled={!onMoveDown}
           aria-label="Move down"
-          className="size-5 grid place-items-center rounded hover:bg-soft disabled:opacity-30"
+          className="size-5 grid place-items-center rounded hover:bg-soft disabled:opacity-25"
         >
           <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" /></svg>
         </button>
-      </span>
-      <span className="sm:hidden text-muted" aria-hidden>
-        <GripVertical size={14} />
-      </span>
+      </div>
+
+      {/* Bead dot — leads the row visually */}
+      <BeadDot
+        hex={colour?.hex ?? "#cccccc"}
+        sparkly={colour?.id === "sparkly_pink"}
+        size={22}
+        className="shrink-0"
+      />
+
+      {/* Description: borderless until focused */}
       <input
         type="text"
         required
         value={item.description}
         onChange={(e) => onPatch(item.id, { description: e.target.value })}
         placeholder="Task description"
-        className="w-full h-9 rounded-md border border-line bg-white px-3 text-[16px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
+        className="flex-1 min-w-0 h-9 px-2 text-[16px] bg-transparent border border-transparent rounded-md hover:bg-white hover:border-line focus:bg-white focus:border-primary focus:outline-none"
       />
-      <select
-        value={item.bead_colour_id}
-        onChange={(e) => onPatch(item.id, { bead_colour_id: e.target.value })}
-        aria-label="Bead colour"
-        className="h-9 rounded-md border border-line bg-white px-2.5 text-[15px] focus:outline-2 focus:outline-offset-0 focus:outline-primary"
-      >
-        {colours.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name} · {formatSGD(Number(c.sgd_value))}
-          </option>
-        ))}
-      </select>
-      <BeadDot
-        hex={colour?.hex ?? "#cccccc"}
-        sparkly={colour?.id === "sparkly_pink"}
-        size={20}
-        className="hidden sm:inline-block"
-      />
+
+      {/* Bead colour + price selector — borderless until interacted */}
+      <div className="relative shrink-0">
+        <select
+          value={item.bead_colour_id}
+          onChange={(e) => onPatch(item.id, { bead_colour_id: e.target.value })}
+          aria-label="Bead colour"
+          className="h-9 pl-2 pr-7 text-[14px] tnum bg-transparent border border-transparent rounded-md cursor-pointer hover:bg-white hover:border-line focus:bg-white focus:border-primary focus:outline-none appearance-none"
+        >
+          {colours.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name} · {formatSGD(Number(c.sgd_value))}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          size={14}
+          className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-muted"
+          aria-hidden
+        />
+      </div>
+
       <button
         type="button"
         onClick={() => onRemove(item.id)}
         aria-label="Remove task"
-        className="size-9 grid place-items-center text-muted hover:text-danger rounded-md hover:bg-soft"
+        className="size-9 shrink-0 grid place-items-center text-muted hover:text-danger rounded-md hover:bg-white opacity-50 group-hover:opacity-100 transition-opacity"
       >
         <Trash2 size={14} />
       </button>
