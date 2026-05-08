@@ -29,6 +29,7 @@ export default function FinanceUpdatePage() {
   const [submitting, setSubmitting] = useState(false);
   const [prefillRan, setPrefillRan] = useState(false);
   const [previousMap, setPreviousMap] = useState<Record<string, number>>({});
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   // Bootstrap: call prefill RPC on mount, then load balances.
   useEffect(() => {
@@ -132,6 +133,29 @@ export default function FinanceUpdatePage() {
     }
   }
 
+  async function handleDelete() {
+    if (!targetMonth) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("account_snapshots")
+        .delete()
+        .eq("snapshot_month", targetMonth);
+      if (error) throw error;
+      navigate("/finance");
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setSubmitting(false);
+      setConfirmDeleteOpen(false);
+    }
+  }
+
+  // Does this month already have any persisted rows? Without that we
+  // shouldn't offer a delete (nothing to delete).
+  const hasPersisted = data.snapshots.some((s) => s.snapshot_month === targetMonth);
+
   return (
     <section className="mx-auto max-w-[760px] px-4 sm:px-6 py-6 sm:py-10 space-y-6">
       <Link to="/finance" className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-ink">
@@ -174,15 +198,58 @@ export default function FinanceUpdatePage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap justify-end gap-2 pt-2 border-t border-line">
-          <Button type="submit" variant="secondary" loading={submitting} disabled={submitting}>
-            Save draft
-          </Button>
-          <Button type="button" onClick={handleComplete} loading={submitting} disabled={submitting}>
-            Mark complete
-          </Button>
+        <div className="flex flex-wrap justify-between gap-2 pt-2 border-t border-line">
+          {hasPersisted ? (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setConfirmDeleteOpen(true)}
+              disabled={submitting}
+              className="text-muted hover:text-danger"
+            >
+              Delete this month
+            </Button>
+          ) : <span />}
+          <div className="flex gap-2 ml-auto">
+            <Button type="submit" variant="secondary" loading={submitting} disabled={submitting}>
+              Save draft
+            </Button>
+            <Button type="button" onClick={handleComplete} loading={submitting} disabled={submitting}>
+              Mark complete
+            </Button>
+          </div>
         </div>
       </form>
+
+      {confirmDeleteOpen && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-ink/30 backdrop-blur-[2px] px-4"
+          onClick={(e) => e.target === e.currentTarget && !submitting && setConfirmDeleteOpen(false)}
+        >
+          <div className="w-full max-w-sm bg-white rounded-lg border border-line p-5">
+            <p className="text-[18px] font-semibold text-ink mb-2">
+              Delete {formatMonthLabel(targetMonth!)}?
+            </p>
+            <p className="text-[13.5px] text-muted leading-relaxed mb-4">
+              This removes all eight account balances for this month. The chart
+              and totals re-compute without it. This can't be undone, but you
+              can re-add the month later from the History page.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => setConfirmDeleteOpen(false)}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={handleDelete} loading={submitting}>
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
