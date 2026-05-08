@@ -29,17 +29,63 @@ export default function FinanceOverviewPage() {
 
   if (data.loading) return <LoadingScreen />;
 
+  // Build a unified per-month series from the three sources. Snapshots
+  // all land on the 1st of the month so they align cleanly.
+  const monthSet = new Set<string>();
+  for (const r of data.totalsOverTime) monthSet.add(r.snapshot_month);
+  for (const r of data.propertyEquityOverTime) monthSet.add(r.snapshot_month);
+  for (const s of data.portfolioSnapshots) monthSet.add(s.snapshot_date);
+  const sortedMonths = Array.from(monthSet).sort();
+
+  const liquidByMonth = new Map<string, number>();
+  for (const r of data.totalsOverTime) liquidByMonth.set(r.snapshot_month, r.total_sgd);
+  const propertyByMonth = new Map<string, number>();
+  for (const r of data.propertyEquityOverTime) propertyByMonth.set(r.snapshot_month, r.total_equity_sgd);
+  const stocksByMonth = new Map<string, number>();
+  for (const s of data.portfolioSnapshots) {
+    stocksByMonth.set(s.snapshot_date, (stocksByMonth.get(s.snapshot_date) ?? 0) + s.value_sgd);
+  }
+
+  const netWorthSeries = sortedMonths.map((m) => {
+    const liquid = liquidByMonth.get(m) ?? 0;
+    const property = propertyByMonth.get(m) ?? 0;
+    const stocks = stocksByMonth.get(m) ?? 0;
+    return { month: m, liquid, property, stocks, total: liquid + property + stocks };
+  });
+
+  const lastSeries = netWorthSeries[netWorthSeries.length - 1];
+  const prevSeries = netWorthSeries[netWorthSeries.length - 2];
+  const yearAgoSeries = lastSeries
+    ? netWorthSeries.find((r) => r.month === shiftMonth(lastSeries.month, -12))
+    : undefined;
+
+  // Live "now" stocks value beats the latest snapshot for the headline
+  // since VOO + USDSGD update every 15 min.
+  const voo = data.priceCache.find((p) => p.symbol === "VOO")?.price ?? 0;
+  const fx = data.priceCache.find((p) => p.symbol === "USDSGD")?.price ?? 0;
+  const totalShares = data.childHoldings.reduce((s, h) => s + h.shares_held, 0);
+  const stocksLiveSgd = totalShares * voo * fx;
+
+  const liquidNow = lastSeries?.liquid ?? 0;
+  const propertyEquityNowHeadline = lastSeries?.property ?? 0;
+  const stocksNow = stocksLiveSgd > 0 ? stocksLiveSgd : (lastSeries?.stocks ?? 0);
+  const netWorthNow = liquidNow + propertyEquityNowHeadline + stocksNow;
+
+  const liquidPrev = prevSeries?.liquid ?? 0;
+  const propertyEquityPrevHeadline = prevSeries?.property ?? 0;
+  const stocksPrev = prevSeries?.stocks ?? 0;
+  const netWorthPrev = prevSeries ? liquidPrev + propertyEquityPrevHeadline + stocksPrev : 0;
+  const monthChange = prevSeries ? netWorthNow - netWorthPrev : 0;
+  const monthPct = prevSeries && netWorthPrev > 0 ? (monthChange / netWorthPrev) * 100 : 0;
+  const yearChange = yearAgoSeries
+    ? netWorthNow - (yearAgoSeries.liquid + yearAgoSeries.property + yearAgoSeries.stocks)
+    : 0;
+  const liquidDelta = prevSeries ? liquidNow - liquidPrev : 0;
+  const propertyDelta = prevSeries ? propertyEquityNowHeadline - propertyEquityPrevHeadline : 0;
+  const stocksDelta = prevSeries ? stocksNow - stocksPrev : 0;
+
   const totals = data.totalsOverTime;
   const latest = totals[totals.length - 1];
-  const prevMonthRow = totals[totals.length - 2];
-  const yearAgoRow = totals.find((t) => t.snapshot_month === shiftMonth(latest?.snapshot_month ?? thisMonth, -12));
-
-  const total = latest?.total_sgd ?? 0;
-  const monthChange = latest && prevMonthRow ? total - prevMonthRow.total_sgd : 0;
-  const monthPct = latest && prevMonthRow && prevMonthRow.total_sgd > 0
-    ? ((total - prevMonthRow.total_sgd) / prevMonthRow.total_sgd) * 100
-    : 0;
-  const yearChange = latest && yearAgoRow ? total - yearAgoRow.total_sgd : 0;
 
   // Single short label regardless of whether the month exists yet —
   // the form itself handles the create-vs-edit distinction.
@@ -50,7 +96,11 @@ export default function FinanceOverviewPage() {
   // each account independently — if an account was added more recently,
   // its delta is null and we render "new this month" instead.
   const latestMonth = latest?.snapshot_month ?? thisMonth;
-  const previousMonth = prevMonthRow?.snapshot_month ?? null;
+  // The "previous" we compare to here is the second-latest accounts row,
+  // not the second-latest net-worth row, because we want per-account
+  // deltas vs the prior bank-balance snapshot specifically.
+  const accountMonths = totals.map((t) => t.snapshot_month);
+  const previousMonth = accountMonths[accountMonths.length - 2] ?? null;
   const latestSnaps = data.snapshots.filter((s) => s.snapshot_month === latestMonth);
   const previousSnaps = previousMonth
     ? data.snapshots.filter((s) => s.snapshot_month === previousMonth)
@@ -72,9 +122,6 @@ export default function FinanceOverviewPage() {
     })
     .sort((a, b) => b.balance - a.balance);
   const breakdownMax = Math.max(1, ...breakdown.map((b) => b.balance));
-
-  // Chart series
-  const series = totals.slice(-24);
 
   // Property snapshot for the same month as the latest accounts row.
   const latestPropertySnaps = data.propertySnapshots.filter(
@@ -101,7 +148,7 @@ export default function FinanceOverviewPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Finance</p>
-          <h1 className="text-[30px] font-medium text-ink">Total assets</h1>
+          <h1 className="text-[30px] font-medium text-ink">Net worth</h1>
         </div>
         <div className="flex items-center gap-2">
           <Link to="/finance/history" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[15.5px] hover:bg-soft">
@@ -128,9 +175,9 @@ export default function FinanceOverviewPage() {
         </div>
       )}
 
-      {/* Hero */}
+      {/* Net worth hero */}
       <div className="bg-white border border-line rounded-lg p-6 sm:p-8">
-        {totals.length === 0 ? (
+        {netWorthSeries.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-[17px] text-ink mb-1">No data yet.</p>
             <p className="text-[15.5px] text-muted">
@@ -138,48 +185,74 @@ export default function FinanceOverviewPage() {
             </p>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-3 gap-6 items-center">
-            <div className="sm:col-span-2">
-              <p className="text-[14.5px] uppercase tracking-wider text-muted">
-                {formatMonthLabel(latest!.snapshot_month)}
-              </p>
-              <p className="text-[clamp(34px,5vw,52px)] font-semibold text-ink tnum leading-tight mt-1">
-                {formatSGD(total)}
-              </p>
-            </div>
-            <dl className="grid grid-cols-2 sm:grid-cols-1 gap-4">
-              <div>
-                <dt className="text-[13.5px] uppercase tracking-wider text-muted mb-1">vs last month</dt>
-                <dd className={[
-                  "text-[18px] font-semibold tnum inline-flex items-center gap-1",
-                  monthChange >= 0 ? "text-emerald" : "text-danger",
-                ].join(" ")}>
-                  {monthChange >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                  {monthChange >= 0 ? "+" : "−"}{formatSGD(Math.abs(monthChange))}
-                  <span className="text-[14.5px] text-muted ml-1 font-normal">
-                    ({monthPct >= 0 ? "+" : ""}{monthPct.toFixed(1)}%)
-                  </span>
-                </dd>
+          <div className="space-y-6">
+            <div className="grid sm:grid-cols-3 gap-6 items-center">
+              <div className="sm:col-span-2">
+                <p className="text-[14.5px] uppercase tracking-wider text-muted">
+                  Net worth · {formatMonthLabel(lastSeries!.month)}
+                </p>
+                <p className="text-[clamp(34px,5vw,52px)] font-semibold text-ink tnum leading-tight mt-1">
+                  {formatSGD(netWorthNow)}
+                </p>
               </div>
-              {yearAgoRow && (
-                <div>
-                  <dt className="text-[13.5px] uppercase tracking-wider text-muted mb-1">vs 12 months ago</dt>
-                  <dd className={[
-                    "text-[18px] font-semibold tnum inline-flex items-center gap-1",
-                    yearChange >= 0 ? "text-emerald" : "text-danger",
-                  ].join(" ")}>
-                    {yearChange >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                    {yearChange >= 0 ? "+" : "−"}{formatSGD(Math.abs(yearChange))}
-                  </dd>
-                </div>
-              )}
-            </dl>
+              <dl className="grid grid-cols-2 sm:grid-cols-1 gap-4">
+                {prevSeries && (
+                  <div>
+                    <dt className="text-[13.5px] uppercase tracking-wider text-muted mb-1">vs last month</dt>
+                    <dd className={[
+                      "text-[18px] font-semibold tnum inline-flex items-center gap-1",
+                      monthChange >= 0 ? "text-emerald" : "text-danger",
+                    ].join(" ")}>
+                      {monthChange >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                      {monthChange >= 0 ? "+" : "−"}{formatSGD(Math.abs(monthChange))}
+                      <span className="text-[14.5px] text-muted ml-1 font-normal">
+                        ({monthPct >= 0 ? "+" : ""}{monthPct.toFixed(1)}%)
+                      </span>
+                    </dd>
+                  </div>
+                )}
+                {yearAgoSeries && (
+                  <div>
+                    <dt className="text-[13.5px] uppercase tracking-wider text-muted mb-1">vs 12 months ago</dt>
+                    <dd className={[
+                      "text-[18px] font-semibold tnum inline-flex items-center gap-1",
+                      yearChange >= 0 ? "text-emerald" : "text-danger",
+                    ].join(" ")}>
+                      {yearChange >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                      {yearChange >= 0 ? "+" : "−"}{formatSGD(Math.abs(yearChange))}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-3 pt-4 border-t border-line">
+              <LayerStat
+                label="Liquid (banks)"
+                amount={liquidNow}
+                delta={prevSeries ? liquidDelta : null}
+                accent="#0891b2"
+              />
+              <LayerStat
+                label="Property equity"
+                amount={propertyEquityNowHeadline}
+                delta={prevSeries ? propertyDelta : null}
+                accent="#7c3aed"
+              />
+              <LayerStat
+                label="Investments (live)"
+                amount={stocksNow}
+                delta={prevSeries ? stocksDelta : null}
+                accent="#059669"
+              />
+            </div>
           </div>
         )}
       </div>
 
-      {/* Chart */}
-      {series.length > 0 && <Chart points={series} />}
+      {/* Stacked net-worth chart */}
+      {netWorthSeries.length > 0 && (
+        <NetWorthChart points={netWorthSeries.slice(-24)} />
+      )}
 
       {/* Refi banner */}
       {refiAlerts.length > 0 && (
@@ -336,24 +409,64 @@ function DeltaBadge({ delta }: { delta: number | null }) {
   );
 }
 
-function Chart({ points }: { points: Array<{ snapshot_month: string; total_sgd: number }> }) {
-  const values = points.map((p) => p.total_sgd);
-  const dataMax = Math.max(...values, 0);
-  const dataMin = Math.min(...values, 0);
+function LayerStat({
+  label,
+  amount,
+  delta,
+  accent,
+}: {
+  label: string;
+  amount: number;
+  delta: number | null;
+  accent: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <p className="text-[13.5px] text-muted inline-flex items-center gap-1.5">
+        <span className="size-2.5 rounded-sm" style={{ backgroundColor: accent }} />
+        {label}
+      </p>
+      <p className="text-[20px] font-semibold text-ink tnum">{formatSGD(amount)}</p>
+      {delta != null && delta !== 0 && (
+        <p
+          className={[
+            "text-[13px] tnum",
+            delta > 0 ? "text-emerald" : "text-danger",
+          ].join(" ")}
+        >
+          {delta > 0 ? "↑ +" : "↓ −"}{formatSGD(Math.abs(delta))}{" "}
+          <span className="text-muted">vs last month</span>
+        </p>
+      )}
+    </div>
+  );
+}
 
-  // Pad y-axis 5% above the max + 5% below the min (or to zero if all
-  // values are positive), so the line never sits flush with the edges.
-  const pad = (dataMax - dataMin) * 0.08;
-  const yMax = dataMax + Math.max(pad, dataMax * 0.05, 1);
-  const yMin = Math.max(0, dataMin - pad);
-  const ySpan = Math.max(yMax - yMin, 1);
+interface NetWorthPoint {
+  month: string;
+  liquid: number;
+  property: number;
+  stocks: number;
+  total: number;
+}
 
-  // Pick four nice gridline values: yMin, ~33%, ~66%, yMax.
-  const gridValues = [yMax, yMax - ySpan / 3, yMin + ySpan / 3, yMin];
+const LAYER_COLORS = {
+  liquid: "#0891b2",  // cyan
+  property: "#7c3aed", // violet
+  stocks: "#059669",   // emerald
+};
 
-  // SVG geometry — left gutter for y labels, bottom gutter for months.
+function NetWorthChart({ points }: { points: NetWorthPoint[] }) {
+  const totals = points.map((p) => p.total);
+  const dataMax = Math.max(...totals, 0);
+  const yMax = Math.max(dataMax * 1.08, 1);
+  const yMin = 0;
+  const ySpan = yMax - yMin;
+
+  const gridValues = [yMax, yMax * 0.66, yMax * 0.33, 0];
+
   const W = 600;
-  const H = 220;
+  const H = 240;
   const left = 60;
   const right = 16;
   const top = 16;
@@ -362,19 +475,47 @@ function Chart({ points }: { points: Array<{ snapshot_month: string; total_sgd: 
   const plotH = H - top - bottom;
 
   const xFor = (i: number) =>
-    points.length > 1
-      ? left + (i / (points.length - 1)) * plotW
-      : left + plotW / 2;
+    points.length > 1 ? left + (i / (points.length - 1)) * plotW : left + plotW / 2;
   const yFor = (v: number) => top + plotH - ((v - yMin) / ySpan) * plotH;
 
-  const linePath = points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${xFor(i).toFixed(2)} ${yFor(p.total_sgd).toFixed(2)}`)
-    .join(" ");
-  const areaPath = points.length > 1
-    ? `${linePath} L ${xFor(points.length - 1).toFixed(2)} ${(top + plotH).toFixed(2)} L ${xFor(0).toFixed(2)} ${(top + plotH).toFixed(2)} Z`
-    : "";
+  // Build cumulative top-edges per layer in stable order.
+  const layers: Array<{ key: keyof NetWorthPoint; color: string }> = [
+    { key: "liquid", color: LAYER_COLORS.liquid },
+    { key: "property", color: LAYER_COLORS.property },
+    { key: "stocks", color: LAYER_COLORS.stocks },
+  ];
 
-  // X-axis labels — first, middle, last (or just first when there's one).
+  function cumulativeAt(i: number, layerIdx: number): number {
+    let sum = 0;
+    for (let j = 0; j <= layerIdx; j++) sum += points[i][layers[j].key] as number;
+    return sum;
+  }
+
+  function areaPathFor(layerIdx: number): string {
+    if (points.length < 2) return "";
+    const tops = points.map((_, i) => ({
+      x: xFor(i),
+      y: yFor(cumulativeAt(i, layerIdx)),
+    }));
+    const bottoms = points.map((_, i) => ({
+      x: xFor(i),
+      y: yFor(layerIdx === 0 ? 0 : cumulativeAt(i, layerIdx - 1)),
+    }));
+    const topEdge = tops
+      .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
+      .join(" ");
+    const bottomEdge = bottoms
+      .slice()
+      .reverse()
+      .map((p) => `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
+      .join(" ");
+    return `${topEdge} ${bottomEdge} Z`;
+  }
+
+  const totalLinePath = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${xFor(i).toFixed(2)} ${yFor(p.total).toFixed(2)}`)
+    .join(" ");
+
   const xLabelIndices: number[] =
     points.length === 1 ? [0]
       : points.length <= 3 ? points.map((_, i) => i)
@@ -382,14 +523,25 @@ function Chart({ points }: { points: Array<{ snapshot_month: string; total_sgd: 
 
   const formatTick = (n: number) => {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}m`;
-    if (n >= 1_000) return `${Math.round(n / 1_000)}k`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}k`;
     return Math.round(n).toString();
   };
 
   return (
-    <div className="bg-white border border-line rounded-lg p-5">
-      <p className="text-[14.5px] uppercase tracking-wider text-muted mb-3">Total assets over time</p>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto block text-emerald" style={{ aspectRatio: `${W} / ${H}` }}>
+    <div className="bg-white border border-line rounded-lg p-5 sm:p-6 space-y-3">
+      <div className="flex items-baseline justify-between gap-3 flex-wrap">
+        <p className="text-[14.5px] uppercase tracking-wider text-muted">Net worth over time</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
+          <Legend color={LAYER_COLORS.liquid} label="Liquid" />
+          <Legend color={LAYER_COLORS.property} label="Property" />
+          <Legend color={LAYER_COLORS.stocks} label="Stocks" />
+        </div>
+      </div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-auto block"
+        style={{ aspectRatio: `${W} / ${H}` }}
+      >
         {/* Grid lines + y labels */}
         {gridValues.map((v, i) => {
           const y = yFor(v);
@@ -418,36 +570,50 @@ function Chart({ points }: { points: Array<{ snapshot_month: string; total_sgd: 
           );
         })}
 
-        {/* Area fill */}
-        {areaPath && (
-          <path d={areaPath} fill="currentColor" opacity="0.12" />
-        )}
+        {/* Stacked areas */}
+        {points.length > 1 &&
+          layers.map((layer, idx) => (
+            <path
+              key={layer.key as string}
+              d={areaPathFor(idx)}
+              fill={layer.color}
+              opacity="0.7"
+            />
+          ))}
 
-        {/* Line */}
+        {/* Total line on top */}
         {points.length > 1 && (
           <path
-            d={linePath}
+            d={totalLinePath}
             fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
+            stroke="#0f172a"
+            strokeWidth={1.5}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         )}
 
-        {/* Data point dots */}
-        {points.map((p, i) => (
-          <g key={p.snapshot_month}>
-            <circle
-              cx={xFor(i)}
-              cy={yFor(p.total_sgd)}
-              r={4}
-              fill="white"
-              stroke="currentColor"
-              strokeWidth={2}
-            />
-          </g>
-        ))}
+        {/* If only 1 point: tall stacked column at the centre */}
+        {points.length === 1 && (
+          <>
+            {layers.map((layer, idx) => {
+              const x = xFor(0);
+              const yTop = yFor(cumulativeAt(0, idx));
+              const yBot = yFor(idx === 0 ? 0 : cumulativeAt(0, idx - 1));
+              return (
+                <rect
+                  key={layer.key as string}
+                  x={x - 12}
+                  y={yTop}
+                  width={24}
+                  height={Math.max(0, yBot - yTop)}
+                  fill={layer.color}
+                  opacity="0.7"
+                />
+              );
+            })}
+          </>
+        )}
 
         {/* X-axis labels */}
         {xLabelIndices.map((i) => {
@@ -455,23 +621,32 @@ function Chart({ points }: { points: Array<{ snapshot_month: string; total_sgd: 
           if (!p) return null;
           return (
             <text
-              key={p.snapshot_month}
+              key={p.month}
               x={xFor(i)}
               y={H - 10}
               textAnchor="middle"
               fontSize="11"
               fill="#94a3b8"
             >
-              {formatMonthLabel(p.snapshot_month)}
+              {formatMonthLabel(p.month)}
             </text>
           );
         })}
       </svg>
       {points.length === 1 && (
-        <p className="text-[14px] text-muted text-center mt-1">
+        <p className="text-[14px] text-muted text-center">
           One month so far. The chart fills out as you save subsequent months.
         </p>
       )}
     </div>
+  );
+}
+
+function Legend({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="size-3 rounded-sm" style={{ backgroundColor: color, opacity: 0.7 }} />
+      <span className="text-ink">{label}</span>
+    </span>
   );
 }

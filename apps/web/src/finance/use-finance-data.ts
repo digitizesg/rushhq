@@ -6,6 +6,11 @@ import type {
   TotalAssetsRow,
 } from "@/lib/finance";
 import type { Property, PropertySnapshot } from "@/lib/properties";
+import type {
+  ChildHolding,
+  PortfolioSnapshot,
+  PriceCache,
+} from "@/lib/stocks";
 
 export interface PropertyEquityRow {
   snapshot_month: string;
@@ -23,6 +28,11 @@ export interface FinanceData {
   properties: Property[];
   propertySnapshots: PropertySnapshot[];
   propertyEquityOverTime: PropertyEquityRow[];
+  // Pulled in for the net-worth dashboard so we don't have to mount the
+  // full stocks hook on the finance page just to sum a few values.
+  portfolioSnapshots: PortfolioSnapshot[];
+  childHoldings: ChildHolding[];
+  priceCache: PriceCache[];
   reload: () => Promise<void>;
 }
 
@@ -40,12 +50,25 @@ export function useFinanceData(): FinanceData {
     properties: [],
     propertySnapshots: [],
     propertyEquityOverTime: [],
+    portfolioSnapshots: [],
+    childHoldings: [],
+    priceCache: [],
   });
 
   const reload = useCallback(async () => {
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
-      const [accRes, snapRes, totalRes, propRes, propSnapRes, propEquityRes] = await Promise.all([
+      const [
+        accRes,
+        snapRes,
+        totalRes,
+        propRes,
+        propSnapRes,
+        propEquityRes,
+        portSnapRes,
+        holdingsRes,
+        priceRes,
+      ] = await Promise.all([
         supabase.from("accounts").select("*").order("display_order"),
         supabase
           .from("account_snapshots")
@@ -58,8 +81,24 @@ export function useFinanceData(): FinanceData {
           .select("*")
           .order("snapshot_month", { ascending: false }),
         supabase.from("total_property_equity_over_time").select("*"),
+        supabase
+          .from("portfolio_snapshots")
+          .select("*")
+          .order("snapshot_date", { ascending: true }),
+        supabase.from("child_holdings").select("*"),
+        supabase.from("price_cache").select("*"),
       ]);
-      for (const r of [accRes, snapRes, totalRes, propRes, propSnapRes, propEquityRes]) {
+      for (const r of [
+        accRes,
+        snapRes,
+        totalRes,
+        propRes,
+        propSnapRes,
+        propEquityRes,
+        portSnapRes,
+        holdingsRes,
+        priceRes,
+      ]) {
         if (r.error) throw r.error;
       }
       setState({
@@ -91,6 +130,26 @@ export function useFinanceData(): FinanceData {
           total_equity_sgd: num(r.total_equity_sgd),
           total_outstanding_sgd: num(r.total_outstanding_sgd),
           total_value_sgd: num(r.total_value_sgd),
+        })),
+        portfolioSnapshots: ((portSnapRes.data ?? []) as PortfolioSnapshot[]).map((s) => ({
+          ...s,
+          shares_held: num(s.shares_held),
+          cost_basis_sgd: num(s.cost_basis_sgd),
+          cost_basis_usd: num(s.cost_basis_usd),
+          price_usd_at_snapshot: num(s.price_usd_at_snapshot),
+          fx_at_snapshot: num(s.fx_at_snapshot),
+          value_sgd: num(s.value_sgd),
+          value_usd: num(s.value_usd),
+        })),
+        childHoldings: ((holdingsRes.data ?? []) as ChildHolding[]).map((h) => ({
+          ...h,
+          shares_held: num(h.shares_held),
+          cost_basis_sgd: num(h.cost_basis_sgd),
+          cost_basis_usd: num(h.cost_basis_usd),
+        })),
+        priceCache: ((priceRes.data ?? []) as PriceCache[]).map((p) => ({
+          ...p,
+          price: num(p.price),
         })),
       });
     } catch (e) {
