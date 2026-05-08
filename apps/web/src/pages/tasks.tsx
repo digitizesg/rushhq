@@ -15,6 +15,7 @@ import {
   type TaskRow,
 } from "@/lib/tasks";
 import { colourFor } from "@/lib/colours";
+import { Avatar } from "@/components/avatar";
 
 interface FormState {
   open: boolean;
@@ -154,6 +155,7 @@ export default function TasksPage() {
               key={g.member.id}
               memberId={g.member.id}
               memberName={g.member.short_name}
+              avatarUrl={g.member.avatar_url ?? null}
               showHeader={canEdit}
               tasks={g.tasks}
               onComplete={completeTask}
@@ -220,6 +222,7 @@ export default function TasksPage() {
 interface KidColumnProps {
   memberId: string;
   memberName: string;
+  avatarUrl: string | null;
   showHeader: boolean;
   tasks: TaskRow[];
   onComplete: (t: TaskRow) => void;
@@ -233,6 +236,7 @@ interface KidColumnProps {
 function KidColumn({
   memberId,
   memberName,
+  avatarUrl,
   showHeader,
   tasks,
   onComplete,
@@ -250,8 +254,15 @@ function KidColumn({
           className="flex items-center justify-between px-5 py-3 border-b border-line"
           style={{ backgroundColor: colour.soft }}
         >
-          <div className="flex items-center gap-2.5">
-            <span className="size-2 rounded-full" style={{ backgroundColor: colour.accent }} />
+          <div className="flex items-center gap-3">
+            <Avatar
+              size={32}
+              name={memberName}
+              url={avatarUrl}
+              accent={colour.accent}
+              text="#ffffff"
+              alt=""
+            />
             <h2 className="text-[18px] font-semibold" style={{ color: colour.text }}>
               {memberName}
             </h2>

@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { Clock, Lock, MapPin, Repeat, StickyNote, Users } from "lucide-react";
 import { rruleToPreset, RECURRENCE_OPTIONS, formatTime24 } from "@/lib/calendar";
 import { colourFor, colourForRole } from "@/lib/colours";
+import { Avatar } from "@/components/avatar";
 import type { FamilyMember } from "@/lib/types";
 import type { FullEvent } from "@/calendar/use-calendar-data";
 import type { EventOccurrence, RecurrencePreset } from "@/lib/calendar";
@@ -79,20 +80,22 @@ export function EventDetails({ event, occurrence, members }: EventDetailsProps) 
               return (
                 <span
                   key={m.id}
-                  className="inline-flex items-center gap-2 px-3 h-9 rounded-full text-[15px] font-medium border"
+                  className="inline-flex items-center gap-2 pl-1 pr-3.5 h-10 rounded-full text-[15px] font-medium border"
                   style={{
                     background: c.soft,
                     color: c.text,
                     borderColor: c.accent,
                   }}
                 >
-                  <span
-                    className="inline-block size-2 rounded-full"
-                    style={{ background: c.accent }}
-                    aria-hidden
+                  <Avatar
+                    size={28}
+                    name={m.short_name}
+                    url={m.avatar_url}
+                    accent={c.accent}
+                    text="#ffffff"
+                    alt=""
                   />
                   {m.short_name}
-                  <span className="text-[13px] capitalize opacity-70">{m.role}</span>
                 </span>
               );
             })}

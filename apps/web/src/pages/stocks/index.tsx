@@ -23,6 +23,7 @@ import {
 import { LoadingScreen } from "@/components/loading-screen";
 import { supabase } from "@/lib/supabase";
 import { colourFor } from "@/lib/colours";
+import { Avatar } from "@/components/avatar";
 
 export default function StocksOverviewPage() {
   const data = useStocksData();
@@ -171,6 +172,7 @@ export default function StocksOverviewPage() {
               key={c.id}
               memberId={c.id}
               name={c.short_name}
+              avatarUrl={c.avatar_url ?? null}
               holding={h}
               snaps={childSnaps}
               voo={voo}
@@ -264,6 +266,7 @@ function GainStat({ label, amount, pct }: { label: string; amount: number; pct?:
 interface ChildCardProps {
   memberId: string;
   name: string;
+  avatarUrl: string | null;
   holding: ChildHolding | undefined;
   snaps: Array<{ snapshot_date: string; value_sgd: number }>;
   voo: number;
@@ -317,7 +320,7 @@ function KidGainHeadline({
   );
 }
 
-function ChildCard({ memberId, name, holding, snaps, voo, fx, pendingCount }: ChildCardProps) {
+function ChildCard({ memberId, name, avatarUrl, holding, snaps, voo, fx, pendingCount }: ChildCardProps) {
   const colour = colourFor(memberId, name);
   const shares = holding?.shares_held ?? 0;
   const costSgd = holding?.cost_basis_sgd ?? 0;
@@ -336,8 +339,15 @@ function ChildCard({ memberId, name, holding, snaps, voo, fx, pendingCount }: Ch
         className="flex items-center justify-between px-5 py-3 border-b border-line"
         style={{ backgroundColor: colour.soft }}
       >
-        <div className="flex items-center gap-2.5">
-          <span className="size-2 rounded-full" style={{ backgroundColor: colour.accent }} />
+        <div className="flex items-center gap-3">
+          <Avatar
+            size={36}
+            name={name}
+            url={avatarUrl}
+            accent={colour.accent}
+            text="#ffffff"
+            alt=""
+          />
           <h2 className="text-[18px] font-semibold" style={{ color: colour.text }}>
             {name}
           </h2>

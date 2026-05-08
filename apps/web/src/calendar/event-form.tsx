@@ -21,6 +21,7 @@ import { Button } from "@/components/button";
 import { TextField } from "@/components/text-field";
 import { Select } from "@/components/select";
 import { colourForRole } from "@/lib/colours";
+import { Avatar } from "@/components/avatar";
 
 interface ReminderRow {
   id: string; // local-only — for stable keys while editing
@@ -340,7 +341,7 @@ export function EventForm({
                   onClick={() => toggleAttendee(m.id)}
                   aria-pressed={selected}
                   className={[
-                    "inline-flex items-center gap-2 h-9 px-3 rounded-full border text-[15.5px] transition-colors",
+                    "inline-flex items-center gap-2 h-10 pl-1 pr-3.5 rounded-full border text-[15.5px] transition-colors",
                     "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary",
                   ].join(" ")}
                   style={
@@ -353,16 +354,17 @@ export function EventForm({
                       : undefined
                   }
                 >
-                  <span
-                    className="size-2 rounded-full"
-                    style={{
-                      backgroundColor: selected ? colour.accent : "#cbd5e1",
-                    }}
+                  <Avatar
+                    size={28}
+                    name={m.short_name}
+                    url={m.avatar_url}
+                    accent={selected ? colour.accent : "#cbd5e1"}
+                    text="#ffffff"
+                    alt=""
                   />
                   <span className={selected ? "font-medium" : "text-ink"}>
                     {m.short_name}
                   </span>
-                  <span className="text-[13.5px] capitalize opacity-70">{m.role}</span>
                 </button>
               );
             })}
