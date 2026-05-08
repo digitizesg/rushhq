@@ -50,6 +50,16 @@ const LEAD_PRESETS = [
   { value: 60 * 24 * 2, label: "2 days before" },
 ];
 
+const DURATION_PRESETS: ReadonlyArray<{ value: number; label: string }> = [
+  { value: 15, label: "15m" },
+  { value: 30, label: "30m" },
+  { value: 60, label: "1h" },
+  { value: 90, label: "1½h" },
+  { value: 120, label: "2h" },
+  { value: 180, label: "3h" },
+  { value: 240, label: "4h" },
+];
+
 const CHANNEL_OPTIONS: ReadonlyArray<{ value: ReminderChannel; label: string }> = [
   { value: "both", label: "Telegram and email" },
   { value: "telegram", label: "Telegram only" },
@@ -99,6 +109,17 @@ export function EventForm({
   const [startsAt, setStartsAt] = useState(toLocalInputValue(initialStart));
   const [endsAt, setEndsAt] = useState(toLocalInputValue(initialEnd));
   const [allDayDate, setAllDayDate] = useState(toLocalInputValue(initialStart).slice(0, 10));
+
+  // Duration model: most events are a known length (1h, 2h…). Default
+  // to 60 min for new events, or compute from existing start/end.
+  const initialDurationMin = useMemo(() => {
+    const ms = initialEnd.getTime() - initialStart.getTime();
+    return Math.max(15, Math.round(ms / 60000));
+  }, [initialStart, initialEnd]);
+  const [durationMin, setDurationMin] = useState<number>(initialDurationMin);
+  const [customDuration, setCustomDuration] = useState<boolean>(
+    !DURATION_PRESETS.some((p) => p.value === initialDurationMin),
+  );
 
   const initialPreset = rruleToPreset(event?.rrule ?? null);
   const [preset, setPreset] = useState<RecurrencePreset>(initialPreset.preset);
@@ -293,19 +314,66 @@ export function EventForm({
             onChange={(e) => setAllDayDate(e.target.value)}
           />
         ) : (
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="space-y-3">
             <TextField
               label="Starts"
               type="datetime-local"
+              containerClassName="max-w-md"
               value={startsAt}
-              onChange={(e) => setStartsAt(e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value;
+                setStartsAt(next);
+                if (!customDuration) setEndsAt(addMinutes(next, durationMin));
+              }}
             />
-            <TextField
-              label="Ends"
-              type="datetime-local"
-              value={endsAt}
-              onChange={(e) => setEndsAt(e.target.value)}
-            />
+            <div>
+              <span className="block text-[15px] font-medium text-ink mb-2">Duration</span>
+              <div className="flex flex-wrap gap-1.5">
+                {DURATION_PRESETS.map((d) => {
+                  const selected = !customDuration && d.value === durationMin;
+                  return (
+                    <button
+                      key={d.value}
+                      type="button"
+                      onClick={() => {
+                        setDurationMin(d.value);
+                        setCustomDuration(false);
+                        setEndsAt(addMinutes(startsAt, d.value));
+                      }}
+                      className={[
+                        "h-9 px-3 rounded-full text-[14px] font-medium border transition-colors",
+                        selected
+                          ? "bg-primary text-white border-primary"
+                          : "bg-white text-ink border-line hover:bg-soft",
+                      ].join(" ")}
+                    >
+                      {d.label}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setCustomDuration(true)}
+                  className={[
+                    "h-9 px-3 rounded-full text-[14px] font-medium border transition-colors",
+                    customDuration
+                      ? "bg-primary text-white border-primary"
+                      : "bg-white text-ink border-line hover:bg-soft",
+                  ].join(" ")}
+                >
+                  Custom
+                </button>
+              </div>
+            </div>
+            {customDuration && (
+              <TextField
+                label="Ends"
+                type="datetime-local"
+                containerClassName="max-w-md"
+                value={endsAt}
+                onChange={(e) => setEndsAt(e.target.value)}
+              />
+            )}
           </div>
         )}
 
@@ -520,6 +588,12 @@ export function EventForm({
       </div>
     </form>
   );
+}
+
+function addMinutes(localIso: string, minutes: number): string {
+  const start = fromLocalInputValue(localIso);
+  const end = new Date(start.getTime() + minutes * 60_000);
+  return toLocalInputValue(end);
 }
 
 function Section({
