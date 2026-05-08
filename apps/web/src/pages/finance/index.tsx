@@ -42,12 +42,30 @@ export default function FinanceOverviewPage() {
         ? `Edit ${formatMonthLabel(thisMonth)}`
         : `Continue ${formatMonthLabel(thisMonth)} update`;
 
-  // Latest-month breakdown
-  const latestSnaps = data.snapshots.filter((s) => s.snapshot_month === (latest?.snapshot_month ?? thisMonth));
+  // Latest-month breakdown with per-account delta vs the previous
+  // snapshot month. We compare to the immediately-previous month for
+  // each account independently — if an account was added more recently,
+  // its delta is null and we render "new this month" instead.
+  const latestMonth = latest?.snapshot_month ?? thisMonth;
+  const previousMonth = prevMonthRow?.snapshot_month ?? null;
+  const latestSnaps = data.snapshots.filter((s) => s.snapshot_month === latestMonth);
+  const previousSnaps = previousMonth
+    ? data.snapshots.filter((s) => s.snapshot_month === previousMonth)
+    : [];
+
   const breakdown = latestSnaps
     .map((s) => {
       const acc = data.accounts.find((a) => a.id === s.account_id);
-      return { name: acc?.name ?? "?", entity: acc?.entity ?? "", balance: s.balance_sgd };
+      const prev = previousSnaps.find((p) => p.account_id === s.account_id);
+      const previous = prev?.balance_sgd ?? null;
+      const delta = previous != null ? s.balance_sgd - previous : null;
+      return {
+        name: acc?.name ?? "?",
+        entity: acc?.entity ?? "",
+        balance: s.balance_sgd,
+        previous,
+        delta,
+      };
     })
     .sort((a, b) => b.balance - a.balance);
   const breakdownMax = Math.max(1, ...breakdown.map((b) => b.balance));
@@ -135,7 +153,7 @@ export default function FinanceOverviewPage() {
       </div>
 
       {/* Chart */}
-      {series.length > 1 && <Chart points={series} />}
+      {series.length > 0 && <Chart points={series} />}
 
       {/* Breakdown */}
       {breakdown.length > 0 && (
@@ -150,7 +168,10 @@ export default function FinanceOverviewPage() {
                   <p className="text-[14px] text-ink">{b.name}</p>
                   <p className="text-[12px] text-muted">{b.entity}</p>
                 </div>
-                <p className="text-[14px] text-ink tnum">{formatSGD(b.balance)}</p>
+                <div className="text-right">
+                  <p className="text-[14px] text-ink tnum">{formatSGD(b.balance)}</p>
+                  <DeltaBadge delta={b.delta} />
+                </div>
                 <div className="col-span-2 h-2 rounded-full bg-soft overflow-hidden">
                   <div
                     className="h-full bg-primary"
@@ -166,37 +187,166 @@ export default function FinanceOverviewPage() {
   );
 }
 
+function DeltaBadge({ delta }: { delta: number | null }) {
+  if (delta == null) {
+    return (
+      <p className="text-[11.5px] text-muted tnum mt-0.5">new this month</p>
+    );
+  }
+  if (delta === 0) {
+    return (
+      <p className="text-[11.5px] text-muted tnum mt-0.5">no change</p>
+    );
+  }
+  const positive = delta > 0;
+  return (
+    <p
+      className={[
+        "text-[11.5px] tnum mt-0.5",
+        positive ? "text-emerald" : "text-danger",
+      ].join(" ")}
+    >
+      {positive ? "↑" : "↓"} {positive ? "+" : "−"}{formatSGD(Math.abs(delta))}
+    </p>
+  );
+}
+
 function Chart({ points }: { points: Array<{ snapshot_month: string; total_sgd: number }> }) {
   const values = points.map((p) => p.total_sgd);
-  const max = Math.max(...values, 1);
-  const min = Math.min(...values, 0);
-  const span = Math.max(max - min, 1);
-  const w = 100;
-  const h = 36;
-  const step = points.length > 1 ? w / (points.length - 1) : w;
+  const dataMax = Math.max(...values, 0);
+  const dataMin = Math.min(...values, 0);
 
-  // Smooth-ish path with monotone-cubic feel via a Catmull-Rom approximation.
-  const pathPoints = points.map((p, i) => {
-    const x = i * step;
-    const y = h - ((p.total_sgd - min) / span) * h;
-    return [x, y] as [number, number];
-  });
-  const linePath = pathPoints
-    .map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`)
+  // Pad y-axis 5% above the max + 5% below the min (or to zero if all
+  // values are positive), so the line never sits flush with the edges.
+  const pad = (dataMax - dataMin) * 0.08;
+  const yMax = dataMax + Math.max(pad, dataMax * 0.05, 1);
+  const yMin = Math.max(0, dataMin - pad);
+  const ySpan = Math.max(yMax - yMin, 1);
+
+  // Pick four nice gridline values: yMin, ~33%, ~66%, yMax.
+  const gridValues = [yMax, yMax - ySpan / 3, yMin + ySpan / 3, yMin];
+
+  // SVG geometry — left gutter for y labels, bottom gutter for months.
+  const W = 600;
+  const H = 220;
+  const left = 60;
+  const right = 16;
+  const top = 16;
+  const bottom = 30;
+  const plotW = W - left - right;
+  const plotH = H - top - bottom;
+
+  const xFor = (i: number) =>
+    points.length > 1
+      ? left + (i / (points.length - 1)) * plotW
+      : left + plotW / 2;
+  const yFor = (v: number) => top + plotH - ((v - yMin) / ySpan) * plotH;
+
+  const linePath = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${xFor(i).toFixed(2)} ${yFor(p.total_sgd).toFixed(2)}`)
     .join(" ");
-  const areaPath = `${linePath} L ${(points.length - 1) * step} ${h} L 0 ${h} Z`;
+  const areaPath = points.length > 1
+    ? `${linePath} L ${xFor(points.length - 1).toFixed(2)} ${(top + plotH).toFixed(2)} L ${xFor(0).toFixed(2)} ${(top + plotH).toFixed(2)} Z`
+    : "";
+
+  // X-axis labels — first, middle, last (or just first when there's one).
+  const xLabelIndices: number[] =
+    points.length === 1 ? [0]
+      : points.length <= 3 ? points.map((_, i) => i)
+        : [0, Math.floor((points.length - 1) / 2), points.length - 1];
+
+  const formatTick = (n: number) => {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}m`;
+    if (n >= 1_000) return `${Math.round(n / 1_000)}k`;
+    return Math.round(n).toString();
+  };
 
   return (
     <div className="bg-white border border-line rounded-lg p-5">
-      <p className="text-[12.5px] uppercase tracking-wider text-muted mb-2">Total assets over time</p>
-      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-32 sm:h-44 text-emerald" preserveAspectRatio="none">
-        <path d={areaPath} fill="currentColor" opacity="0.15" />
-        <path d={linePath} fill="none" stroke="currentColor" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round" />
+      <p className="text-[12.5px] uppercase tracking-wider text-muted mb-3">Total assets over time</p>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-48 sm:h-64 text-emerald" preserveAspectRatio="none">
+        {/* Grid lines + y labels */}
+        {gridValues.map((v, i) => {
+          const y = yFor(v);
+          return (
+            <g key={i}>
+              <line
+                x1={left}
+                x2={W - right}
+                y1={y}
+                y2={y}
+                stroke="#e6e8ee"
+                strokeWidth={1}
+                strokeDasharray={i === gridValues.length - 1 ? "" : "3 3"}
+              />
+              <text
+                x={left - 8}
+                y={y + 4}
+                textAnchor="end"
+                fontSize="11"
+                fill="#94a3b8"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                S${formatTick(v)}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Area fill */}
+        {areaPath && (
+          <path d={areaPath} fill="currentColor" opacity="0.12" />
+        )}
+
+        {/* Line */}
+        {points.length > 1 && (
+          <path
+            d={linePath}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        )}
+
+        {/* Data point dots */}
+        {points.map((p, i) => (
+          <g key={p.snapshot_month}>
+            <circle
+              cx={xFor(i)}
+              cy={yFor(p.total_sgd)}
+              r={4}
+              fill="white"
+              stroke="currentColor"
+              strokeWidth={2}
+            />
+          </g>
+        ))}
+
+        {/* X-axis labels */}
+        {xLabelIndices.map((i) => {
+          const p = points[i];
+          if (!p) return null;
+          return (
+            <text
+              key={p.snapshot_month}
+              x={xFor(i)}
+              y={H - 10}
+              textAnchor="middle"
+              fontSize="11"
+              fill="#94a3b8"
+            >
+              {formatMonthLabel(p.snapshot_month)}
+            </text>
+          );
+        })}
       </svg>
-      <div className="flex justify-between mt-2 text-[11px] text-muted tnum">
-        <span>{points[0] ? formatMonthLabel(points[0].snapshot_month) : ""}</span>
-        <span>{points[points.length - 1] ? formatMonthLabel(points[points.length - 1].snapshot_month) : ""}</span>
-      </div>
+      {points.length === 1 && (
+        <p className="text-[12px] text-muted text-center mt-1">
+          One month so far. The chart fills out as you save subsequent months.
+        </p>
+      )}
     </div>
   );
 }
