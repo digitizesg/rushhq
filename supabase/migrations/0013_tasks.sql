@@ -12,11 +12,9 @@
 -- that handles calendar reminders, and the dispatch_log gets a
 -- task_reminder_id column with its own dedupe index.
 
--- ----------------------------------------------------------------------------
--- Notification event type
--- ----------------------------------------------------------------------------
-
-alter type notification_event_type add value if not exists 'task_reminder';
+-- The 'task_reminder' enum value is added in 0012_task_reminder_enum.sql.
+-- It has to live in a separate migration because Postgres won't let a new
+-- enum value be referenced in the same transaction that creates it.
 
 -- ----------------------------------------------------------------------------
 -- tasks
