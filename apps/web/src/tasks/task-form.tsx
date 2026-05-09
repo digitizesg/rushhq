@@ -10,6 +10,8 @@ import {
 import { Button } from "@/components/button";
 import { TextField } from "@/components/text-field";
 import { Select } from "@/components/select";
+import { Avatar } from "@/components/avatar";
+import { colourForRole } from "@/lib/colours";
 import type { FamilyMember, ReminderChannel } from "@/lib/types";
 import type { TaskReminderRow, TaskRow } from "@/lib/tasks";
 
@@ -61,9 +63,11 @@ export function TaskForm({
 
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
-  const [assigneeId, setAssigneeId] = useState<string>(
-    task?.assignee_id ?? defaultAssigneeId ?? members[0]?.id ?? "",
-  );
+  const [assigneeIds, setAssigneeIds] = useState<string[]>(() => {
+    if (task?.assignee_ids?.length) return [...task.assignee_ids];
+    if (defaultAssigneeId) return [defaultAssigneeId];
+    return [];
+  });
   const [dueDate, setDueDate] = useState<string>(
     task?.due_date ?? defaultDueDate(),
   );
@@ -112,8 +116,8 @@ export function TaskForm({
       setError("Please give the task a title.");
       return;
     }
-    if (!assigneeId) {
-      setError("Pick who this is for.");
+    if (assigneeIds.length === 0) {
+      setError("Pick at least one person to assign this to.");
       return;
     }
     if (!dueDate) {
@@ -135,7 +139,7 @@ export function TaskForm({
     const payload = {
       p_title: title.trim(),
       p_description: description.trim(),
-      p_assignee_id: assigneeId,
+      p_assignee_ids: assigneeIds,
       p_due_date: dueDate,
       p_due_time: hasTime ? `${dueTime}:00` : null,
       p_rrule: rrule || null,
@@ -202,18 +206,56 @@ export function TaskForm({
       </Section>
 
       <Section title="Who and when">
-        <Select
-          label="Assigned to"
-          containerClassName="max-w-sm"
-          value={assigneeId}
-          onChange={(e) => setAssigneeId(e.target.value)}
-        >
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.short_name}
-            </option>
-          ))}
-        </Select>
+        <div>
+          <span className="block text-[15px] font-medium text-ink mb-2">
+            Assigned to
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {members.map((m) => {
+              const selected = assigneeIds.includes(m.id);
+              const colour = colourForRole(m.id, m.short_name, m.role);
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() =>
+                    setAssigneeIds((prev) =>
+                      prev.includes(m.id)
+                        ? prev.filter((x) => x !== m.id)
+                        : [...prev, m.id],
+                    )
+                  }
+                  aria-pressed={selected}
+                  className={[
+                    "inline-flex items-center gap-2 h-10 pl-1 pr-3.5 rounded-full border text-[15.5px] transition-colors",
+                    "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary",
+                  ].join(" ")}
+                  style={
+                    selected
+                      ? {
+                          backgroundColor: colour.soft,
+                          borderColor: colour.accent,
+                          color: colour.text,
+                        }
+                      : undefined
+                  }
+                >
+                  <Avatar
+                    size={28}
+                    name={m.short_name}
+                    url={m.avatar_url}
+                    accent={selected ? colour.accent : "#cbd5e1"}
+                    text="#ffffff"
+                    alt=""
+                  />
+                  <span className={selected ? "font-medium" : "text-ink"}>
+                    {m.short_name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <div className="grid sm:grid-cols-2 gap-3">
           <TextField

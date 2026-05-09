@@ -16,6 +16,7 @@ import {
 } from "@/lib/tasks";
 import { colourFor } from "@/lib/colours";
 import { Avatar } from "@/components/avatar";
+import type { FamilyMember } from "@/lib/types";
 
 interface FormState {
   open: boolean;
@@ -35,7 +36,7 @@ export default function TasksPage() {
   // Parents see all family tasks; helpers + children see only their own.
   const visibleTasks = canEdit
     ? data.tasks
-    : data.tasks.filter((t) => t.assignee_id === member?.id);
+    : data.tasks.filter((t) => member?.id && t.assignee_ids.includes(member.id));
 
   const pending = visibleTasks.filter((t) => t.status === "pending");
   const done = visibleTasks
@@ -53,7 +54,7 @@ export default function TasksPage() {
         .map((m) => ({
           member: m,
           tasks: pending
-            .filter((t) => t.assignee_id === m.id)
+            .filter((t) => t.assignee_ids.includes(m.id))
             .sort((a, b) => a.due_date.localeCompare(b.due_date)),
         }))
         .filter((g) => g.tasks.length > 0)
@@ -158,6 +159,7 @@ export default function TasksPage() {
               avatarUrl={g.member.avatar_url ?? null}
               showHeader={canEdit}
               tasks={g.tasks}
+              members={data.members}
               onComplete={completeTask}
               onSnooze={snoozeTask}
               onEdit={openEdit}
@@ -176,13 +178,16 @@ export default function TasksPage() {
           </summary>
           <ul className="divide-y divide-line">
             {done.map((t) => {
-              const m = data.members.find((x) => x.id === t.assignee_id);
+              const names = t.assignee_ids
+                .map((id) => data.members.find((x) => x.id === id)?.short_name)
+                .filter(Boolean)
+                .join(", ");
               return (
                 <li key={t.id} className="px-5 py-2.5 flex items-center gap-3 text-[15.5px]">
                   <Check size={14} className="text-emerald shrink-0" />
                   <span className="text-ink line-through">{t.title}</span>
                   <span className="text-muted text-[14px] ml-auto">
-                    {m?.short_name ?? "?"} · {t.completed_at ? formatRelativeDate(t.completed_at) : ""}
+                    {names || "—"} · {t.completed_at ? formatRelativeDate(t.completed_at) : ""}
                   </span>
                 </li>
               );
@@ -225,6 +230,7 @@ interface KidColumnProps {
   avatarUrl: string | null;
   showHeader: boolean;
   tasks: TaskRow[];
+  members: FamilyMember[];
   onComplete: (t: TaskRow) => void;
   onSnooze: (t: TaskRow, days: number) => void;
   onEdit: (t: TaskRow) => void;
@@ -239,6 +245,7 @@ function KidColumn({
   avatarUrl,
   showHeader,
   tasks,
+  members,
   onComplete,
   onSnooze,
   onEdit,
@@ -293,6 +300,8 @@ function KidColumn({
               key={t.id}
               task={t}
               accent={colour.accent}
+              members={members}
+              currentColumnMemberId={memberId}
               onComplete={() => onComplete(t)}
               onSnooze={(days) => onSnooze(t, days)}
               onEdit={() => onEdit(t)}
@@ -309,6 +318,8 @@ function KidColumn({
 function TaskListItem({
   task,
   accent,
+  members,
+  currentColumnMemberId,
   onComplete,
   onSnooze,
   onEdit,
@@ -317,6 +328,10 @@ function TaskListItem({
 }: {
   task: TaskRow;
   accent: string;
+  members: FamilyMember[];
+  /** Hide the avatar of the column owner so the row doesn't show
+   *  their face redundantly — but show every other assignee. */
+  currentColumnMemberId: string;
   onComplete: () => void;
   onSnooze: (days: number) => void;
   onEdit: () => void;
@@ -326,6 +341,10 @@ function TaskListItem({
   const overdue = isOverdue(task);
   const due = dueLabel(task);
   const time = formatDueTime(task.due_time);
+  const otherAssignees = task.assignee_ids
+    .filter((id) => id !== currentColumnMemberId)
+    .map((id) => members.find((m) => m.id === id))
+    .filter((m): m is FamilyMember => !!m);
   return (
     <li className="px-3 sm:px-5 py-3 flex items-start gap-2 sm:gap-3">
       <button
@@ -361,6 +380,28 @@ function TaskListItem({
           {task.rrule && (
             <span className="inline-flex items-center gap-1 text-muted">
               <Repeat size={12} /> repeats
+            </span>
+          )}
+          {otherAssignees.length > 0 && (
+            <span className="inline-flex items-center gap-1 text-muted">
+              <span className="opacity-70">also</span>
+              <span className="inline-flex -space-x-1">
+                {otherAssignees.map((m) => {
+                  const c = colourFor(m.id, m.short_name);
+                  return (
+                    <Avatar
+                      key={m.id}
+                      size={18}
+                      name={m.short_name}
+                      url={m.avatar_url}
+                      accent={c.accent}
+                      text="#ffffff"
+                      alt={m.short_name}
+                      className="ring-2 ring-white"
+                    />
+                  );
+                })}
+              </span>
             </span>
           )}
         </p>

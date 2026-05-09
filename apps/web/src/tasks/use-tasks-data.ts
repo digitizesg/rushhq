@@ -27,7 +27,7 @@ export function useTasksData(): TasksData {
       const [tRes, rRes, mRes] = await Promise.all([
         supabase
           .from("tasks")
-          .select("*")
+          .select("*, assignees:task_assignees(member_id)")
           .order("due_date", { ascending: true }),
         supabase.from("task_reminders").select("*"),
         supabase
@@ -37,10 +37,17 @@ export function useTasksData(): TasksData {
           .order("short_name"),
       ]);
       for (const r of [tRes, rRes, mRes]) if (r.error) throw r.error;
+      type RawTask = Omit<TaskRow, "assignee_ids"> & {
+        assignees: Array<{ member_id: string }>;
+      };
+      const rawTasks = (tRes.data ?? []) as RawTask[];
       setState({
         loading: false,
         error: null,
-        tasks: (tRes.data ?? []) as TaskRow[],
+        tasks: rawTasks.map((t) => ({
+          ...t,
+          assignee_ids: (t.assignees ?? []).map((a) => a.member_id),
+        })),
         reminders: (rRes.data ?? []) as TaskReminderRow[],
         members: (mRes.data ?? []) as FamilyMember[],
       });

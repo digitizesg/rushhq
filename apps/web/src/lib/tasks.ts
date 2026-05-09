@@ -7,7 +7,7 @@ export interface TaskRow {
   id: string;
   title: string;
   description: string | null;
-  assignee_id: string;
+  assignee_ids: string[];
   due_date: string;            // YYYY-MM-DD
   due_time: string | null;     // HH:MM:SS
   rrule: string | null;
