@@ -77,8 +77,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadProfile]);
 
   const refresh = useCallback(async () => {
-    await loadProfile(session?.user ?? null);
-  }, [loadProfile, session]);
+    // Read the live session rather than the React-state closure: the
+    // login flow calls refresh() right after signInWithPassword, before
+    // onAuthStateChange has finished propagating, so `session` in the
+    // closure is still stale/null and we'd load the profile with no
+    // user → member=null → /no-profile redirect.
+    const { data } = await supabase.auth.getSession();
+    setSession(data.session);
+    await loadProfile(data.session?.user ?? null);
+  }, [loadProfile]);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
