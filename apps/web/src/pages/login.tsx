@@ -201,7 +201,7 @@ export default function LoginPage() {
             <label className="flex items-center gap-2 text-[15px] text-ink cursor-pointer select-none">
               <input
                 type="checkbox"
-                className="size-4 rounded border-line accent-primary"
+                className="size-5 rounded border-line accent-primary"
                 checked={trustDevice}
                 onChange={(e) => setTrustDevice(e.target.checked)}
               />

@@ -381,7 +381,7 @@ export function EventForm({
           <label className="inline-flex items-center gap-2 text-[16px] text-ink cursor-pointer select-none">
             <input
               type="checkbox"
-              className="size-4 rounded border-line accent-primary"
+              className="size-5 rounded border-line accent-primary"
               checked={allDay}
               onChange={(e) => setAllDay(e.target.checked)}
             />
@@ -540,7 +540,7 @@ export function EventForm({
         <label className="flex items-start gap-2.5 rounded-md border border-line bg-soft px-3 py-2.5 cursor-pointer">
           <input
             type="checkbox"
-            className="mt-0.5 size-4 rounded border-line accent-primary"
+            className="mt-0.5 size-5 rounded border-line accent-primary"
             checked={notifyExtraRoles}
             onChange={(e) => setNotifyExtraRoles(e.target.checked)}
           />
@@ -558,7 +558,7 @@ export function EventForm({
           <label className="flex items-start gap-2.5 rounded-md border border-line bg-soft px-3 py-2.5 cursor-pointer">
             <input
               type="checkbox"
-              className="mt-0.5 size-4 rounded border-line accent-primary"
+              className="mt-0.5 size-5 rounded border-line accent-primary"
               checked={notifyOnCreate}
               onChange={(e) => setNotifyOnCreate(e.target.checked)}
             />
@@ -755,7 +755,7 @@ function AttachmentsField({
           {visibleExisting.map((a) => (
             <li
               key={a.id}
-              className="flex items-center justify-between gap-2 pl-3 pr-1.5 py-1.5 rounded-md bg-soft border border-line text-[14.5px]"
+              className="flex items-center justify-between gap-2 pl-3 pr-1.5 py-1.5 rounded-md bg-soft border border-line text-[14.5px] min-w-0"
             >
               <button
                 type="button"
@@ -763,7 +763,7 @@ function AttachmentsField({
                 className="flex-1 min-w-0 flex items-center gap-2 text-left text-ink hover:text-primary"
                 title="Open"
               >
-                <span className="truncate">{a.file_name}</span>
+                <span className="truncate min-w-0 break-all">{a.file_name}</span>
                 <span className="text-[12.5px] text-muted shrink-0">
                   {a.size_bytes ? humanSize(a.size_bytes) : ""}
                 </span>
@@ -793,13 +793,13 @@ function AttachmentsField({
           {pending.map((f, i) => (
             <li
               key={`p-${i}`}
-              className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-primary-soft border border-primary/30 text-[14.5px]"
+              className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-primary-soft border border-primary/30 text-[14.5px] min-w-0"
             >
-              <span className="truncate flex items-center gap-2 text-primary">
+              <span className="truncate flex items-center gap-2 text-primary min-w-0 break-all">
                 <Trash2 size={14} className="opacity-0" aria-hidden />
                 {f.name}
-                <span className="text-[12.5px] opacity-80">
-                  {humanSize(f.size)} · ready to upload
+                <span className="text-[12.5px] opacity-80 shrink-0">
+                  {humanSize(f.size)} · ready
                 </span>
               </span>
               <button

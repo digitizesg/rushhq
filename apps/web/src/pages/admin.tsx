@@ -593,7 +593,7 @@ function AddMemberForm({ onAdded, onCancelled }: AddMemberFormProps) {
         <label className="flex items-start gap-2.5 rounded-md border border-line bg-soft px-3 py-2.5 cursor-pointer">
           <input
             type="checkbox"
-            className="mt-0.5 size-4 rounded border-line accent-primary"
+            className="mt-0.5 size-5 rounded border-line accent-primary"
             checked={sendInvite}
             onChange={(e) => setSendInvite(e.target.checked)}
           />

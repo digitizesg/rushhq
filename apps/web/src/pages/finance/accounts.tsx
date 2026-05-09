@@ -109,7 +109,7 @@ export default function AccountsPage() {
                 <label className="inline-flex items-center gap-2 text-[15.5px] text-ink cursor-pointer">
                   <input
                     type="checkbox"
-                    className="size-4 accent-primary"
+                    className="size-5 accent-primary"
                     checked={p.active ?? a.active}
                     onChange={(e) => patch(a.id, { active: e.target.checked })}
                   />

@@ -294,7 +294,7 @@ export default function BuyPage() {
                         type="checkbox"
                         checked={periodIds.has(p.id)}
                         onChange={(e) => togglePeriod(p.id, e.target.checked)}
-                        className="size-4 accent-primary"
+                        className="size-5 accent-primary"
                       />
                       <div className="flex-1">
                         <p className="text-[16px] text-ink">
@@ -325,7 +325,7 @@ export default function BuyPage() {
                         type="checkbox"
                         checked={depositIds.has(d.id)}
                         onChange={(e) => toggleDeposit(d.id, e.target.checked)}
-                        className="size-4 accent-primary"
+                        className="size-5 accent-primary"
                       />
                       <div className="flex-1">
                         <p className="text-[16px] text-ink">{member?.short_name} · {d.source}</p>

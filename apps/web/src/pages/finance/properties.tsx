@@ -321,7 +321,7 @@ function PropertyForm({ property, onSaved, onCancelled }: FormProps) {
       <label className="inline-flex items-center gap-2 text-[15.5px] text-ink cursor-pointer">
         <input
           type="checkbox"
-          className="size-4 accent-primary"
+          className="size-5 accent-primary"
           checked={active}
           onChange={(e) => setActive(e.target.checked)}
         />

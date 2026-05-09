@@ -53,7 +53,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
             </svg>
           </button>
         </div>
-        <div className="overflow-y-auto p-5">{children}</div>
+        <div className="overflow-y-auto overflow-x-hidden p-5 min-w-0">{children}</div>
       </div>
     </div>,
     document.body,

@@ -276,7 +276,7 @@ export function TaskForm({
             <label className="inline-flex items-center gap-2 text-[16px] text-ink cursor-pointer select-none mb-1.5">
               <input
                 type="checkbox"
-                className="size-4 rounded border-line accent-primary"
+                className="size-5 rounded border-line accent-primary"
                 checked={hasTime}
                 onChange={(e) => setHasTime(e.target.checked)}
               />
@@ -323,7 +323,7 @@ export function TaskForm({
           <label className="flex items-start gap-2.5 rounded-md border border-line bg-soft px-3 py-2.5 cursor-pointer">
             <input
               type="checkbox"
-              className="mt-0.5 size-4 rounded border-line accent-primary"
+              className="mt-0.5 size-5 rounded border-line accent-primary"
               checked={notifyOnCreate}
               onChange={(e) => setNotifyOnCreate(e.target.checked)}
             />
