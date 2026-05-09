@@ -44,26 +44,21 @@ export default function TasksPage() {
     .sort((a, b) => (b.completed_at ?? "").localeCompare(a.completed_at ?? ""))
     .slice(0, 10);
 
-  // Tasks can now be assigned to anyone (parents, helpers, children).
-  // For parents: show a column for any active member who currently has
-  // at least one pending task — keeps the page tight when most people
-  // have nothing on. For kids: a flat list of their own.
   const assignableMembers = data.members.filter((m) => m.active);
-  const groups = canEdit
-    ? assignableMembers
-        .map((m) => ({
-          member: m,
-          tasks: pending
-            .filter((t) => t.assignee_ids.includes(m.id))
-            .sort((a, b) => a.due_date.localeCompare(b.due_date)),
-        }))
-        .filter((g) => g.tasks.length > 0)
-    : [
-        {
-          member: member!,
-          tasks: pending.sort((a, b) => a.due_date.localeCompare(b.due_date)),
-        },
-      ];
+
+  // Filter chip state: which member's tasks to show. "all" = unfiltered.
+  const [filterMemberId, setFilterMemberId] = useState<string>("all");
+
+  // Members with at least one pending task — drive the filter chip row.
+  const membersWithTasks = assignableMembers.filter((m) =>
+    pending.some((t) => t.assignee_ids.includes(m.id)),
+  );
+
+  const filteredPending = pending
+    .filter((t) =>
+      filterMemberId === "all" ? true : t.assignee_ids.includes(filterMemberId),
+    )
+    .sort((a, b) => a.due_date.localeCompare(b.due_date));
 
   async function completeTask(t: TaskRow) {
     setBusyTaskId(t.id);
@@ -150,24 +145,65 @@ export default function TasksPage() {
           )}
         </div>
       ) : (
-        <div className={canEdit ? "grid gap-5 md:grid-cols-2" : "space-y-5"}>
-          {groups.map((g) => (
-            <KidColumn
-              key={g.member.id}
-              memberId={g.member.id}
-              memberName={g.member.short_name}
-              avatarUrl={g.member.avatar_url ?? null}
-              showHeader={canEdit}
-              tasks={g.tasks}
-              members={data.members}
-              onComplete={completeTask}
-              onSnooze={snoozeTask}
-              onEdit={openEdit}
-              onAdd={canEdit ? () => openCreate(g.member.id) : undefined}
-              busyTaskId={busyTaskId}
-              canEdit={canEdit}
-            />
-          ))}
+        <div className="space-y-4">
+          {canEdit && membersWithTasks.length > 1 && (
+            <div className="flex flex-wrap gap-2">
+              <FilterChip
+                label="Everyone"
+                count={pending.length}
+                selected={filterMemberId === "all"}
+                onClick={() => setFilterMemberId("all")}
+              />
+              {membersWithTasks.map((m) => {
+                const c = colourFor(m.id, m.short_name);
+                const count = pending.filter((t) => t.assignee_ids.includes(m.id)).length;
+                return (
+                  <FilterChip
+                    key={m.id}
+                    label={m.short_name}
+                    count={count}
+                    avatar={
+                      <Avatar
+                        size={20}
+                        name={m.short_name}
+                        url={m.avatar_url}
+                        accent={c.accent}
+                        text="#ffffff"
+                        alt=""
+                      />
+                    }
+                    selected={filterMemberId === m.id}
+                    onClick={() => setFilterMemberId(m.id)}
+                    selectedStyle={{
+                      backgroundColor: c.soft,
+                      borderColor: c.accent,
+                      color: c.text,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
+
+          <ul className="bg-white border border-line rounded-lg divide-y divide-line overflow-hidden">
+            {filteredPending.map((t) => (
+              <TaskListItem
+                key={t.id}
+                task={t}
+                members={data.members}
+                onComplete={() => completeTask(t)}
+                onSnooze={(days) => snoozeTask(t, days)}
+                onEdit={() => openEdit(t)}
+                busy={busyTaskId === t.id}
+                canEdit={canEdit}
+              />
+            ))}
+            {filteredPending.length === 0 && (
+              <li className="px-5 py-6 text-center text-[15px] text-muted">
+                No tasks for that filter.
+              </li>
+            )}
+          </ul>
         </div>
       )}
 
@@ -224,102 +260,43 @@ export default function TasksPage() {
   );
 }
 
-interface KidColumnProps {
-  memberId: string;
-  memberName: string;
-  avatarUrl: string | null;
-  showHeader: boolean;
-  tasks: TaskRow[];
-  members: FamilyMember[];
-  onComplete: (t: TaskRow) => void;
-  onSnooze: (t: TaskRow, days: number) => void;
-  onEdit: (t: TaskRow) => void;
-  onAdd?: () => void;
-  busyTaskId: string | null;
-  canEdit: boolean;
-}
-
-function KidColumn({
-  memberId,
-  memberName,
-  avatarUrl,
-  showHeader,
-  tasks,
-  members,
-  onComplete,
-  onSnooze,
-  onEdit,
-  onAdd,
-  busyTaskId,
-  canEdit,
-}: KidColumnProps) {
-  const colour = colourFor(memberId, memberName);
+function FilterChip({
+  label,
+  count,
+  avatar,
+  selected,
+  onClick,
+  selectedStyle,
+}: {
+  label: string;
+  count: number;
+  avatar?: React.ReactNode;
+  selected: boolean;
+  onClick: () => void;
+  selectedStyle?: React.CSSProperties;
+}) {
   return (
-    <div className="bg-white border border-line rounded-lg overflow-hidden">
-      {showHeader && (
-        <header
-          className="flex items-center justify-between px-5 py-3 border-b border-line"
-          style={{ backgroundColor: colour.soft }}
-        >
-          <div className="flex items-center gap-3">
-            <Avatar
-              size={44}
-              name={memberName}
-              url={avatarUrl}
-              accent={colour.accent}
-              text="#ffffff"
-              alt=""
-            />
-            <h2 className="text-[19px] font-semibold" style={{ color: colour.text }}>
-              {memberName}
-            </h2>
-            <span className="text-[14px] opacity-70" style={{ color: colour.text }}>
-              {tasks.length} pending
-            </span>
-          </div>
-          {onAdd && (
-            <button
-              type="button"
-              onClick={onAdd}
-              className="text-[14.5px] font-medium hover:underline"
-              style={{ color: colour.text }}
-            >
-              + Add
-            </button>
-          )}
-        </header>
-      )}
-      {tasks.length === 0 ? (
-        <div className="px-5 py-6 text-center text-[15.5px] text-muted">
-          No tasks. Nice and clear.
-        </div>
-      ) : (
-        <ul className="divide-y divide-line">
-          {tasks.map((t) => (
-            <TaskListItem
-              key={t.id}
-              task={t}
-              accent={colour.accent}
-              members={members}
-              currentColumnMemberId={memberId}
-              onComplete={() => onComplete(t)}
-              onSnooze={(days) => onSnooze(t, days)}
-              onEdit={() => onEdit(t)}
-              busy={busyTaskId === t.id}
-              canEdit={canEdit}
-            />
-          ))}
-        </ul>
-      )}
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        "inline-flex items-center gap-2 h-9 pl-1.5 pr-3 rounded-full border text-[14.5px] transition-colors",
+        selected
+          ? "font-medium"
+          : "bg-white text-ink border-line hover:bg-soft",
+      ].join(" ")}
+      style={selected ? selectedStyle : undefined}
+    >
+      {avatar ?? <span className="size-5" />}
+      {label}
+      <span className="text-[12.5px] opacity-70 tnum">{count}</span>
+    </button>
   );
 }
 
 function TaskListItem({
   task,
-  accent,
   members,
-  currentColumnMemberId,
   onComplete,
   onSnooze,
   onEdit,
@@ -327,11 +304,7 @@ function TaskListItem({
   canEdit,
 }: {
   task: TaskRow;
-  accent: string;
   members: FamilyMember[];
-  /** Hide the avatar of the column owner so the row doesn't show
-   *  their face redundantly — but show every other assignee. */
-  currentColumnMemberId: string;
   onComplete: () => void;
   onSnooze: (days: number) => void;
   onEdit: () => void;
@@ -341,10 +314,14 @@ function TaskListItem({
   const overdue = isOverdue(task);
   const due = dueLabel(task);
   const time = formatDueTime(task.due_time);
-  const otherAssignees = task.assignee_ids
-    .filter((id) => id !== currentColumnMemberId)
+  const assignees = task.assignee_ids
     .map((id) => members.find((m) => m.id === id))
     .filter((m): m is FamilyMember => !!m);
+  // Pick a tint for the complete-circle: single assignee → their colour;
+  // multi → neutral primary.
+  const accent = assignees.length === 1
+    ? colourFor(assignees[0].id, assignees[0].short_name).accent
+    : "#2563eb";
   return (
     <li className="px-3 sm:px-5 py-3 flex items-start gap-2 sm:gap-3">
       <button
@@ -355,12 +332,29 @@ function TaskListItem({
         className="mt-0.5 size-9 sm:size-7 shrink-0 grid place-items-center rounded-full border-2 hover:bg-soft active:bg-soft disabled:opacity-50 transition-colors"
         style={{ borderColor: accent }}
       >
-        <Check
-          size={15}
-          className="opacity-25 group-hover:opacity-100 transition-opacity"
-          style={{ color: accent }}
-        />
+        <Check size={15} className="opacity-25" style={{ color: accent }} />
       </button>
+
+      {/* Avatar stack of all assignees */}
+      {assignees.length > 0 && (
+        <div className="flex items-center -space-x-1.5 shrink-0 mt-0.5">
+          {assignees.map((m) => {
+            const c = colourFor(m.id, m.short_name);
+            return (
+              <Avatar
+                key={m.id}
+                size={28}
+                name={m.short_name}
+                url={m.avatar_url}
+                accent={c.accent}
+                text="#ffffff"
+                alt={m.short_name}
+                className="ring-2 ring-white"
+              />
+            );
+          })}
+        </div>
+      )}
 
       <div className="flex-1 min-w-0">
         <p className="text-[16.5px] font-medium text-ink break-words">{task.title}</p>
@@ -382,26 +376,9 @@ function TaskListItem({
               <Repeat size={12} /> repeats
             </span>
           )}
-          {otherAssignees.length > 0 && (
-            <span className="inline-flex items-center gap-1 text-muted">
-              <span className="opacity-70">also</span>
-              <span className="inline-flex -space-x-1">
-                {otherAssignees.map((m) => {
-                  const c = colourFor(m.id, m.short_name);
-                  return (
-                    <Avatar
-                      key={m.id}
-                      size={18}
-                      name={m.short_name}
-                      url={m.avatar_url}
-                      accent={c.accent}
-                      text="#ffffff"
-                      alt={m.short_name}
-                      className="ring-2 ring-white"
-                    />
-                  );
-                })}
-              </span>
+          {assignees.length > 1 && (
+            <span className="text-muted">
+              {assignees.map((a) => a.short_name).join(", ")}
             </span>
           )}
         </p>

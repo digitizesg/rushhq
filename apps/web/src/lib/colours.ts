@@ -22,11 +22,14 @@ const CYAN: MemberColour =   { accent: "#0891b2", soft: "#ecfeff", text: "#0e749
 
 const PALETTE: ReadonlyArray<MemberColour> = [BLUE, VIOLET, EMERALD, AMBER, ROSE, INDIGO, CYAN];
 
-// Per-name overrides take priority over the hash. Lets the kids own
-// "their" colour even if the auth/member ids change.
+// Per-name overrides take priority over the hash so each member
+// keeps "their" colour regardless of auth/member id changes.
 const NAME_OVERRIDES: Record<string, MemberColour> = {
   Robin: BLUE,
   Riley: ROSE,
+  Ben:   CYAN,
+  Alice: VIOLET,
+  Diwen: AMBER,
 };
 
 function hash(id: string): number {
