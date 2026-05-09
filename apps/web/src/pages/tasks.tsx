@@ -32,12 +32,10 @@ export default function TasksPage() {
   if (data.loading) return <LoadingScreen />;
 
   const canEdit = isParent();
-  const isChild = member?.member_type === "child";
-
-  // Children only see their own; parents see all.
-  const visibleTasks = isChild
-    ? data.tasks.filter((t) => t.assignee_id === member?.id)
-    : data.tasks;
+  // Parents see all family tasks; helpers + children see only their own.
+  const visibleTasks = canEdit
+    ? data.tasks
+    : data.tasks.filter((t) => t.assignee_id === member?.id);
 
   const pending = visibleTasks.filter((t) => t.status === "pending");
   const done = visibleTasks
@@ -45,18 +43,20 @@ export default function TasksPage() {
     .sort((a, b) => (b.completed_at ?? "").localeCompare(a.completed_at ?? ""))
     .slice(0, 10);
 
-  // For parents: group pending tasks by assignee. For kids: a single
-  // flat list since they're all theirs.
-  const childMembers = data.members.filter((m) => m.member_type === "child");
+  // Tasks can now be assigned to anyone (parents, helpers, children).
+  // For parents: show a column for any active member who currently has
+  // at least one pending task — keeps the page tight when most people
+  // have nothing on. For kids: a flat list of their own.
+  const assignableMembers = data.members.filter((m) => m.active);
   const groups = canEdit
-    ? childMembers
-        .map((c) => ({
-          member: c,
+    ? assignableMembers
+        .map((m) => ({
+          member: m,
           tasks: pending
-            .filter((t) => t.assignee_id === c.id)
+            .filter((t) => t.assignee_id === m.id)
             .sort((a, b) => a.due_date.localeCompare(b.due_date)),
         }))
-        .filter((g) => g.tasks.length > 0 || canEdit)
+        .filter((g) => g.tasks.length > 0)
     : [
         {
           member: member!,
@@ -118,7 +118,7 @@ export default function TasksPage() {
         <div>
           <p className="text-[14px] uppercase tracking-wider text-muted mb-1">Tasks</p>
           <h1 className="text-[30px] font-medium text-ink">
-            {canEdit ? "What's on the kids' lists" : "Your tasks"}
+            {canEdit ? "Family tasks" : "Your tasks"}
           </h1>
           <p className="mt-2 text-[15.5px] text-muted">
             Tap a task to mark it done. Recurring tasks roll forward to the next
@@ -199,7 +199,7 @@ export default function TasksPage() {
           size="lg"
         >
           <TaskForm
-            members={childMembers}
+            members={assignableMembers}
             task={form.task}
             defaultAssigneeId={form.defaultAssigneeId}
             reminders={data.reminders.filter((r) => r.task_id === form.task?.id)}
