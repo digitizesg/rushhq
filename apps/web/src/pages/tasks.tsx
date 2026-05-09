@@ -29,6 +29,9 @@ export default function TasksPage() {
   const data = useTasksData();
   const [form, setForm] = useState<FormState>({ open: false, task: null });
   const [busyTaskId, setBusyTaskId] = useState<string | null>(null);
+  // Filter chip state: which member's tasks to show. "all" = unfiltered.
+  // Declared up here (before any early returns) to keep hook order stable.
+  const [filterMemberId, setFilterMemberId] = useState<string>("all");
 
   if (data.loading) return <LoadingScreen />;
 
@@ -45,9 +48,6 @@ export default function TasksPage() {
     .slice(0, 10);
 
   const assignableMembers = data.members.filter((m) => m.active);
-
-  // Filter chip state: which member's tasks to show. "all" = unfiltered.
-  const [filterMemberId, setFilterMemberId] = useState<string>("all");
 
   // Members with at least one pending task — drive the filter chip row.
   const membersWithTasks = assignableMembers.filter((m) =>

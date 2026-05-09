@@ -501,6 +501,20 @@ Deno.serve(async (_req) => {
         });
         outboxSkipped++;
         handledIds.add(row.outbox_id);
+        // Mark the outbox row processed even though we didn't send
+        // anything — otherwise it sits in the queue forever and the
+        // dispatcher logs the same "skipped" row every 5 minutes.
+        await supabase
+          .from("notification_outbox")
+          .update({
+            processed_at: new Date().toISOString(),
+            attempts:
+              (row as { attempts?: number }).attempts != null
+                ? Number((row as { attempts?: number }).attempts) + 1
+                : 1,
+            last_error: "No enabled channel or contact details",
+          })
+          .eq("id", row.outbox_id);
         continue;
       }
 
