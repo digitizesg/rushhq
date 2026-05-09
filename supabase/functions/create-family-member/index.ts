@@ -77,7 +77,14 @@ Deno.serve(async (req) => {
   });
   const { data: who, error: whoErr } = await userClient.auth.getUser();
   if (whoErr || !who?.user) {
-    return jsonRes({ error: "Invalid token" }, 401);
+    console.error("[create-family-member] auth.getUser failed:", whoErr);
+    return jsonRes(
+      {
+        error: "Invalid token",
+        detail: whoErr?.message ?? "no user",
+      },
+      401,
+    );
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
