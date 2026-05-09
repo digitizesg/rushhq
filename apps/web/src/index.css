@@ -51,6 +51,9 @@ html, body {
   font-family: var(--font-sans);
   font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;
+  /* Belt-and-braces: stop any wider-than-viewport child element from
+     producing horizontal scroll on phones. */
+  overflow-x: clip;
 }
 
 button {

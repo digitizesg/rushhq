@@ -335,15 +335,17 @@ function TaskListItem({
         <Check size={15} className="opacity-25" style={{ color: accent }} />
       </button>
 
-      {/* Avatar stack of all assignees */}
+      {/* Avatar stack of all assignees. Caps to 3 visible on phones with
+          a +N badge for the rest, so a Riley+Robin+parents task doesn't
+          eat the row width. */}
       {assignees.length > 0 && (
         <div className="flex items-center -space-x-1.5 shrink-0 mt-0.5">
-          {assignees.map((m) => {
+          {assignees.slice(0, 3).map((m) => {
             const c = colourFor(m.id, m.short_name);
             return (
               <Avatar
                 key={m.id}
-                size={28}
+                size={26}
                 name={m.short_name}
                 url={m.avatar_url}
                 accent={c.accent}
@@ -353,6 +355,14 @@ function TaskListItem({
               />
             );
           })}
+          {assignees.length > 3 && (
+            <span
+              aria-hidden
+              className="size-[26px] grid place-items-center rounded-full bg-soft border border-line text-muted text-[11px] font-medium ring-2 ring-white"
+            >
+              +{assignees.length - 3}
+            </span>
+          )}
         </div>
       )}
 
