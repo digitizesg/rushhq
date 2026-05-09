@@ -26,9 +26,21 @@ export default function MfaEnrolPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+
+      // If there's already a verified factor, we shouldn't be on this
+      // page at all — escape to the calendar instead of trying to enrol
+      // a duplicate. Guards against a route-guard race that occasionally
+      // sends already-verified parents here on a fresh sign-in.
+      const verified = factors?.totp?.find((f) => f.status === "verified");
+      if (verified) {
+        await refresh();
+        if (!cancelled) navigate("/", { replace: true });
+        return;
+      }
+
       // Clean up any unverified TOTP factors left over from a previous
       // attempt — the API allows multiple but they get noisy.
-      const { data: factors } = await supabase.auth.mfa.listFactors();
       const stale = factors?.totp?.filter((f) => f.status !== "verified") ?? [];
       for (const f of stale) {
         await supabase.auth.mfa.unenroll({ factorId: f.id });
@@ -48,7 +60,7 @@ export default function MfaEnrolPage() {
     return () => {
       cancelled = true;
     };
-  }, [member?.short_name]);
+  }, [member?.short_name, navigate, refresh]);
 
   async function handleVerify(e: FormEvent) {
     e.preventDefault();
