@@ -68,14 +68,14 @@ Deno.serve(async (req) => {
     return jsonRes({ error: "Missing bearer token" }, 401);
   }
 
-  // Read-as-caller client (anon key; auth ctx comes from the JWT).
-  // We use the service-role client below for actually inserting rows
-  // because the inviteUserByEmail flow needs admin perms anyway.
+  // Validate the caller's JWT. `auth.getUser()` no longer reads the
+  // Authorization header automatically in @supabase/auth-js@2.70+; pass
+  // the token in directly.
+  const jwt = auth.replace(/^Bearer\s+/i, "").trim();
   const userClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    global: { headers: { authorization: auth } },
     auth: { persistSession: false },
   });
-  const { data: who, error: whoErr } = await userClient.auth.getUser();
+  const { data: who, error: whoErr } = await userClient.auth.getUser(jwt);
   if (whoErr || !who?.user) {
     console.error("[create-family-member] auth.getUser failed:", whoErr);
     return jsonRes(
