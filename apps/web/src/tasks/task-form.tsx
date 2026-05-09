@@ -91,6 +91,10 @@ export function TaskForm({
     return [];
   });
 
+  // For new tasks only: ping assignees right after save. Defaults to on
+  // since tasks are usually news to the assignee. Edits skip the option.
+  const [notifyOnCreate, setNotifyOnCreate] = useState<boolean>(true);
+
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -155,7 +159,10 @@ export function TaskForm({
         });
         if (rpcErr) throw rpcErr;
       } else {
-        const { error: rpcErr } = await supabase.rpc("create_task", payload);
+        const { error: rpcErr } = await supabase.rpc("create_task", {
+          ...payload,
+          p_notify_on_create: notifyOnCreate,
+        });
         if (rpcErr) throw rpcErr;
       }
       await onSaved();
@@ -310,6 +317,25 @@ export function TaskForm({
             onChange={(e) => setCustomRrule(e.target.value)}
             hint="iCal RRULE syntax. Example: RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=TU"
           />
+        )}
+
+        {!isEditing && (
+          <label className="flex items-start gap-2.5 rounded-md border border-line bg-soft px-3 py-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-4 rounded border-line accent-primary"
+              checked={notifyOnCreate}
+              onChange={(e) => setNotifyOnCreate(e.target.checked)}
+            />
+            <span className="text-[15px] text-ink">
+              Notify assignees on save
+              <span className="block text-[13.5px] text-muted mt-0.5">
+                Sends a Telegram + email ping right away so the
+                assignees know it's there. Lead-time reminders fire
+                later as configured below.
+              </span>
+            </span>
+          </label>
         )}
       </Section>
 

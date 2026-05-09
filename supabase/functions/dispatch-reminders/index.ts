@@ -810,6 +810,50 @@ function renderOutboxMessage(
     maximumFractionDigits: 2,
   })}`;
 
+  if (eventType === "task_created") {
+    const title = String(payload.title ?? "New task");
+    const dueDate = payload.due_date ? String(payload.due_date) : null;
+    const dueTime = payload.due_time ? String(payload.due_time).slice(0, 5) : null;
+    const description = payload.description ? String(payload.description) : null;
+    const recurring = !!payload.rrule;
+    const dueLabel = dueDate
+      ? `Due ${new Date(dueDate + "T00:00:00").toLocaleDateString("en-GB", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })}${dueTime ? ` · ${dueTime}` : ""}`
+      : "";
+    const link = `${APP_URL}/tasks`;
+
+    const tgLines: string[] = [
+      `📝 <b>${escapeHtml(title)}</b>`,
+      `Hey ${escapeHtml(recipientShortName)} — new task assigned to you${dueLabel ? `, ${escapeHtml(dueLabel.toLowerCase())}` : ""}${recurring ? " · repeats" : ""}.`,
+    ];
+    if (description) tgLines.push("", escapeHtml(description));
+    tgLines.push("", `<a href="${link}">Open Rush HQ</a>`);
+    const tg = tgLines.join("\n");
+
+    const html = richEmail({
+      kicker: `Rush HQ · New task for ${recipientShortName}`,
+      title,
+      when: dueLabel || null,
+      notes: description,
+      buttonUrl: link,
+      buttonText: "Open tasks",
+    });
+    const text =
+      `New task: ${title}` +
+      (dueLabel ? ` · ${dueLabel}` : "") +
+      ` ${link}`;
+    return {
+      telegramText: tg,
+      emailSubject: `New task: ${title}${dueLabel ? ` · ${dueLabel}` : ""}`,
+      emailHtml: html,
+      emailText: text,
+    };
+  }
+
   if (eventType === "calendar_event_created") {
     const title = String(payload.title ?? "New event");
     const startsAt = payload.starts_at
