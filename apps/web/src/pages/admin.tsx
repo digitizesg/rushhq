@@ -550,9 +550,11 @@ function AddMemberForm({ onAdded, onCancelled }: AddMemberFormProps) {
           }),
         },
       );
-      const data = (await res.json()) as { id?: string; error?: string; invited?: boolean };
+      const data = (await res.json()) as { id?: string; error?: string; detail?: string; invited?: boolean };
       if (!res.ok || data.error) {
-        throw new Error(data.error ?? `Request failed with ${res.status}`);
+        const main = data.error ?? `Request failed with ${res.status}`;
+        const tail = data.detail ? ` (${data.detail})` : "";
+        throw new Error(`${main}${tail}`);
       }
       await onAdded();
     } catch (e) {
