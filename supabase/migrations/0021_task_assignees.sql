@@ -17,6 +17,11 @@ insert into task_assignees (task_id, member_id)
 select id, assignee_id from tasks where assignee_id is not null
 on conflict do nothing;
 
+-- Drop the old policy that referenced assignee_id BEFORE dropping
+-- the column itself (Postgres won't let you drop a column a policy
+-- depends on, even with `if exists` on the column).
+drop policy if exists "Assignee reads own tasks" on tasks;
+
 -- Drop the single-assignee column.
 alter table tasks drop column assignee_id;
 
@@ -26,7 +31,7 @@ drop index if exists tasks_assignee_idx;
 create index tasks_status_due_idx on tasks (status, due_date);
 
 -- ----------------------------------------------------------------------------
--- RLS — replace the old "Assignee reads own tasks" policy
+-- RLS for task_assignees + the new tasks SELECT policy
 -- ----------------------------------------------------------------------------
 
 alter table task_assignees enable row level security;
@@ -41,8 +46,6 @@ create policy "Members read own task assignments"
   on task_assignees for select
   to authenticated
   using (member_id = public.current_member_id());
-
-drop policy if exists "Assignee reads own tasks" on tasks;
 
 create policy "Assignees read own tasks"
   on tasks for select
