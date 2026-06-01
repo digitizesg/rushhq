@@ -964,14 +964,20 @@ function renderOutboxMessage(
 
   if (eventType === "finance_monthly_reminder") {
     const link = `${APP_URL}/finance`;
-    const month = String(payload.month ?? "");
-    const headline = `Time for the ${month} finance update`;
+    // Backward-looking convention: on the 1st we record the month that has
+    // just finished (its closing balances are now settled). Derive that
+    // month from the send date so the wording is right regardless of what
+    // the cron payload carries.
+    const now = new Date();
+    const month = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1))
+      .toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
+    const headline = `Time to record ${month}`;
     const tg = `💰 <b>${escapeHtml(headline)}</b>\n<a href="${link}">Open Rush HQ</a>`;
     const html = richEmail({
       kicker: "Rush HQ · Finance",
       title: headline,
       when: null,
-      notes: "Run through the eight account balances and the property snapshots for the month.",
+      notes: `Now ${month} has closed, run through the eight account balances and the property snapshots.`,
       buttonUrl: link,
       buttonText: "Start update",
     });

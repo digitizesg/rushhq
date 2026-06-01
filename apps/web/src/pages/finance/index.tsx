@@ -102,9 +102,11 @@ export default function FinanceOverviewPage() {
   const totals = data.totalsOverTime;
   const latest = totals[totals.length - 1];
 
-  // Single short label regardless of whether the month exists yet —
-  // the form itself handles the create-vs-edit distinction.
-  const ctaLabel = "Add update";
+  // Backward-looking convention: balances are recorded once a month has
+  // finished, so the headline action targets last month (the one whose
+  // closing position you can actually read), not the in-progress one.
+  const lastMonth = shiftMonth(thisMonth, -1);
+  const ctaLabel = `Record ${formatMonthLabel(lastMonth)}`;
 
   // Latest-month breakdown with per-account delta vs the previous
   // snapshot month. We compare to the immediately-previous month for
@@ -176,7 +178,7 @@ export default function FinanceOverviewPage() {
             <SettingsIcon size={14} /> Accounts
           </Link>
           <Link
-            to={`/finance/update/${thisMonth.slice(0, 7)}`}
+            to={`/finance/update/${lastMonth.slice(0, 7)}`}
             className="inline-flex items-center justify-center h-9 px-4 rounded-md bg-primary text-white text-[15px] font-medium whitespace-nowrap hover:bg-primary-strong"
           >
             {ctaLabel}
