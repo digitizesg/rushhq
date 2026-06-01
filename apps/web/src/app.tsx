@@ -96,6 +96,7 @@ export function App() {
               <Route path="/beads" element={<BeadsIndexPage />} />
               <Route path="/beads/charts/:childId" element={<ChartEditPage />} />
               <Route path="/beads/count/:childId" element={<CountPage />} />
+              <Route path="/beads/count/:childId/:periodStart" element={<CountPage />} />
               <Route path="/stocks" element={<StocksOverviewPage />} />
               <Route path="/stocks/buy" element={<BuyPage />} />
               <Route path="/stocks/dividend" element={<DividendPage />} />

@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
-import { ChevronLeft, Lock, RotateCcw } from "lucide-react";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Lock, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/lib/supabase";
 import {
+  addMonths,
   firstOfMonth,
   formatPeriodLabel,
   formatSGD,
+  normalisePeriodStart,
   totalFor,
   type BeadColour,
   type BeadPeriod,
@@ -31,8 +33,27 @@ interface PageState {
 }
 
 export default function CountPage() {
-  const { childId = "" } = useParams<{ childId: string }>();
-  const periodStart = useMemo(() => firstOfMonth(new Date()), []);
+  const { childId = "", periodStart: periodParam } = useParams<{
+    childId: string;
+    periodStart?: string;
+  }>();
+  const navigate = useNavigate();
+
+  // The month being counted. Defaults to the current month, but an optional
+  // route segment lets us reach any past month (e.g. to finish May once June
+  // has begun). Forward navigation is capped at the current month.
+  const currentMonthStart = useMemo(() => firstOfMonth(new Date()), []);
+  const periodStart = useMemo(
+    () => normalisePeriodStart(periodParam) ?? currentMonthStart,
+    [periodParam, currentMonthStart],
+  );
+  const atCurrentMonth = periodStart >= currentMonthStart;
+
+  function goToMonth(delta: number) {
+    const target = addMonths(periodStart, delta);
+    if (target > currentMonthStart) return; // never count the future
+    navigate(`/beads/count/${childId}/${target}`);
+  }
 
   const [state, setState] = useState<PageState>({
     loading: true,
@@ -52,6 +73,7 @@ export default function CountPage() {
   // Initial data fetch + period bootstrap.
   useEffect(() => {
     let cancelled = false;
+    setState((s) => ({ ...s, loading: true, error: null }));
     (async () => {
       try {
         const [coloursRes, childRes, membersRes] = await Promise.all([
@@ -227,13 +249,39 @@ export default function CountPage() {
         />
         <div>
           <p className="text-[14px] uppercase tracking-wider text-muted mb-1">
-            Counting beads
+            Counting beads · {state.child.short_name}
           </p>
-          <h1 className="text-[28px] font-medium text-ink">
-            {state.child.short_name} · {formatPeriodLabel(periodStart)}
-          </h1>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => goToMonth(-1)}
+              disabled={submitting !== "none"}
+              aria-label="Previous month"
+              className="grid size-9 place-items-center rounded-md border border-line text-muted hover:bg-soft hover:text-ink disabled:opacity-40 disabled:pointer-events-none"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <h1 className="text-[28px] font-medium text-ink min-w-[180px] text-center tnum">
+              {formatPeriodLabel(periodStart)}
+            </h1>
+            <button
+              type="button"
+              onClick={() => goToMonth(1)}
+              disabled={atCurrentMonth || submitting !== "none"}
+              aria-label="Next month"
+              className="grid size-9 place-items-center rounded-md border border-line text-muted hover:bg-soft hover:text-ink disabled:opacity-40 disabled:pointer-events-none"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       </div>
+
+      {!atCurrentMonth && (
+        <div className="rounded-md border border-amber/40 bg-amber-soft text-amber text-[15px] px-4 py-2.5">
+          You're counting a past month. The current month is {formatPeriodLabel(currentMonthStart)}.
+        </div>
+      )}
 
       {state.error && (
         <div className="rounded-md border border-danger/40 bg-danger/[0.06] text-danger text-[15px] px-4 py-3">

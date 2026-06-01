@@ -63,6 +63,23 @@ export function firstOfMonth(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
+/** Shift a YYYY-MM-DD first-of-month by `delta` months. Returns YYYY-MM-DD. */
+export function addMonths(periodStart: string, delta: number): string {
+  const [y, m] = periodStart.split("-").map((p) => parseInt(p, 10));
+  return firstOfMonth(new Date(y, m - 1 + delta, 1));
+}
+
+/** Normalise a YYYY-MM or YYYY-MM-DD string to first-of-month YYYY-MM-DD.
+ *  Returns null if it isn't a valid year-month. */
+export function normalisePeriodStart(raw: string | undefined | null): string | null {
+  if (!raw) return null;
+  const m = raw.match(/^(\d{4})-(\d{2})(?:-\d{2})?$/);
+  if (!m) return null;
+  const month = parseInt(m[2], 10);
+  if (month < 1 || month > 12) return null;
+  return `${m[1]}-${m[2]}-01`;
+}
+
 /** Format S$ with two decimals, e.g. S$32.80. */
 export function formatSGD(n: number): string {
   return `S$${n.toLocaleString("en-SG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

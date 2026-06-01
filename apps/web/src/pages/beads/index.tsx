@@ -76,6 +76,11 @@ function ChildCard({ child, data, thisMonthStart }: ChildCardProps) {
   const thisMonth = childTotals.find((t) => t.period_start === thisMonthStart);
   const lastThree = childTotals.slice(-3);
   const lifetime = childTotals.reduce((s, t) => s + t.total_sgd, 0);
+  // Past months still open (counting never finished) — surface so they
+  // don't get stranded once a new month begins.
+  const unfinishedPast = childTotals
+    .filter((t) => t.status === "open" && t.period_start < thisMonthStart)
+    .sort((a, b) => (a.period_start < b.period_start ? 1 : -1));
 
   return (
     <article className="bg-white border border-line rounded-lg overflow-hidden">
@@ -123,6 +128,19 @@ function ChildCard({ child, data, thisMonthStart }: ChildCardProps) {
         {lastThree.length > 1 && (
           <Sparkline points={lastThree} />
         )}
+
+        {unfinishedPast.map((u) => (
+          <Link
+            key={u.period_id}
+            to={`/beads/count/${child.id}/${u.period_start}`}
+            className="flex items-center justify-between gap-2 rounded-md border border-amber/40 bg-amber-soft px-3 py-2 text-[14.5px] text-amber hover:bg-amber/15 transition-colors"
+          >
+            <span>
+              {formatPeriodLabel(u.period_start)} not finished
+            </span>
+            <span className="font-medium whitespace-nowrap">Finish &rarr;</span>
+          </Link>
+        ))}
 
         <div className="grid grid-cols-2 gap-2 pt-2">
           {activeChart && (
