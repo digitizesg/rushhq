@@ -1,8 +1,9 @@
 # Rush HQ — project context for Claude Code
 
 A login-only family operations site for the Rush family. Live at
-`rushhq.co` with four modules: **calendar**, **beads**, **stocks**,
-**finance**.
+`rushhq.co` with five modules: **calendar**, **tasks**, **beads**,
+**stocks**, **finance**. Finance also holds **properties** (at
+`/finance/properties`).
 
 This file is authoritative. If a build prompt or PR description
 contradicts it, ask before resolving.
@@ -34,6 +35,7 @@ rushhq/
 │       │   ├── lib/                      supabase client, types, helpers
 │       │   ├── pages/                    routes (one folder per module)
 │       │   ├── stocks/                   use-stocks-data hook
+│       │   ├── tasks/                     use-task-data hook
 │       │   ├── app.tsx                   router
 │       │   ├── main.tsx                  entry point
 │       │   └── index.css                 Tailwind theme
@@ -55,9 +57,31 @@ rushhq/
 │   │   │                                 stock_transactions, stock_allocations,
 │   │   │                                 portfolio_snapshots, child_holdings view,
 │   │   │                                 4 record_* RPCs
-│   │   └── 0009_finance.sql              accounts, account_snapshots,
-│   │                                     total_assets_over_time view,
-│   │                                     prefill_month_from_previous RPC
+│   │   ├── 0009_finance.sql              accounts, account_snapshots,
+│   │   │                                 total_assets_over_time view,
+│   │   │                                 prefill_month_from_previous RPC
+│   │   ├── 0010_direct_purchase.sql      record_direct_purchase RPC (split shares
+│   │   │                                 directly across kids, no bead/gift link)
+│   │   ├── 0011_delete_stock_transaction.sql  delete_stock_transaction RPC,
+│   │   │                                 reverts bead/deposit side effects
+│   │   ├── 0012_task_reminder_enum.sql   adds 'task_reminder' enum value
+│   │   ├── 0013_tasks.sql                tasks, task_reminders,
+│   │   │                                 fetch_task_dispatch_candidates, task RPCs
+│   │   ├── 0014_properties.sql           properties, property_snapshots + RPCs
+│   │   ├── 0015_avatars.sql              family_members.avatar_url + public
+│   │   │                                 "avatars" storage bucket + policies
+│   │   ├── 0016_notify_extra_roles.sql   calendar_events.notify_extra_roles flag
+│   │   ├── 0017_event_attachments.sql    event_attachments + private
+│   │   │                                 "event-attachments" bucket
+│   │   ├── 0018_event_type.sql           calendar_events.event_type tag (text)
+│   │   ├── 0019_notify_on_create.sql     create_calendar_event notify-on-create
+│   │   ├── 0020_preferred_channel.sql    family_members.preferred_channel;
+│   │   │                                 narrows notification_outbox_pending view
+│   │   ├── 0021_task_assignees.sql       task_assignees join (drops single
+│   │   │                                 assignee_id, multi-assignee tasks)
+│   │   ├── 0022_trusted_devices.sql      trusted_devices (remember-2FA per browser)
+│   │   ├── 0023_task_created_enum.sql    adds 'task_created' enum value
+│   │   └── 0024_task_notify_on_create.sql  create_task notify-on-create
 │   └── functions/
 │       ├── dispatch-reminders/           every 5 min: calendar reminders + outbox drain
 │       ├── telegram-webhook/             handles /start <token> from the bot
@@ -138,6 +162,9 @@ member id so each person gets a stable hue.
 
 - Two role values used today in `family_members.role`: `parent` and `helper`. The `child` role exists in the enum and is wired through (children read their own bead/stock data) but Riley/Robin don't have auth users yet.
 - MFA is mandatory for `parent` accounts. The route guard sends them to `/mfa` if no verified TOTP factor exists.
+- **Trusted devices** (`0022`): after a successful TOTP challenge a user can tick "trust this device for 30 days". Login looks up `trusted_devices` by (`auth_user_id` × a random `device_id` in localStorage) and skips the TOTP prompt while the row is unexpired. This is remember-2FA, not remember-login — the password is still required every sign-in.
+- Each member has a `preferred_channel` (`both`/`telegram`/`email`, `0020`) that *narrows* notification delivery: the dispatcher ANDs it with each per-event-type flag, so it can mute a channel but never re-enable one muted at the per-type level.
+- Members have an optional `avatar_url` (`0015`) pointing at the public `avatars` bucket (`<member_id>/<file>`); members upload to their own folder, parents can upload on anyone's behalf.
 - Auth emails (verification, password reset, invites) go through Resend via Supabase custom-SMTP, configured at the project level.
 
 ### RLS shape
@@ -154,6 +181,18 @@ Policies follow a consistent shape: parents can do anything in their domain; chi
 `calendar_events` is the canonical store. Recurring events are a single row with an iCal `rrule` string. `calendar_event_attendees` is a many-to-many join. `calendar_reminders` lives at the event level (every attendee shares the same reminder set, but per-attendee notification preferences + contact info determine what actually goes out).
 
 The React app expands recurrences with `rrule` npm package; the edge function uses `rrulestr` from esm.sh.
+
+Columns added after the foundation migration: `event_type` (coarse text tag — school/activity/family/personal/travel/other, no enum so new tags need no migration), `notify_extra_roles` (bool: also ping active parents + helpers, not just attendees), plus notify-on-create wiring. `event_attachments` records file metadata for PDFs/images stored in the private `event-attachments` bucket; reads piggyback on event visibility, writes are parents-only. The `create_/update_calendar_event` RPCs now take `p_event_type`, `p_notify_extra_roles`, and `p_notify_on_create`.
+
+### Tasks
+
+A lightweight to-do list for nudging the kids, added in `0013`. Each task is a single canonical row (`tasks`) with an optional iCal `rrule`; completing a recurring task rolls `due_date` forward — no per-instance history (nudges, not a forensic log). `0021` replaced the single `assignee_id` with a `task_assignees` join table (multi-assignee, same shape as `calendar_event_attendees`). `task_reminders` carries lead-time reminders that feed the same dispatcher as calendar reminders via `fetch_task_dispatch_candidates`.
+
+RPCs are parents-only: `create_task(..., p_notify_on_create)` (enqueues `task_created` pings to assignees when true), plus update/complete/delete. Children read only tasks they're assigned to via RLS; parents manage everything.
+
+### Properties
+
+Added in `0014`, sits under Finance at `/finance/properties`, parents-only at every layer. Tracks the family's mortgaged properties (one HDB, two commercial) with the same monthly-snapshot pattern as bank accounts: `properties` holds slow-changing facts (purchase price, loan, tenure, rate), `property_snapshots` holds per-month `amount_outstanding` + `market_value`. Equity is derived (`market_value - amount_outstanding`), never stored.
 
 ### Beads
 
@@ -173,8 +212,9 @@ VOO ETF tracking per child. The user enters what already happened on moomoo; we 
 - `bead_purchase` — pro-rata across counted bead periods + pending deposits
 - `gift_purchase` — single-child quick buy from a relative's gift
 - `dividend_reinvest` — pro-rata by current shares held
+- `direct_purchase` (`record_direct_purchase`, `0010`) — parent splits shares directly across kids by explicit amounts, with no bead period or gift link. Used for historical buys and parent-funded purchases. Allocation shares must sum to the transaction total.
 
-Money out via `withdrawal`, which uses average-cost method to reduce cost basis.
+Money out via `withdrawal`, which uses average-cost method to reduce cost basis. A transaction can be removed with `delete_stock_transaction` (`0011`), which also reverts its side effects: `invested` bead periods return to `counted` and `invested` pending deposits return to `pending`. (This is the sanctioned correction path; the "no editing after creation" guardrail still holds for amounts.)
 
 Tables: `stock_transactions` (signed shares + price + FX, generated `total_usd`/`total_sgd`), `stock_allocations` (signed per child), `pending_deposits`, `price_cache`, `portfolio_snapshots`. View `child_holdings` aggregates current position per child.
 
@@ -202,6 +242,9 @@ Active event types:
 | Event | Source | Recipients |
 |---|---|---|
 | `calendar_reminder` | calendar_reminders | event attendees |
+| `calendar_event_created` | create_calendar_event (notify-on-create) | attendees (+ parents/helpers if `notify_extra_roles`) |
+| `task_reminder` | task_reminders | task assignees |
+| `task_created` | create_task (notify-on-create) | task assignees |
 | `bead_chart_published` | clone_bead_chart RPC | parents + the child |
 | `bead_period_locked` | lock_bead_period RPC | parents |
 | `stock_purchase_recorded` | record_*_purchase / record_dividend / record_withdrawal | parents |
