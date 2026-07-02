@@ -72,6 +72,7 @@ const FinanceUpdatePage = lazyWithReload(() => import("@/pages/finance/update"))
 const FinanceHistoryPage = lazyWithReload(() => import("@/pages/finance/history"));
 const FinanceAccountsPage = lazyWithReload(() => import("@/pages/finance/accounts"));
 const PropertiesPage = lazyWithReload(() => import("@/pages/finance/properties"));
+const FinanceIncomePage = lazyWithReload(() => import("@/pages/finance/income"));
 
 export function App() {
   return (
@@ -108,6 +109,7 @@ export function App() {
               <Route path="/finance/history" element={<FinanceHistoryPage />} />
               <Route path="/finance/accounts" element={<FinanceAccountsPage />} />
               <Route path="/finance/properties" element={<PropertiesPage />} />
+              <Route path="/finance/income" element={<FinanceIncomePage />} />
             </Route>
           </Route>
         </Route>

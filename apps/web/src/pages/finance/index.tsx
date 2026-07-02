@@ -6,6 +6,7 @@ import {
   Building2,
   Calendar as CalendarIcon,
   History,
+  Landmark,
   Settings as SettingsIcon,
 } from "lucide-react";
 import { useFinanceData } from "@/finance/use-finance-data";
@@ -168,6 +169,9 @@ export default function FinanceOverviewPage() {
           <h1 className="text-[30px] font-medium text-ink">Net worth</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Link to="/finance/income" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[15px] whitespace-nowrap hover:bg-soft">
+            <Landmark size={14} /> Income
+          </Link>
           <Link to="/finance/history" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-line text-[15px] whitespace-nowrap hover:bg-soft">
             <History size={14} /> History
           </Link>
