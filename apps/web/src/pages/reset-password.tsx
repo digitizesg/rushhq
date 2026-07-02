@@ -173,6 +173,7 @@ export default function ResetPasswordPage() {
               label="New password"
               type="password"
               autoComplete="new-password"
+              revealToggle
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -182,6 +183,7 @@ export default function ResetPasswordPage() {
               label="Confirm password"
               type="password"
               autoComplete="new-password"
+              revealToggle
               required
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
