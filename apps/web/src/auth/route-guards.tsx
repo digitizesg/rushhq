@@ -5,11 +5,11 @@ import { LoadingScreen } from "@/components/loading-screen";
 
 /**
  * Gate that requires a logged-in user with a linked family_members row.
- * Parents must have a verified TOTP factor — otherwise they're sent to
- * the MFA enrolment page first.
+ * MFA is optional: anyone who enrols a TOTP factor is still challenged for
+ * it at login, but it is no longer forced on parents (this is a family app).
  */
 export function RequireAuth() {
-  const { loading, session, member, mfaVerified } = useAuth();
+  const { loading, session, member } = useAuth();
   const location = useLocation();
 
   if (loading) return <LoadingScreen />;
@@ -19,11 +19,6 @@ export function RequireAuth() {
     // operator setup issue; the user can do nothing until a parent links
     // the rows in Admin.
     return <Navigate to="/no-profile" replace />;
-  }
-  if (member.role === "parent" && !mfaVerified) {
-    if (location.pathname !== "/mfa") {
-      return <Navigate to="/mfa" replace />;
-    }
   }
   return <Outlet />;
 }

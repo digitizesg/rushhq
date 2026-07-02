@@ -161,7 +161,7 @@ member id so each person gets a stable hue.
 ### Auth + roles
 
 - Two role values used today in `family_members.role`: `parent` and `helper`. The `child` role exists in the enum and is wired through (children read their own bead/stock data) but Riley/Robin don't have auth users yet.
-- MFA is mandatory for `parent` accounts. The route guard sends them to `/mfa` if no verified TOTP factor exists.
+- MFA is optional (this is a family app). Anyone can enrol a TOTP factor via `/mfa`, and login still challenges those who have one, but the route guard no longer forces parents to enrol. The reset-password flow steps a verified factor up to AAL2 before saving.
 - **Trusted devices** (`0022`): after a successful TOTP challenge a user can tick "trust this device for 30 days". Login looks up `trusted_devices` by (`auth_user_id` × a random `device_id` in localStorage) and skips the TOTP prompt while the row is unexpired. This is remember-2FA, not remember-login — the password is still required every sign-in.
 - Each member has a `preferred_channel` (`both`/`telegram`/`email`, `0020`) that *narrows* notification delivery: the dispatcher ANDs it with each per-event-type flag, so it can mute a channel but never re-enable one muted at the per-type level.
 - Members have an optional `avatar_url` (`0015`) pointing at the public `avatars` bucket (`<member_id>/<file>`); members upload to their own folder, parents can upload on anyone's behalf.
