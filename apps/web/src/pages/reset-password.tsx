@@ -18,6 +18,13 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // MFA users: the recovery session comes in at AAL1, but Supabase requires an
+  // AAL2 session to change a password when a verified factor exists. We detect
+  // that once the session is ready and collect a TOTP code to step up before
+  // saving, mirroring the challenge/verify the login page does.
+  const [needsMfa, setNeedsMfa] = useState(false);
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [code, setCode] = useState("");
 
   // Turn whatever the reset link carried into a session. Different senders
   // use different link shapes:
@@ -66,6 +73,29 @@ export default function ResetPasswordPage() {
     return () => clearTimeout(timer);
   }, [session, status]);
 
+  // Once the recovery session is ready, work out whether a two-factor step-up
+  // is needed. If the session is only AAL1 but can reach AAL2, the user has a
+  // verified factor and must enter a code before the password can be changed.
+  useEffect(() => {
+    if (status !== "ready") return;
+    let cancelled = false;
+    void (async () => {
+      const { data: aal } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (cancelled || !aal) return;
+      if (aal.currentLevel === "aal2" || aal.nextLevel !== "aal2") return;
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const verified = factors?.totp.find((f) => f.status === "verified");
+      if (verified && !cancelled) {
+        setMfaFactorId(verified.id);
+        setNeedsMfa(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [status]);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -77,8 +107,31 @@ export default function ResetPasswordPage() {
       setError("Password must be at least 10 characters");
       return;
     }
+    if (needsMfa && code.trim().length !== 6) {
+      setError("Enter the six-digit code from your authenticator app");
+      return;
+    }
     setSubmitting(true);
     try {
+      // Step the recovery session up to AAL2 first when MFA is enabled, or
+      // updateUser rejects with "AAL2 session is required...".
+      if (needsMfa && mfaFactorId) {
+        const { data: challenge, error: challErr } =
+          await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
+        if (challErr || !challenge) {
+          setError(challErr?.message ?? "Could not start two-factor verification");
+          return;
+        }
+        const { error: verifyErr } = await supabase.auth.mfa.verify({
+          factorId: mfaFactorId,
+          challengeId: challenge.id,
+          code: code.trim(),
+        });
+        if (verifyErr) {
+          setError(verifyErr.message);
+          return;
+        }
+      }
       const { error } = await supabase.auth.updateUser({ password });
       if (error) setError(error.message);
       else navigate("/", { replace: true });
@@ -133,6 +186,19 @@ export default function ResetPasswordPage() {
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
             />
+            {needsMfa && (
+              <TextField
+                label="Six-digit code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]*"
+                maxLength={6}
+                required
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                hint="Your account has two-factor on, so enter the current code from your authenticator app."
+              />
+            )}
             {error && (
               <p className="text-danger text-[15px]" role="alert">{error}</p>
             )}
